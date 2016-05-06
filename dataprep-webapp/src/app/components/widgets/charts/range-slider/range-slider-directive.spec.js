@@ -31,6 +31,7 @@ describe('Range slider directive', function () {
 
     beforeEach(angular.mock.module('htmlTemplates'));
     beforeEach(angular.mock.module('talend.widget'));
+    beforeEach(angular.mock.module('data-prep.services.utils'));
 
     beforeEach(inject(function ($rootScope, $compile) {
         scope = $rootScope.$new(true);
@@ -145,6 +146,25 @@ describe('Range slider directive', function () {
             expect(element.find('text.the-minimum-label').eq(0).text()).toBe('-50,000');
             expect(element.find('text.the-maximum-label').eq(0).text()).toBe('20,000');
         }));
+
+        it('should display the min and max labels to the provided min/max date values', inject(function ($timeout) {
+            //given
+            const
+                minDateTime = new Date(2000, 0, 1).getTime(),
+                maxDateTime = new Date(2001, 0, 1).getTime();
+            scope.rangeLimits = {
+                min: minDateTime,
+                max: maxDateTime,
+                type: 'date'
+            };
+            createElement();
+            $timeout.flush(100);
+            flushAllD3Transitions();
+
+            //then
+            expect(element.find('text.the-minimum-label').eq(0).text()).toBe('01/01/2000');
+            expect(element.find('text.the-maximum-label').eq(0).text()).toBe('01/01/2001');
+        }));
     });
 
     describe('inputs', function() {
@@ -189,6 +209,32 @@ describe('Range slider directive', function () {
             //then
             expect(element.find('input').eq(0)[0].value).toBe('25');
             expect(element.find('input').eq(1)[0].value).toBe('35');
+        }));
+
+        it('should init inputs by rendering their values as human readable dates if type is date', inject(function($timeout) {
+            //given
+            const
+                minDateTime = new Date(2016, 0, 1).getTime(),
+                maxDateTime = new Date(2016, 11, 1).getTime();
+
+            scope.rangeLimits = {
+                min: minDateTime,
+                max: maxDateTime,
+                type: 'date'
+            };
+            createElement();
+            $timeout.flush(100);
+            flushAllD3Transitions();
+
+            //when
+            ctrl.showRangeInputs = true;
+            scope.$digest();
+
+            //then
+            const inputs = element.find('input');
+            expect(inputs.eq(0)[0].value).toBe('01/01/2016');
+            expect(inputs.eq(1)[0].value).toBe('01/12/2016');
+
         }));
 
         describe('events', function() {

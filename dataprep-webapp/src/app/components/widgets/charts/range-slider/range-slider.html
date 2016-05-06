@@ -14,23 +14,44 @@
   -->
 
 <div class="range-slider-id"></div>
-<form name="rangesForm" ng-if="rangeSliderCtrl.showRangeInputs" class="range-inputs-cls">
+<form class="range-inputs-cls"
+      name="rangesForm"
+      ng-if="rangeSliderCtrl.showRangeInputs"
+      ng-switch="rangeSliderCtrl.isDateType">
     <span class="range-label-input">
         <!-- did  not use input type="number because the ng-model of '25,' is '25' " -->
         <b translate-once="MIN"></b>&nbsp;<input type="text"
                   ng-model="rangeSliderCtrl.minMaxModel.minModel"
+                  ng-switch-when="false"
                   ng-blur="rangeSliderCtrl.prepareInputFilter($event)"
                   ng-keydown="rangeSliderCtrl.stopPropagation($event)"
                   ng-keyup="rangeSliderCtrl.handleKey('min')($event)"
-            >
+            ><talend-datetime-picker ng-model="rangeSliderCtrl.minMaxModel.minModel"
+                                     ng-switch-when="true"
+                                     ng-keydown="rangeSliderCtrl.stopPropagation($event)"
+                                     ng-keyup="rangeSliderCtrl.handleKey('min')($event)"
+                                     datetimepicker-on-select="rangeSliderCtrl.prepareInputFilter"
+                                     datetimepicker-min="rangeSliderCtrl.rangeLimits.min"
+                                     datetimepicker-max="rangeSliderCtrl.rangeLimits.max"
+                                     range-item-type="from">
+        </talend-datetime-picker>
     </span>
     <span class="range-label-input">
         <b translate-once="MAX"></b>&nbsp;<input type="text"
                   ng-model="rangeSliderCtrl.minMaxModel.maxModel"
+                  ng-switch-when="false"
                   ng-blur="rangeSliderCtrl.prepareInputFilter($event)"
                   ng-keydown="rangeSliderCtrl.stopPropagation($event)"
                   ng-keyup="rangeSliderCtrl.handleKey('max')($event)"
-            >
+            ><talend-datetime-picker ng-model="rangeSliderCtrl.minMaxModel.maxModel"
+                                     ng-switch-when="true"
+                                     ng-keydown="rangeSliderCtrl.stopPropagation($event)"
+                                     ng-keyup="rangeSliderCtrl.handleKey('max')($event)"
+                                     datetimepicker-on-select="rangeSliderCtrl.prepareInputFilter"
+                                     datetimepicker-min="rangeSliderCtrl.rangeLimits.min"
+                                     datetimepicker-max="rangeSliderCtrl.rangeLimits.max"
+                                     range-item-type="to">
+        </talend-datetime-picker>
     </span>
 
     <br/>

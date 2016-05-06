@@ -723,7 +723,7 @@ describe('Statistics service', function () {
 
         it('should create a function that reinit range limits when the selected column is the same', inject(function (StatisticsService, StateService) {
             //given
-            var column = { id: '0000', statistics: { min: 5, max: 55 } };
+            var column = { id: '0000', type: 'integer', statistics: { min: 5, max: 55 } };
             stateMock.playground.statistics.histogram = {};
             stateMock.playground.grid.selectedColumn = column;
 
@@ -735,7 +735,8 @@ describe('Statistics service', function () {
             //then
             expect(StateService.setStatisticsRangeLimits).toHaveBeenCalledWith({
                 min: 5,
-                max: 55
+                max: 55,
+                type: 'integer'
             });
             expect(StateService.setStatisticsHistogramActiveLimits).toHaveBeenCalledWith([column.statistics.min, column.statistics.max]);
         }));
@@ -1447,7 +1448,8 @@ describe('Statistics service', function () {
                 expect(StateService.setStatisticsHistogramActiveLimits.calls.count()).toBe(1); // not called with value
                 expect(StateService.setStatisticsRangeLimits).toHaveBeenCalledWith({
                     min: 0,
-                    max: 11
+                    max: 11,
+                    type: 'integer'
                 });
             }));
 
@@ -1469,7 +1471,8 @@ describe('Statistics service', function () {
                     minBrush: 5,
                     maxBrush: 10,
                     minFilterVal: 5,
-                    maxFilterVal: 10
+                    maxFilterVal: 10,
+                    type: 'integer'
                 });
                 expect(StateService.setStatisticsHistogramActiveLimits).toHaveBeenCalledWith([5, 10]);
             }));
@@ -1492,7 +1495,8 @@ describe('Statistics service', function () {
                     minBrush: 0,
                     maxBrush: 0,
                     minFilterVal: -15,
-                    maxFilterVal: -10
+                    maxFilterVal: -10,
+                    type: 'integer'
                 });
             }));
 
@@ -1514,7 +1518,8 @@ describe('Statistics service', function () {
                     minBrush: 0,
                     maxBrush: 11,
                     minFilterVal: -15,
-                    maxFilterVal: 20
+                    maxFilterVal: 20,
+                    type: 'integer'
                 });
             }));
 
@@ -1536,7 +1541,8 @@ describe('Statistics service', function () {
                     minBrush: 11,
                     maxBrush: 11,
                     minFilterVal: 25,
-                    maxFilterVal: 30
+                    maxFilterVal: 30,
+                    type: 'integer'
                 });
             }));
 
@@ -1558,7 +1564,8 @@ describe('Statistics service', function () {
                     minBrush: 5,
                     maxBrush: 11,
                     minFilterVal: 5,
-                    maxFilterVal: 30
+                    maxFilterVal: 30,
+                    type: 'integer'
                 });
             }));
 
@@ -1580,7 +1587,8 @@ describe('Statistics service', function () {
                     minBrush: 0,
                     maxBrush: 10,
                     minFilterVal: -25,
-                    maxFilterVal: 10
+                    maxFilterVal: 10,
+                    type: 'integer'
                 });
             }));
         });

@@ -18,6 +18,7 @@ describe('Datetimepicker directive', function () {
 
     beforeEach(angular.mock.module('talend.widget'));
     beforeEach(angular.mock.module('htmlTemplates'));
+    beforeEach(angular.mock.module('data-prep.services.utils'));
 
     var showCalendarInput = function (elm) {
         elm = elm || element;
@@ -54,8 +55,8 @@ describe('Datetimepicker directive', function () {
                 '<talend-datetime-picker ' +
                 ' ng-model="param.value" ' +
                 ' format="DD/MM/YYYY hh:mm:ss" ' +
-                ' formatTime="hh:mm:ss" ' +
-                ' formatDate="DD/MM/YYY" />' +
+                ' format-time="hh:mm:ss" ' +
+                ' format-date="DD/MM/YYY" />' +
                 '</div></body></html>';
 
             element = $compile(html)(scope);
