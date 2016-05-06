@@ -15,13 +15,11 @@
 
 <ul id="filter-list">
     <li ng-repeat="filter in filterCtrl.filters track by $index">
-        <talend-badge text="{{filter.colName}}"
-                      obj="filter"
-                      on-change="filterCtrl.changeFilter(obj, newValue)"
-                      on-close="filterCtrl.removeFilter(obj)"
-                      editable="filter.editable && filterCtrl.enabled"
-                      type="filter.type"
-                      removable ="filterCtrl.enabled">
-        </talend-badge>
+        <filter-item ng-model="filter"
+                     on-change="filterCtrl.changeFilter(filter)"
+                     on-close="filterCtrl.removeFilter(filter)"
+                     editable="filter.editable && filterCtrl.enabled"
+                     removable ="filterCtrl.enabled">
+        </filter-item>
     </li>
 </ul>

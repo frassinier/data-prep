@@ -11,22 +11,17 @@
 
  ============================================================================*/
 
-import FilterBar from './filter-bar-directive';
+import FilterValueComponent from './filter-value-component';
 
 (() => {
     'use strict';
 
     /**
      * @ngdoc object
-     * @name data-prep.filter-bar
-     * @description This module aggregate the filters components into a bar
+     * @name data-prep.filter-item-value
+     * @description This module contains the component to display filter item value
      */
-    angular.module('data-prep.filter-bar',
-        [
-            'data-prep.filter-list',
-            'data-prep.filter-item',
-            'data-prep.filter-monitor',
-            'data-prep.filter-search',
-        ])
-        .directive('filterBar', FilterBar);
+    angular
+        .module('data-prep.filter-item-value', [])
+        .component('filterValue', FilterValueComponent);
 })();

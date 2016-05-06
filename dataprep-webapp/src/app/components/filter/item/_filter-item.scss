@@ -1,0 +1,90 @@
+/*  ============================================================================
+
+  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+
+  This source code is available under agreement available at
+  https://github.com/Talend/data-prep/blob/master/LICENSE
+
+  You should have received a copy of the agreement
+  along with this program; if not, write to Talend SA
+  9 rue Pages 92150 Suresnes, France
+
+  ============================================================================*/
+
+@import '../../widgets/badge/badge';
+
+$contains-color: $dark-blue;
+$inside_range-color: $blue;
+$empty_records-color: $white;
+$valid_records-color: $color-ok;
+$invalid_records-color: $orange;
+$matches-color: $brown;
+
+.badge {
+  &.valid_records {
+    @include badge($valid_records-color);
+  }
+
+  &.invalid_records {
+    @include badge($invalid_records-color);
+  }
+
+  &.empty_records {
+    @include badge($empty_records-color);
+    color: $black;
+    border-color: #8C8C8C;
+
+    .badge-btn-close {
+      color: $black;
+    }
+  }
+
+  &.contains {
+    @include badge($contains-color);
+  }
+
+  &.exact {
+    @include badge($contains-color);
+  }
+
+  &.inside_range {
+    @include badge($inside_range-color);
+  }
+
+  &.matches {
+    @include badge($matches-color);
+  }
+}
+
+.filter-item {
+  &-label {
+    font-family: $inconsolota;
+    font-weight: 500;
+  }
+
+  &-value {
+    @include ellipsis(180px);
+    padding: 3px 2px;
+    font-family: $base-font-family;
+    text-transform: uppercase;
+
+    input[type="text"] {
+      margin: 0;
+      padding: 2px;
+      width: 30px;
+      font-weight: 500;
+      font-family: $inconsolota;
+      background: none;
+      border: none;
+      box-shadow: none;
+    }
+
+    &.multi {
+      input[type="text"] {
+        margin-right: -20px;
+        padding-right: 15px;
+        transition: .2s width;
+      }
+    }
+  }
+}

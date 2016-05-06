@@ -27,9 +27,24 @@
 export default function FilterService($timeout, state, StateService, FilterAdapterService, DatagridService, StatisticsService, ConverterService, TextFormatService, DateService) {
     'ngInject';
 
+    const
+        RANGE_SEPARATOR = ' .. ',
+        INTERVAL_SEPARATOR = ',',
+        VALUES_SEPARATOR = '|',
+        SHIFT_KEY_NAME = 'shift',
+        CTRL_KEY_NAME = 'ctrl';
+
     var service = {
+        //constants
+        VALUES_SEPARATOR: VALUES_SEPARATOR,
+        SHIFT_KEY_NAME: SHIFT_KEY_NAME,
+        CTRL_KEY_NAME: CTRL_KEY_NAME,
+        EMPTY_RECORDS_LABEL: FilterAdapterService.EMPTY_RECORDS_LABEL,
+
         //utils
         getColumnsContaining: getColumnsContaining,
+        getRangeLabelFor: getRangeLabelFor,
+        getSplittedRangeLabelFor: getSplittedRangeLabelFor,
 
         //life
         addFilter: addFilter,
@@ -65,6 +80,47 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
         return DatagridService.getColumnsContaining(regexp, canBeNumeric, canBeBoolean);
     }
 
+    /**
+     * @ngdoc method
+     * @name getRangeLabelFor
+     * @methodOf data-prep.services.filter.service:FilterService
+     * @description Define an interval label
+     * @param {Object} interval
+     * @return {string} interval label
+     */
+    function getRangeLabelFor(interval) {
+        let label;
+        const min = angular.isNumber(interval.min) ? d3.format(',')(interval.min) : interval.min,
+            max = angular.isNumber(interval.max) ? d3.format(',')(interval.max) : interval.max;
+        if (min === max) {
+            label = '[' + min + ']';
+        }
+        else {
+            label = '[' + min + RANGE_SEPARATOR + max + (interval.isMaxReached ? ']' : '[');
+        }
+        return label;
+    }
+
+    /**
+     * @name getSplittedRangeLabelFor
+     * @methodOf data-prep.services.filter.service:FilterService
+     * @description Split range label into an array with its min and its max
+     * @param label Range label to split
+     * @returns {Array} Splitted range values as string
+     */
+    function getSplittedRangeLabelFor(label) {
+        let splittedLabel = [];
+        label = label.replace(new RegExp(/(\[|])/g), ''); //eslint-disable-line no-control-regex
+        if (label.indexOf(RANGE_SEPARATOR) > -1) {
+            splittedLabel = label.split(RANGE_SEPARATOR);
+        } else if (label.indexOf(INTERVAL_SEPARATOR) > -1) {
+            splittedLabel = label.split(INTERVAL_SEPARATOR);
+        } else {
+            splittedLabel.push(label);
+        }
+        return splittedLabel;
+    }
+
     //--------------------------------------------------------------------------------------------------------------
     //---------------------------------------------------FILTER FNs-------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------
@@ -93,18 +149,22 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
      * @returns {function} The predicate function
      */
     function createContainFilterFn(colId, phrase) {
-        var lowerCasePhrase = phrase.toLowerCase();
-        var regexp = new RegExp(TextFormatService.escapeRegexpExceptStar(lowerCasePhrase));
-
+        const regexps = phrase
+            .map(phraseValue => {
+                const lowerCasePhrase = phraseValue.value.toLowerCase();
+                return new RegExp(TextFormatService.escapeRegexpExceptStar(lowerCasePhrase));
+            });
+        const fns = (item) => regexps
+            .map(regexp => item.toLowerCase().match(regexp))
+            .reduce((newResult,oldResult) => newResult || oldResult);
         return function () {
             return function (item) {
                 // col could be removed by a step
-                if (item[colId]) {
-                    return item[colId].toLowerCase().match(regexp);
+                let currentItem = item[colId];
+                if (currentItem) {
+                    return fns(currentItem);
                 }
-                else {
-                    return false;
-                }
+                return false;
             };
         };
     }
@@ -119,18 +179,27 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
      * @description [PRIVATE] Create a filter function that test exact equality
      * @returns {function} The predicate function
      */
-    function createExactFilterFn(colId, phrase, caseSensitive) {
+    function createExactFilterFn(colId, filterValues, caseSensitive) {
+        const hasEmptyRecords = filterValues
+            .filter(filterValue => filterValue.isEmtpy)
+            .length;
+        const flattenFiltersValues = filterValues
+            .filter(filterValue => !filterValue.isEmtpy)
+            .map(filterValue => TextFormatService.escapeRegexpExceptStar(filterValue.value))
+            .join(VALUES_SEPARATOR);
+        const regExpPatternToMatch = `^(${flattenFiltersValues})$`;
+        const regExpToMatch = caseSensitive ? new RegExp(regExpPatternToMatch) : new RegExp(regExpPatternToMatch, 'i');
         return function () {
             return function (item) {
                 // col could be removed by a step
-                if (item[colId]) {
-                    return caseSensitive ?
-                    item[colId] === phrase :
-                    (item[colId]).toUpperCase() === phrase.toUpperCase();
+                let currentItem = item[colId];
+                if (hasEmptyRecords) {
+                    return !currentItem || currentItem.match(regExpToMatch);
                 }
-                else {
-                    return false;
+                if (currentItem) {
+                    return currentItem.match(regExpToMatch) !== null;
                 }
+                return false;
             };
         };
     }
@@ -193,23 +262,26 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
      * @methodOf data-prep.services.filter.service:FilterService
      * @param {string} colId The column id
      * @param {Array} values The filter interval
-     * @param {boolean} isMaxReached Exclude the max
      * @description Create a 'range' filter function
      * @returns {function} The predicate function
      */
-    function createRangeFilterFn(colId, values, isMaxReached) {
+    function createRangeFilterFn(colId, intervals) {
         return function () {
             return function (item) {
                 if (!ConverterService.isNumber(item[colId])) {
                     return false;
                 }
-
-                var numberValue = ConverterService.adaptValue('numeric', item[colId]);
-                var min = values[0];
-                var max = values[1];
-                return isMaxReached ?
-                (numberValue === min) || (numberValue > min && numberValue <= max):
-                (numberValue === min) || (numberValue > min && numberValue < max);
+                const numberValue = ConverterService.adaptValue('numeric', item[colId]);
+                return intervals
+                    .map(interval => {
+                        const values = interval.value;
+                        const pairMin = values[0];
+                        const pairMax = values[1];
+                        return interval.isMaxReached ?
+                        (numberValue === pairMin) || (numberValue > pairMin && numberValue <= pairMax) :
+                        (numberValue === pairMin) || (numberValue > pairMin && numberValue < pairMax);
+                    })
+                    .reduce((oldResult, newResult) => oldResult || newResult);
             };
         };
     }
@@ -225,14 +297,19 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
      * @returns {function} The predicate function
      */
     function createDateRangeFilterFn(colId, values) {
-        var minTimestamp = values[0];
-        var maxTimestamp = values[1];
-        var patterns = _.chain(state.playground.grid.selectedColumn.statistics.patternFrequencyTable)
+        console.log('filter-service.createDateRangeFilterFn', colId, JSON.stringify(values));
+        const patterns = _.chain(state.playground.grid.selectedColumn.statistics.patternFrequencyTable)
             .pluck('pattern')
             .map(TextFormatService.convertJavaDateFormatToMomentDateFormat)
             .value();
-
-        var valueInDateLimitsFn = DateService.isInDateLimits(minTimestamp, maxTimestamp, patterns);
+        const getValueInDateLimitsFn = value => {
+            let minTimestamp = value[0],
+                maxTimestamp = value[1];
+            return DateService.isInDateLimits(minTimestamp, maxTimestamp, patterns);
+        };
+        const valueInDateLimitsFn = (item) => values
+                    .map(dateRange => getValueInDateLimitsFn(dateRange.value)(item))
+                    .reduce((oldResult, newResult) => oldResult || newResult);
         return function () {
             return function (item) {
                 return valueInDateLimitsFn(item[colId]);
@@ -249,11 +326,19 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
      * @description Create a 'match' filter function
      * @returns {function} The predicate function
      */
-    function createMatchFilterFn(colId, pattern) {
-        var valueMatchPatternFn = StatisticsService.valueMatchPatternFn(pattern);
+    function createMatchFilterFn(colId, patterns) {
+        const hasEmptyRecords = patterns
+            .filter(patternValue => !patternValue.isEmtpy)
+            .length;
+        let patternValues = patterns
+            .filter(patternValue => !patternValue.isEmtpy)
+            .map(patternValue => patternValue.value);
+        const valueMatchPatternFns = (item) => patternValues
+            .map(pattern => StatisticsService.valueMatchPatternFn(pattern)(item))
+            .reduce((oldResult, newResult) => oldResult || newResult);
         return function () {
             return function (item) {
-                return valueMatchPatternFn(item[colId]);
+                return hasEmptyRecords ? !item[colId] || valueMatchPatternFns(item[colId]) : valueMatchPatternFns(item[colId]);
             };
         };
     }
@@ -264,22 +349,30 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
 
     /**
      * @ngdoc method
-     * @name getValueToDisplay
-     * @param {string} value The value to convert
-     * @description convert the value for display
+     * @name getValuesToDisplay
+     * @param {Array} filterValues The filter values to convert
+     * @description Replace new line character
      */
-    function getValueToDisplay(value) {
-        return value.replace(new RegExp('\n', 'g'), '\\n'); //eslint-disable-line no-control-regex
+    function getValuesToDisplay(filterValues) {
+        return filterValues
+            .map(filterValue => {
+                filterValue.label = filterValue.value.replace(new RegExp('\n', 'g'), '\\n'); //eslint-disable-line no-control-regex
+                return filterValue;
+            });
     }
 
     /**
      * @ngdoc method
      * @name getValueToMatch
-     * @param {string} value The value to convert
+     * @param {Array} filterValues The value to convert
      * @description convert the value for matching
      */
-    function getValueToMatch(value) {
-        return value.replace(new RegExp('\\\\n', 'g'), '\n'); //eslint-disable-line no-control-regex
+    function getValueToMatch(filterValues) {
+        return filterValues
+            .map(filterValue => {
+                filterValue.value = filterValue.value.replace(new RegExp('\\\\n', 'g'), '\n'); //eslint-disable-line no-control-regex
+                return filterValue;
+            });
     }
 
     /**
@@ -293,17 +386,29 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
      * @param {function} removeFilterFn An optional remove callback
      * @description Add a filter and update datagrid filters
      */
+    function addFilter(type, colId, colName, args, removeFilterFn, keyName) {
+        console.log('filter-service.addFilter', colName, type, JSON.stringify(args));
+        const sameColAndTypeFilter = _.find(state.playground.filter.gridFilters, {colId: colId, type: type});
+        let filterFn,
+            createFilter,
+            getFilterValue,
+            filterExists,
+            argsToDisplay,
+            sameColEmptyFilter,
+            hasEmptyRecordsExactFilter,
+            hasEmptyRecordsMatchFilter;
 
-    function addFilter(type, colId, colName, args, removeFilterFn) {
-        var filterFn;
-        var sameColAndTypeFilter = _.find(state.playground.filter.gridFilters, {colId: colId, type: type});
-        var createFilter, getFilterValue, filterExists, argsToDisplay;
+        const emptyFilterValue = {
+            label: FilterAdapterService.EMPTY_RECORDS_LABEL,
+            value: '',
+            isEmpty: true
+        };
 
         switch (type) {
             case 'contains':
                 argsToDisplay = {
                     caseSensitive: args.caseSensitive,
-                    phrase: getValueToDisplay(args.phrase)
+                    phrase: getValuesToDisplay(args.phrase)
                 };
 
                 createFilter = function createFilter() {
@@ -312,21 +417,51 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
                 };
 
                 getFilterValue = function getFilterValue() {
-                    return args.phrase;
+                    return argsToDisplay.phrase;
                 };
 
                 filterExists = function filterExists() {
-                    return sameColAndTypeFilter.args.phrase === argsToDisplay.phrase;
+                    if (sameColAndTypeFilter) {
+                        return _.isEqual(
+                            sameColAndTypeFilter.args.phrase
+                                .map(phraseValue => phraseValue.value)
+                                .reduce((oldValue, newValue) => oldValue.concat(newValue)),
+                            argsToDisplay.phrase
+                                .map(phraseValue => phraseValue.value)
+                                .reduce((oldValue, newValue) => oldValue.concat(newValue))
+                        );
+                    }
+                    return false;
                 };
                 break;
             case 'exact':
+                let filters;
+                // If we want to select records and a empty filter is already applied to that column
+                // Then we need remove it before
+                sameColEmptyFilter = _.find(state.playground.filter.gridFilters, {
+                    colId: colId,
+                    type: 'empty_records'
+                });
+                if (sameColEmptyFilter) {
+                    removeFilter(sameColEmptyFilter);
+                    if (keyName === CTRL_KEY_NAME) {
+                        filters = args.phrase.concat([emptyFilterValue]);
+                    }
+                }
+                if (_.some(args.patterns, {value: ''})) {
+                    filters = [emptyFilterValue];
+                }
+                else {
+                    filters = args.phrase
+                }
+
                 argsToDisplay = {
                     caseSensitive: args.caseSensitive,
-                    phrase: getValueToDisplay(args.phrase)
+                    phrase: getValuesToDisplay(args.phrase)
                 };
 
                 createFilter = function createFilter() {
-                    filterFn = createExactFilterFn(colId, args.phrase, args.caseSensitive);
+                    filterFn = createExactFilterFn(colId, filters, args.caseSensitive);
                     return FilterAdapterService.createFilter(type, colId, colName, true, argsToDisplay, filterFn, removeFilterFn);
                 };
 
@@ -335,7 +470,17 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
                 };
 
                 filterExists = function filterExists() {
-                    return sameColAndTypeFilter.args.phrase === argsToDisplay.phrase;
+                    if (sameColAndTypeFilter) {
+                        return _.isEqual(
+                            sameColAndTypeFilter.args.phrase
+                                .map(phraseValue => phraseValue.value)
+                                .reduce((oldValue, newValue) => oldValue.concat(newValue)),
+                            argsToDisplay.phrase
+                                .map(phraseValue => phraseValue.value)
+                                .reduce((oldValue, newValue) => oldValue.concat(newValue))
+                        );
+                    }
+                    return false;
                 };
                 break;
             case 'invalid_records':
@@ -349,13 +494,33 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
                 };
                 break;
             case 'empty_records':
+                // If we want to select empty records and another filter is already applied to that column
+                // Then we need remove it before
+                const sameColExactFilter = _.find(state.playground.filter.gridFilters, {colId: colId, type: 'exact'});
+                const sameColMatchFilter = _.find(state.playground.filter.gridFilters, {colId: colId, type: 'matches'});
+                if (sameColExactFilter) {
+                    hasEmptyRecordsExactFilter = (
+                        sameColExactFilter.args
+                        && sameColMatchFilter.args.phrase.length === 1
+                        && sameColExactFilter.args.phrase[0].value === ''
+                    );
+                    removeFilter(sameColExactFilter);
+                } else if (sameColMatchFilter) {
+                    hasEmptyRecordsMatchFilter = (
+                        sameColMatchFilter.args &&
+                        sameColMatchFilter.args.patterns.length === 1 &&
+                        sameColMatchFilter.args.patterns[0].value === ''
+                    );
+                    removeFilter(sameColMatchFilter);
+                }
+
                 createFilter = function createFilter() {
                     filterFn = createEmptyFilterFn(colId);
                     return FilterAdapterService.createFilter(type, colId, colName, false, args, filterFn, removeFilterFn);
                 };
 
                 filterExists = function filterExists() {
-                    return sameColAndTypeFilter;
+                    return sameColAndTypeFilter || hasEmptyRecordsExactFilter || hasEmptyRecordsMatchFilter;
                 };
                 break;
             case 'valid_records':
@@ -371,36 +536,69 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
             case 'inside_range':
                 createFilter = function createFilter() {
                     filterFn = args.type === 'date' ?
-                        createDateRangeFilterFn(colId, args.interval) :
-                        createRangeFilterFn(colId, args.interval, args.isMaxReached);
+                        createDateRangeFilterFn(colId, args.intervals) :
+                        createRangeFilterFn(colId, args.intervals, args.isMaxReached);
                     return FilterAdapterService.createFilter(type, colId, colName, false, args, filterFn, removeFilterFn);
                 };
 
                 getFilterValue = function getFilterValue() {
-                    return args;
+                    return args.intervals;
                 };
 
                 filterExists = function filterExists() {
-                    return _.isEqual(sameColAndTypeFilter.args.interval, args.interval);
+                    if (sameColAndTypeFilter) {
+                        return _.isEqual(
+                            sameColAndTypeFilter.args.intervals
+                                .map(criterion => criterion.value)
+                                .reduce((oldValue, newValue) => oldValue.concat(newValue)),
+                            args.intervals
+                                .map(criterion => criterion.value)
+                                .reduce((oldValue, newValue) => oldValue.concat(newValue))
+                        );
+                    }
+                    return false;
                 };
                 break;
             case 'matches':
+                // If we want to select records and a empty filter is already applied to that column
+                // Then we need remove it before
+                sameColEmptyFilter = _.find(state.playground.filter.gridFilters, {
+                    colId: colId,
+                    type: 'empty_records'
+                });
+                if (sameColEmptyFilter) {
+                    removeFilter(sameColEmptyFilter);
+                    if (keyName === CTRL_KEY_NAME) {
+                        args.patterns = args.patterns.concat([emptyFilterValue]);
+                    }
+                }
+                if (_.some(args.patterns, {value: ''})) {
+                    args.patterns = [emptyFilterValue]
+                }
+
                 createFilter = function createFilter() {
-                    filterFn = createMatchFilterFn(colId, args.pattern);
+                    filterFn = createMatchFilterFn(colId, args.patterns);
                     return FilterAdapterService.createFilter(type, colId, colName, false, args, filterFn, removeFilterFn);
                 };
 
                 getFilterValue = function getFilterValue() {
-                    return args.pattern;
+                    return args.patterns;
                 };
 
                 filterExists = function filterExists() {
-                    return sameColAndTypeFilter.args.pattern === args.pattern;
+                    return _.isEqual(
+                        sameColAndTypeFilter.args.patterns
+                            .map(criterion => criterion.value)
+                            .reduce((oldValue, newValue) => oldValue.concat(newValue)),
+                        args.patterns
+                            .map(criterion => criterion.value)
+                            .reduce((oldValue, newValue) => oldValue.concat(newValue))
+                    );
                 };
                 break;
         }
 
-        if (!sameColAndTypeFilter) {
+        if (!sameColAndTypeFilter && !hasEmptyRecordsExactFilter && !hasEmptyRecordsMatchFilter) {
             var filterInfo = createFilter();
             pushFilter(filterInfo);
         }
@@ -409,7 +607,7 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
         }
         else {
             var filterValue = getFilterValue();
-            updateFilter(sameColAndTypeFilter, filterValue);
+            updateFilter(sameColAndTypeFilter, filterValue, keyName);
         }
     }
 
@@ -424,8 +622,8 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
      * @param {function} removeFilterFn An optional remove callback
      * @description Wrapper on addFilter method that trigger a digest at the end (use of $timeout)
      */
-    function addFilterAndDigest(type, colId, colName, args, removeFilterFn) {
-        $timeout(addFilter.bind(service, type, colId, colName, args, removeFilterFn));
+    function addFilterAndDigest(type, colId, colName, args, removeFilterFn, keyName) {
+        $timeout(addFilter.bind(service, type, colId, colName, args, removeFilterFn, keyName));
     }
 
     /**
@@ -436,32 +634,91 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
      * @param {object} newValue The filter update parameters
      * @description Update an existing filter and update datagrid filters
      */
-    function updateFilter(oldFilter, newValue) {
-        var newFilterFn;
-        var newFilter;
-        var newArgs;
-        var editableFilter;
+    function updateFilter(oldFilter, newValue, keyName) {
+        console.log('filter-service.updateFilter', JSON.stringify(oldFilter), JSON.stringify(newValue));
+        let
+            newFilterFn,
+            newFilter,
+            newArgs,
+            editableFilter;
+
+        const
+            addOrCriteria = keyName === CTRL_KEY_NAME,
+            addFromToCriteria = keyName === SHIFT_KEY_NAME;
+
         switch (oldFilter.type) {
             case 'contains':
-                newArgs = {phrase: newValue};
+                newArgs = {
+                    phrase: newValue
+                };
                 newFilterFn = createContainFilterFn(oldFilter.colId, getValueToMatch(newValue));
                 editableFilter = true;
                 break;
             case 'exact':
-                newArgs = {phrase: newValue};
-                newFilterFn = createExactFilterFn(oldFilter.colId, getValueToMatch(newValue), oldFilter.args.caseSensitive);
+                if (newValue && newValue.indexOf(VALUES_SEPARATOR) > -1) {
+                    // Need to clean all empty values
+                    newValue = newValue
+                        .split(VALUES_SEPARATOR)
+                        .filter(value => value)
+                        .join(VALUES_SEPARATOR);
+                }
+                let newComputedValue;
+                if (addOrCriteria) {
+                    newComputedValue = computeOr(oldFilter.args.phrase, newValue);
+                } else {
+                    newComputedValue = newValue;
+                }
+                newArgs = {
+                    phrase: newComputedValue
+                };
+                newFilterFn = createExactFilterFn(oldFilter.colId, getValueToMatch(newComputedValue), oldFilter.args.caseSensitive);
                 editableFilter = true;
                 break;
             case 'inside_range':
-                newArgs = newValue;
+                let newComputedArgs;
+                let newComputedRange;
+                if (addFromToCriteria) {
+                    //Need to pass complete old filter there in order to stock its direction
+                    newComputedArgs = computeFromToRange(oldFilter, newValue);
+                    newComputedRange = newComputedArgs.intervals;
+                }
+                else if (addOrCriteria) {
+                    newComputedRange = computeOr(oldFilter.args.intervals, newValue);
+                } else {
+                    newComputedRange = newValue;
+                }
+                if (newComputedArgs) {
+                    newArgs = newComputedArgs;
+                } else {
+                    newArgs = {
+                        intervals: newComputedRange,
+                        type: oldFilter.args.type
+                    };
+                }
+
                 editableFilter = false;
-                newFilterFn = newValue.type === 'date' ?
-                    createDateRangeFilterFn(oldFilter.colId, newValue.interval) :
-                    createRangeFilterFn(oldFilter.colId, newValue.interval, newValue.isMaxReached);
+                newFilterFn = newArgs.type === 'date' ?
+                    createDateRangeFilterFn(oldFilter.colId, newComputedRange) :
+                    createRangeFilterFn(oldFilter.colId, newComputedRange);
                 break;
             case 'matches':
-                newArgs = {pattern: newValue};
-                newFilterFn = createMatchFilterFn(oldFilter.colId, newValue);
+                if (newValue && newValue.indexOf(VALUES_SEPARATOR) > -1) {
+                    // Need to clean all empty values
+                    newValue = newValue
+                        .split(VALUES_SEPARATOR)
+                        .filter(value => value)
+                        .join(VALUES_SEPARATOR);
+                }
+                let newComputedPattern;
+                if (addOrCriteria) {
+                    newComputedPattern = computeOr(oldFilter.args.patterns, newValue);
+                } else {
+                    newComputedPattern = newValue;
+                }
+                newArgs = {
+                    patterns: newComputedPattern
+                };
+                newFilterFn = createMatchFilterFn(oldFilter.colId, newComputedPattern);
                 editableFilter = false;
                 break;
         }
@@ -472,6 +729,136 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
     }
 
     /**
+     * @name computeOr
+     * @methodOf data-prep.services.filter.service:FilterService
+     * @description Create filter values with Or criteria
+     * @param oldFilter Previous filter to update
+     * @param criteria New filter value
+     * @returns {string} Filter values with Or criteria
+     */
+    function computeOr(oldCriteria, newCriteria) {
+        console.log('filter-service.computeOr', JSON.stringify(oldCriteria), JSON.stringify(newCriteria));
+        let mergedCriteria = [];
+        newCriteria.forEach(criterion => {
+            if (_.some(oldCriteria, criterion)) {
+                _.remove(oldCriteria, criterion);
+            } else {
+                oldCriteria.push(criterion);
+            }
+            mergedCriteria = oldCriteria;
+        });
+        console.log('filter-service.computeOr ->', JSON.stringify(mergedCriteria));
+        return mergedCriteria;
+    }
+
+    /**
+     *
+     * @param intervals
+     * @returns {*}
+     * @private
+     */
+    function _findMinInterval(intervals) {
+        return intervals
+            .map(interval => interval)
+            .reduce((oldV, newV) => (oldV.value[0] > newV.value[0]) ? newV : oldV);
+    }
+
+    /**
+     *
+     * @param intervals
+     * @returns {*}
+     * @private
+     */
+    function _findMaxInterval(intervals) {
+        return intervals
+            .map(interval => interval)
+            .reduce((oldInterval, newInterval) => (oldInterval.value[1] < newInterval.value[1]) ? newInterval : oldInterval);
+    }
+
+    /**
+     * @name computeFromToRange
+     * @methodOf data-prep.services.filter.service:FilterService
+     * @description Create filter values with From To criteria
+     * @param oldFilter Previous filter to update
+     * @param newValue New filter value
+     * @returns {Object} Filter values with From To criteria
+     */
+    function computeFromToRange(oldFilter, newValue) {
+        console.log('service-filter.computeFromToRange', JSON.stringify(oldFilter), JSON.stringify(newValue));
+        const oldFilterArgs = oldFilter.args;
+        const oldIntervals = oldFilterArgs.intervals;
+        const oldDirection = oldFilterArgs.direction || 1;
+        const newIntervals = newValue;
+
+        newIntervals.map(newInterval => {
+
+            // Identify min and max old interval
+            const oldMinInterval = _findMinInterval(oldIntervals);
+            const oldMaxInterval = _findMaxInterval(oldIntervals);
+
+            // Identify min and max from previous intervals
+            const oldMin = oldMinInterval.value[0];
+            const oldMax = oldMaxInterval.value[1] || oldMaxInterval.value[0];
+            const oldMinLabel = getSplittedRangeLabelFor(oldMinInterval.label);
+            const oldMaxLabel = getSplittedRangeLabelFor(oldMaxInterval.label);
+
+            // Identify min and max from new interval
+            const newMin = newInterval.value[0];
+            const newMax = newInterval.value[1] || newMin;
+            const newLabel = getSplittedRangeLabelFor(newInterval.label);
+
+            let mergedInterval;
+            let newDirection = oldFilter.direction;
+
+            const updateMinInterval = () => {
+                newDirection = 1;
+                mergedInterval = oldMinInterval;
+                mergedInterval.value[1] = newMax;
+                mergedInterval.label = `[${oldMinLabel[0]}${RANGE_SEPARATOR}${newLabel[1] || newLabel[0]}[`;
+            };
+
+            const updateMaxInterval = () => {
+                newDirection = -1;
+                mergedInterval = oldMaxInterval;
+                mergedInterval.value[0] = newMin;
+                mergedInterval.label = `[${newLabel[0]}${RANGE_SEPARATOR}${oldMaxLabel[1] || oldMaxLabel[0]}[`;
+            };
+
+            // Compare old and new interval values
+            if (newMin >= oldMin) {
+                if (oldDirection < 0) {
+                    if (newMax >= oldMax) {
+                        // after current maximum and direction is <-
+                        // console.log('after current maximum and direction is <-');
+                        updateMinInterval();
+                    }
+                    else {
+                        // between current min and current maximum and direction is <-
+                        // console.log('between current min and current maximum and direction is <-');
+                        updateMaxInterval();
+                    }
+                }
+                else {
+                    // between current min and current maximum and direction is ->
+                    // console.log('between current min and current maximum and direction is ->');
+                    updateMinInterval();
+                }
+            }
+            else {
+                // before current minimum and direction is ->
+                // console.log('before current minimum and direction is ->');
+                updateMaxInterval();
+            }
+
+            // Store direction
+            oldFilterArgs.direction = newDirection;
+        });
+        console.log('service-filter.computeFromToRange ->', JSON.stringify(oldFilterArgs));
+        return oldFilterArgs;
+    }
+
+    /**
+     *
      * @ngdoc method
      * @name removeAllFilters
      * @methodOf data-prep.services.filter.service:FilterService

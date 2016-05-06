@@ -237,8 +237,22 @@ export default function StatisticsService($log, $filter, state, StateService,
         };
 
         if (currentRangeFilter) {
-            var filterMin = currentRangeFilter.args.interval[0];
-            var filterMax = currentRangeFilter.args.interval[1];
+            let
+                filterMin,
+                filterMax;
+            const currentRangeFilterIntervals = currentRangeFilter.args.intervals;
+            currentRangeFilterIntervals.map(interval => {
+                const intervalValues = interval.value;
+                const intervalMin = intervalValues[0];
+                const intervalMax = intervalValues[1];
+                if (!filterMin && !filterMax) {
+                    filterMin = intervalMin;
+                    filterMax = intervalMax;
+                } else {
+                    filterMin = intervalMin < filterMin ? intervalMin : filterMin;
+                    filterMax = intervalMax > filterMax ? intervalMax : filterMax;
+                }
+            });
 
             rangeLimits.minFilterVal = filterMin;
             rangeLimits.maxFilterVal = filterMax;
@@ -680,10 +694,10 @@ export default function StatisticsService($log, $filter, state, StateService,
      * @param {string} pattern The date pattern to match
      */
     function valueMatchDatePatternFn(pattern) {
-        var datePattern = workerFn0(pattern);
-        return function (value) {
-            return value && moment(value, datePattern, true).isValid();
-        };
+        const datePattern = workerFn0(pattern).split('|');
+        return value => value && datePattern
+            .map(datePattern => moment(value, datePattern, true).isValid())
+            .reduce((previousResult, newResult) => previousResult || newResult);
     }
 
     /**

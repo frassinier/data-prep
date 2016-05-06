@@ -1,0 +1,36 @@
+<!--
+  ~ ============================================================================
+  ~
+  ~  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+  ~
+  ~  This source code is available under agreement available at
+  ~  https://github.com/Talend/data-prep/blob/master/LICENSE
+  ~
+  ~  You should have received a copy of the agreement
+  ~  along with this program; if not, write to Talend SA
+  ~  9 rue Pages 92150 Suresnes, France
+  ~
+  ~ ============================================================================
+  -->
+
+<div class="filter-value">
+    <input type="text"
+           title="{{$ctrl.filterValue.value}}"
+           ng-if="$ctrl.editable"
+           ng-model="$ctrl.filterValue.value"
+           ng-model-options="{debounce: { 'default': 200, 'blur': 0 }}"
+           ng-focus="$ctrl.ngFocus"
+           ng-trim="false"
+           removable="$ctrl.removable"
+           resizable-input
+    />
+
+    <span ng-class="{'empty': $ctrl.filterValue.isEmpty}"
+          ng-if="!$ctrl.editable">
+        {{$ctrl.filterValue.label || $ctrl.filterValue.value}}
+    </span>
+
+    <a class="filter-value-btn-remove"
+       ng-show="$ctrl.removable"
+       ng-click="$ctrl.remove()">&times;</a>
+</div>

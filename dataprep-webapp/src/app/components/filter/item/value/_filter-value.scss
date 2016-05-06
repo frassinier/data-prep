@@ -11,19 +11,15 @@
 
   ============================================================================*/
 
-export default function FilterListCtrl() {
-    var vm = this;
+.filter-value {
+  display: inline-block;
+  padding: 0 5px;
+  margin-right: 2px;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
 
-    vm.changeFilter = function changeFilter(filter) {
-        vm.onFilterChange({
-            filter: filter,
-            value: filter.value
-        });
-    };
-
-    vm.removeFilter = function removeFilter(filter) {
-        vm.onFilterRemove({
-            filter: filter
-        });
-    };
+  &-btn-remove {
+    margin: 0 5px;
+    color: $white;
+  }
 }
