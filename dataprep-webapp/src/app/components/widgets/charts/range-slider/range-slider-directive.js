@@ -31,7 +31,7 @@
  * @param {function} onBrushEnd The callback on slider move
  * */
 
-export default function RangeSlider($timeout) {
+export default function RangeSlider($timeout, DateService) {
     'ngInject';
 
     return {
@@ -70,6 +70,7 @@ export default function RangeSlider($timeout) {
              * @description Render the slider and attach the actions listeners
              **/
             function renderRangerSlider() {
+
                 var rangeLimits = ctrl.rangeLimits;
                 var minBrush = typeof rangeLimits.minBrush !== 'undefined' ? rangeLimits.minBrush : rangeLimits.min;
                 var maxBrush = typeof rangeLimits.maxBrush !== 'undefined' ? rangeLimits.maxBrush : rangeLimits.max;
@@ -93,6 +94,8 @@ export default function RangeSlider($timeout) {
                 };
 
                 var centerValue = (minBrush + maxBrush) / 2;
+
+                ctrl.isDateType = rangeLimits.type === 'date';
 
                 //--------------------------------------------------------------------------------------------------
                 //----------------------------------------------CONTAINER-------------------------------------------
@@ -158,13 +161,27 @@ export default function RangeSlider($timeout) {
                     triggerFilter(filterToApply);
                 }
 
-                ctrl.prepareInputFilter = function prepareInputFilter() {
-                    if (!ctrl.areMinMaxNumbers()) {
+                ctrl.prepareInputFilter = function prepareInputFilter(dateAsTime, type) {
+                    if (!ctrl.areMinMaxNumbers() && !ctrl.isDateType) {
                         initInputValues();
                     }
                     else {
-                        var enteredMin = +ctrl.minMaxModel.minModel;
-                        var enteredMax = +ctrl.minMaxModel.maxModel;
+                        if (ctrl.isDateType) {
+                            if (type === 'from') {
+                                ctrl.minMaxModel.minModel = dateAsTime;
+                            } else {
+                                ctrl.minMaxModel.minModel = DateService.getTimeFromFormattedDate(ctrl.minMaxModel.minModel);
+                            }
+                            if (type === 'to') {
+                                ctrl.minMaxModel.maxModel = dateAsTime;
+                            } else {
+                                ctrl.minMaxModel.maxModel = DateService.getTimeFromFormattedDate(ctrl.minMaxModel.maxModel);
+                            }
+                        }
+
+                        const
+                            enteredMin = +ctrl.minMaxModel.minModel,
+                            enteredMax = +ctrl.minMaxModel.maxModel;
 
                         //2 Cases:
                         //- ONBLUR: the user selects the input then he selects sth else
@@ -217,7 +234,7 @@ export default function RangeSlider($timeout) {
                         .attr('text-anchor', 'start')
                         .attr('fill', 'grey')
                         .text(function () {
-                            return d3.format(',')(rangeLimits.min);
+                            return ctrl.isDateType ? DateService.getFormattedDateFromTime(rangeLimits.min) : d3.format(',')(rangeLimits.min);
                         });
 
                     svg.append('g').append('text')
@@ -227,7 +244,7 @@ export default function RangeSlider($timeout) {
                         .attr('text-anchor', 'end')
                         .attr('fill', 'grey')
                         .text(function () {
-                            return d3.format(',')(rangeLimits.max);
+                            return ctrl.isDateType ? DateService.getFormattedDateFromTime(rangeLimits.max) : d3.format(',')(rangeLimits.max);
                         });
 
                     ctrl.brush = d3.svg.brush()
@@ -275,12 +292,12 @@ export default function RangeSlider($timeout) {
                             var brushValues = ctrl.brush.extent();
                             if (initialBrushValues[0] !== brushValues[0]) {
                                 $timeout(function () {
-                                    ctrl.minMaxModel.minModel = brushValues[0].toFixed(nbDecimals);
+                                    ctrl.minMaxModel.minModel = ctrl.isDateType ? DateService.getFormattedDateFromTime(brushValues[0]): brushValues[0].toFixed(nbDecimals);
                                 });
                             }
                             if (initialBrushValues[1] !== brushValues[1]) {
                                 $timeout(function () {
-                                    ctrl.minMaxModel.maxModel = brushValues[1].toFixed(nbDecimals);
+                                    ctrl.minMaxModel.maxModel = ctrl.isDateType ? DateService.getFormattedDateFromTime(brushValues[1]) : brushValues[1].toFixed(nbDecimals);
                                 });
                             }
                         })

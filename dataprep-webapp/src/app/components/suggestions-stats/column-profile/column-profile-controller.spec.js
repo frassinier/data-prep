@@ -197,6 +197,45 @@ describe('ColumnProfile controller', () => {
                 removeFilterFn);
         }));
 
+        it('should add a date "range" filter from time', inject((StatisticsService, FilterService) => {
+            //given
+            const
+                ctrl = createController(),
+
+                minDateTime = new Date(2016, 0, 1).getTime(),
+                maxDateTime = new Date(2016, 11, 1).getTime(),
+
+                interval = {
+                    min: minDateTime,
+                    max: maxDateTime,
+                    label: undefined,
+                    isMaxReached: undefined
+                };
+
+            stateMock.playground.grid.selectedColumn = {
+                id: '0001',
+                name: 'CreationDate',
+                type: 'date'
+            };
+
+            //when
+            ctrl.addRangeFilter(interval);
+
+            //then
+            expect(StatisticsService.getRangeFilterRemoveFn).toHaveBeenCalled();
+            expect(FilterService.addFilterAndDigest).toHaveBeenCalledWith(
+                'inside_range',
+                '0001',
+                'CreationDate',
+                {
+                    interval: [minDateTime, maxDateTime],
+                    label: '[01/01/2016 .. 01/12/2016[',
+                    type: 'date',
+                    isMaxReached: undefined
+                },
+                removeFilterFn);
+        }));
+
         it('should add a "empty_records" filter from exact_filter on barchart click callback', inject((StatisticsService, FilterService) => {
             //given
             const ctrl = createController();

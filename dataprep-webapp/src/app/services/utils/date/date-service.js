@@ -17,8 +17,13 @@
  * @description DateService service. This service help to manipulate dates
  */
 export default function DateService() {
+
+    const DEFAULT_MOMENT_DATE_FORMAT = 'DD/MM/YYYY';
+
     return {
-        isInDateLimits: isInDateLimits
+        isInDateLimits: isInDateLimits,
+        getFormattedDateFromTime: getFormattedDateFromTime,
+        getTimeFromFormattedDate: getTimeFromFormattedDate
     };
 
     /**
@@ -48,5 +53,33 @@ export default function DateService() {
             var time = parsedMoment.toDate().getTime();
             return time === minTimestamp || (time > minTimestamp && time < maxTimestamp);
         };
+    }
+
+    /**
+     * @ngdoc method
+     * @name getFormattedDateFromTime
+     * @methodOf data-prep.services.utils.service:DateService
+     * @description Get formatted date from time
+     * @param {number} time Date time
+     * @param {string} pattern date pattern to use
+     * @returns {string} Formatted date using pattern
+     */
+    function getFormattedDateFromTime(time, format = DEFAULT_MOMENT_DATE_FORMAT) {
+        const date = new Date(time);
+        return moment(date).format(format);
+    }
+
+    /**
+     * @ngdoc method
+     * @name getTimeFromFormattedDate
+     * @methodOf data-prep.services.utils.service:DateService
+     * @description Get time from formatted Date
+     * @param {string} formattedDate Formatted date
+     * @param {string} format Date pattern to parse
+     * @returns {number} Parsed date time
+     */
+    function getTimeFromFormattedDate(formattedDate, format = DEFAULT_MOMENT_DATE_FORMAT) {
+        const date = moment(formattedDate, format).toDate();
+        return date.getTime();
     }
 }
