@@ -175,7 +175,19 @@ public enum DataSetErrorCodes implements ErrorCode {
      */
     UNABLE_CREATE_DATASET(INTERNAL_SERVER_ERROR.value()),
     /** Error thrown when an error occurs while adding or updating a dataset. */
-    UNABLE_TO_CREATE_OR_UPDATE_DATASET(INTERNAL_SERVER_ERROR.value());
+    UNABLE_TO_CREATE_OR_UPDATE_DATASET(INTERNAL_SERVER_ERROR.value()),
+    /**
+     * Error thrown when a datepattern could not be added.
+     */
+    UNABLE_TO_ADD_DATEPATTERN(INTERNAL_SERVER_ERROR.value(), "pattern"),
+    /**
+     * Error thrown when datepattern could not be listed.
+     */
+    UNABLE_TO_LIST_DATEPATTERNS(INTERNAL_SERVER_ERROR.value()),
+    /**
+     * Error thrown when a datepattern could not be added.
+     */
+    UNABLE_TO_REMOVE_DATEPATTERN(INTERNAL_SERVER_ERROR.value(), "pattern");
 
 
     /**
