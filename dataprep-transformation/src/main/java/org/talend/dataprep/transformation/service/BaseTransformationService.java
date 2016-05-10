@@ -13,9 +13,11 @@
 
 package org.talend.dataprep.transformation.service;
 
+import static org.talend.daikon.exception.ExceptionContext.build;
 import static org.talend.dataprep.exception.error.PreparationErrorCodes.UNABLE_TO_READ_PREPARATION;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,8 +32,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.talend.daikon.exception.ExceptionContext;
 import org.talend.dataprep.api.dataset.DataSet;
+import org.talend.dataprep.api.preparation.Preparation;
+import org.talend.dataprep.command.preparation.PreparationDetailsGet;
 import org.talend.dataprep.command.preparation.PreparationGetActions;
 import org.talend.dataprep.exception.TDPException;
+import org.talend.dataprep.exception.error.PreparationErrorCodes;
 import org.talend.dataprep.exception.error.TransformationErrorCodes;
 import org.talend.dataprep.format.export.ExportFormat;
 import org.talend.dataprep.http.HttpResponseContext;
@@ -75,7 +80,7 @@ public abstract class BaseTransformationService {
 
     /** Spring application context. */
     @Autowired
-    private ApplicationContext applicationContext;
+    protected ApplicationContext applicationContext;
 
     /**
      * Transformation business logic.
@@ -94,18 +99,7 @@ public abstract class BaseTransformationService {
         final ExportFormat format = getFormat(formatName);
 
         // get the actions to apply (no preparation ==> dataset export ==> no actions)
-        String actions;
-        if (StringUtils.isBlank(preparationId)) {
-            actions = "{\"actions\": []}";
-        } else {
-            final PreparationGetActions getActionsCommand = applicationContext.getBean(PreparationGetActions.class, preparationId, stepId);
-            try {
-                actions = "{\"actions\": "+ IOUtils.toString(getActionsCommand.execute()) + '}';
-            } catch (IOException e) {
-                final ExceptionContext context = ExceptionContext.build().put("id", preparationId).put("version", stepId);
-                throw new TDPException(UNABLE_TO_READ_PREPARATION, e, context);
-            }
-        }
+        final String actions = getActions(preparationId, stepId);
 
         setExportHeaders(exportName, format);
 
@@ -118,6 +112,22 @@ public abstract class BaseTransformationService {
 
         factory.get(configuration).transform(dataSet, configuration);
 
+    }
+
+    protected String getActions(String preparationId, String stepId) {
+        String actions;
+        if (StringUtils.isBlank(preparationId)) {
+            actions = "{\"actions\": []}";
+        } else {
+            final PreparationGetActions getActionsCommand = applicationContext.getBean(PreparationGetActions.class, preparationId, stepId);
+            try {
+                actions = "{\"actions\": "+ IOUtils.toString(getActionsCommand.execute()) + '}';
+            } catch (IOException e) {
+                final ExceptionContext context = ExceptionContext.build().put("id", preparationId).put("version", stepId);
+                throw new TDPException(UNABLE_TO_READ_PREPARATION, e, context);
+            }
+        }
+        return actions;
     }
 
     /**
@@ -158,4 +168,18 @@ public abstract class BaseTransformationService {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
+    /**
+     * @param preparationId the wanted preparation id.
+     * @return the preparation out of its id.
+     */
+    protected Preparation getPreparation(String preparationId) {
+
+        final PreparationDetailsGet preparationDetailsGet = applicationContext.getBean(PreparationDetailsGet.class, preparationId);
+        try (InputStream details = preparationDetailsGet.execute()) {
+            return mapper.readerFor(Preparation.class).readValue(details);
+        } catch (IOException e) {
+            throw new TDPException(UNABLE_TO_READ_PREPARATION, e, build().put("id", preparationId));
+        }
+
+    }
 }

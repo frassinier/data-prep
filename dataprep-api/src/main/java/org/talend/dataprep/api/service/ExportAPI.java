@@ -20,32 +20,30 @@ import static org.talend.dataprep.format.export.ExportFormat.PREFIX;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.validation.Valid;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.Header;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.talend.dataprep.api.dataset.DataSetMetadata;
 import org.talend.dataprep.api.preparation.Preparation;
 import org.talend.dataprep.api.service.api.ExportParameters;
 import org.talend.dataprep.api.service.command.dataset.DataSetGetMetadata;
 import org.talend.dataprep.api.service.command.export.Export;
 import org.talend.dataprep.api.service.command.export.ExportTypes;
+import org.talend.dataprep.command.CommandHelper;
 import org.talend.dataprep.command.GenericCommand;
 import org.talend.dataprep.command.preparation.PreparationDetailsGet;
 import org.talend.dataprep.exception.TDPException;
 import org.talend.dataprep.exception.error.APIErrorCodes;
 import org.talend.dataprep.format.export.ExportFormat;
 import org.talend.dataprep.http.HttpRequestContext;
-import org.talend.dataprep.http.HttpResponseContext;
 import org.talend.dataprep.metrics.Timed;
 import org.talend.dataprep.security.PublicAPI;
 
@@ -59,8 +57,7 @@ public class ExportAPI extends APIService {
 
     @RequestMapping(value = "/api/export", method = GET)
     @ApiOperation(value = "Export a dataset", consumes = APPLICATION_FORM_URLENCODED_VALUE, notes = "Export a dataset or a preparation to file. The file type is provided in the request body.")
-    public void export(@ApiParam(value = "Export configuration") @Valid final ExportParameters input, //
-                       final OutputStream output) {
+    public StreamingResponseBody export(@ApiParam(value = "Export configuration") @Valid final ExportParameters input) {
         try {
             Map<String, String> arguments = new HashMap<>();
             final Enumeration<String> names = HttpRequestContext.parameters();
@@ -73,21 +70,9 @@ public class ExportAPI extends APIService {
             }
             input.setArguments(arguments);
 
-
             String exportName = getExportNameAndConsolidateParameters(input);
             final GenericCommand<InputStream> command = getCommand(Export.class, input, exportName);
-
-            // copy all headers from the command response so that the mime-type is correctly forwarded for instance
-            try (InputStream commandInputStream = command.execute()) {
-
-                final Header[] commandResponseHeaders = command.getCommandResponseHeaders();
-                for (Header header : commandResponseHeaders) {
-                    HttpResponseContext.header(header.getName(), header.getValue());
-                }
-
-                IOUtils.copyLarge(commandInputStream, output);
-                output.flush();
-            }
+            return CommandHelper.toStreaming(command);
         } catch (Exception e) {
             throw new TDPException(APIErrorCodes.UNABLE_TO_EXPORT_CONTENT, e);
         }
@@ -144,13 +129,8 @@ public class ExportAPI extends APIService {
     @ApiOperation(value = "Get the available format types")
     @Timed
     @PublicAPI
-    public void exportTypes(final OutputStream output) {
+    public StreamingResponseBody exportTypes() {
         final HystrixCommand<InputStream> command = getCommand(ExportTypes.class);
-        try (InputStream commandResult = command.execute()) {
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
-        } catch (Exception e) {
-            throw new TDPException(APIErrorCodes.UNABLE_TO_EXPORT_CONTENT, e);
-        }
+        return CommandHelper.toStreaming(command);
     }
 }

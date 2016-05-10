@@ -16,7 +16,6 @@ package org.talend.dataprep.api.service;
 import static org.springframework.http.MediaType.*;
 import static org.springframework.web.bind.annotation.RequestMethod.*;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,16 +28,18 @@ import java.util.stream.StreamSupport;
 import org.apache.commons.io.IOUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.talend.dataprep.api.dataset.DataSetMetadata;
 import org.talend.dataprep.api.preparation.Preparation;
 import org.talend.dataprep.api.service.command.dataset.*;
 import org.talend.dataprep.api.service.command.preparation.PreparationList;
 import org.talend.dataprep.api.service.command.transformation.SuggestDataSetActions;
 import org.talend.dataprep.api.service.command.transformation.SuggestLookupActions;
+import org.talend.dataprep.command.CommandHelper;
+import org.talend.dataprep.command.GenericCommand;
 import org.talend.dataprep.command.dataset.DataSetGet;
 import org.talend.dataprep.exception.TDPException;
 import org.talend.dataprep.exception.error.APIErrorCodes;
-import org.talend.dataprep.exception.error.CommonErrorCodes;
 import org.talend.dataprep.http.HttpResponseContext;
 import org.talend.dataprep.metrics.Timed;
 import org.talend.dataprep.security.PublicAPI;
@@ -155,7 +156,7 @@ public class DataSetAPI extends APIService {
 
     @RequestMapping(value = "/api/datasets/{id}", method = GET, consumes = ALL_VALUE, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get a data set by id.", produces = APPLICATION_JSON_VALUE, notes = "Get a data set based on given id.")
-    public void get(
+    public StreamingResponseBody get(
             @ApiParam(value = "Id of the data set to get") @PathVariable(value = "id") String id,
             @RequestParam(defaultValue = "true") @ApiParam(name = "metadata", value = "Include metadata information in the response") boolean metadata,
             @RequestParam(required = false, defaultValue = "full") @ApiParam(name = "sample", value = "Size of the wanted sample, if missing or 'full', the full dataset is returned") String sample, //
@@ -171,16 +172,15 @@ public class DataSetAPI extends APIService {
         } catch (NumberFormatException e) {
             sampleValue = null;
         }
-        
-        HystrixCommand<InputStream> retrievalCommand = getCommand(DataSetGet.class, id, metadata, sampleValue);
-        try (InputStream content = retrievalCommand.execute()){
-            IOUtils.copyLarge(content, output);
-            output.flush();
+
+        HystrixCommand<InputStream> retrievalCommand;
+        try {
+            retrievalCommand = getCommand(DataSetGet.class, id, metadata, sampleValue);
+            return CommandHelper.toStreaming(retrievalCommand);
+        } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Request dataset #{} (pool: {}) done.", id, getConnectionStats());
             }
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
         }
     }
 
@@ -212,44 +212,36 @@ public class DataSetAPI extends APIService {
 
     @RequestMapping(value = "/api/datasets/preview/{id}", method = GET, consumes = ALL_VALUE, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get a data set by id.", produces = APPLICATION_JSON_VALUE, notes = "Get a data set based on given id.")
-    public void preview(@ApiParam(value = "Id of the data set to get") @PathVariable(value = "id") String id,
+    public StreamingResponseBody preview(@ApiParam(value = "Id of the data set to get") @PathVariable(value = "id") String id,
             @RequestParam(defaultValue = "true") @ApiParam(name = "metadata", value = "Include metadata information in the response") boolean metadata,
-            @RequestParam(defaultValue = "") @ApiParam(name = "sheetName", value = "Sheet name to preview") String sheetName,
-            final OutputStream output) {
+            @RequestParam(defaultValue = "") @ApiParam(name = "sheetName", value = "Sheet name to preview") String sheetName) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Requesting dataset #{} (pool: {})...", id, getConnectionStats());
         }
-        HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-        HystrixCommand<InputStream> retrievalCommand = getCommand(DataSetPreview.class, id, metadata, sheetName);
-        try (InputStream content = retrievalCommand.execute()) {
-            IOUtils.copyLarge(content, output);
-            output.flush();
+        try {
+            GenericCommand<InputStream> retrievalCommand = getCommand(DataSetPreview.class, id, metadata, sheetName);
+            return CommandHelper.toStreaming(retrievalCommand);
+        } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Request dataset #{} (pool: {}) done.", id, getConnectionStats());
             }
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
         }
     }
 
     @RequestMapping(value = "/api/datasets", method = GET, consumes = ALL_VALUE, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "List data sets.", produces = APPLICATION_JSON_VALUE, notes = "Returns a list of data sets the user can use.")
-    public void list(@ApiParam(value = "Sort key (by name or date), defaults to 'date'.") @RequestParam(defaultValue = "DATE", required = false) String sort,
-                     @ApiParam(value = "Order for sort key (desc or asc), defaults to 'desc'.") @RequestParam(defaultValue = "DESC", required = false) String order,
-                     final OutputStream output) {
+    public StreamingResponseBody list(@ApiParam(value = "Sort key (by name or date), defaults to 'date'.") @RequestParam(defaultValue = "DATE", required = false) String sort,
+                     @ApiParam(value = "Order for sort key (desc or asc), defaults to 'desc'.") @RequestParam(defaultValue = "DESC", required = false) String order) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Listing datasets (pool: {})...", getConnectionStats());
         }
-        HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-        HystrixCommand<InputStream> listCommand = getCommand(DataSetList.class, sort, order);
-        try (InputStream content = listCommand.execute()) {
-            IOUtils.copyLarge(content, output);
-            output.flush();
+        try {
+            GenericCommand<InputStream> listCommand = getCommand(DataSetList.class, sort, order);
+            return CommandHelper.toStreaming(listCommand);
+        } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Listing datasets (pool: {}) done.", getConnectionStats());
             }
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
         }
     }
 
@@ -266,23 +258,19 @@ public class DataSetAPI extends APIService {
      */
     @RequestMapping(value = "/api/datasets/{id}/compatibledatasets", method = GET, consumes = ALL_VALUE, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "List compatible data sets.", produces = APPLICATION_JSON_VALUE, notes = "Returns a list of data sets that are compatible with the specified one.")
-    public void listCompatibleDatasets(@ApiParam(value = "Id of the data set to get") @PathVariable(value = "id") String id,
+    public StreamingResponseBody listCompatibleDatasets(@ApiParam(value = "Id of the data set to get") @PathVariable(value = "id") String id,
             @ApiParam(value = "Sort key (by name or date), defaults to 'date'.") @RequestParam(defaultValue = "DATE", required = false) String sort,
-            @ApiParam(value = "Order for sort key (desc or asc), defaults to 'desc'.") @RequestParam(defaultValue = "DESC", required = false) String order,
-            final OutputStream output) {
+            @ApiParam(value = "Order for sort key (desc or asc), defaults to 'desc'.") @RequestParam(defaultValue = "DESC", required = false) String order) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Listing compatible datasets (pool: {})...", getConnectionStats());
         }
-        HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-        HystrixCommand<InputStream> listCommand = getCommand(CompatibleDataSetList.class, id, sort, order);
-        try (InputStream content = listCommand.execute()) {
-            IOUtils.copyLarge(content, output);
-            output.flush();
+        try {
+            GenericCommand<InputStream> listCommand = getCommand(CompatibleDataSetList.class, id, sort, order);
+            return CommandHelper.toStreaming(listCommand);
+        } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Listing compatible datasets (pool: {}) done.", getConnectionStats());
             }
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
         }
     }
 
@@ -309,21 +297,19 @@ public class DataSetAPI extends APIService {
         HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
         try {
             // get the list of compatible data sets
-            final ByteArrayOutputStream temp = new ByteArrayOutputStream();
-            listCompatibleDatasets(dataSetId, "", order, temp);
-            final Iterable<DataSetMetadata> dataSetMetadataCollection = readServiceResult(
-                    new TypeReference<Iterable<DataSetMetadata>>() {
-                    }, temp);
+            GenericCommand<InputStream> compatibleDataSetList = getCommand(CompatibleDataSetList.class, dataSetId, sort, order);
+            Iterable<DataSetMetadata> dataSetMetadataCollection = mapper.readerFor(new TypeReference<Iterable<DataSetMetadata>>() {
+            }).readValue(compatibleDataSetList.execute());
             final Set<String> compatibleDataSetIds = StreamSupport.stream(dataSetMetadataCollection.spliterator(), false)
                     .map(DataSetMetadata::getId).collect(Collectors.toSet());
             // add the current dataset
             compatibleDataSetIds.add(dataSetId);
 
             // get list of preparations
-            HystrixCommand<InputStream> listCommand = getCommand(PreparationList.class, PreparationList.Format.LONG, sort,
+            HystrixCommand<InputStream> preparationList = getCommand(PreparationList.class, PreparationList.Format.LONG, sort,
                     order);
             try {
-                String preparationsJson = IOUtils.toString(listCommand.execute());
+                String preparationsJson = IOUtils.toString(preparationList.execute());
                 final Collection<Preparation> preparationsList = mapper.readerFor(new TypeReference<Collection<Preparation>>() {
                 }).readValue(preparationsJson);
 
@@ -378,9 +364,8 @@ public class DataSetAPI extends APIService {
     @RequestMapping(value = "/api/datasets/{id}/actions", method = GET, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get suggested actions for a whole data set.", notes = "Returns the suggested actions for the given dataset in decreasing order of likeness.")
     @Timed
-    public void suggestDatasetActions(
-            @PathVariable(value = "id") @ApiParam(name = "id", value = "Data set id to get suggestions from.") String dataSetId,
-            final OutputStream output) {
+    public StreamingResponseBody suggestDatasetActions(
+            @PathVariable(value = "id") @ApiParam(name = "id", value = "Data set id to get suggestions from.") String dataSetId) {
         // Get dataset metadata
         HystrixCommand<DataSetMetadata> retrieveMetadata = getCommand(DataSetGetMetadata.class, dataSetId);
         // Asks transformation service for suggested actions for column type and domain...
@@ -389,12 +374,7 @@ public class DataSetAPI extends APIService {
         HystrixCommand<InputStream> getLookupActions = getCommand(SuggestLookupActions.class, getSuggestedActions,
                 dataSetId);
         // Returns actions
-        try (InputStream content = getLookupActions.execute()) {
-            IOUtils.copyLarge(content, output);
-            output.flush();
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
-        }
+        return CommandHelper.toStreaming(getLookupActions);
     }
 
     @RequestMapping(value = "/api/datasets/favorite/{id}", method = POST, consumes = ALL_VALUE, produces = TEXT_PLAIN_VALUE)
@@ -412,37 +392,13 @@ public class DataSetAPI extends APIService {
         return result;
     }
 
-    private <T> T readServiceResult(TypeReference<T> type, ByteArrayOutputStream byteArray) {
-        final String json;
-        try {
-            json = new String(byteArray.toByteArray());
-            return mapper.readerFor(type).readValue(json);
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNABLE_TO_PARSE_JSON, e);
-        } finally {
-            IOUtils.closeQuietly(byteArray);
-        }
-
-    }
-
     @RequestMapping(value = "/api/datasets/encodings", method = GET, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "List supported dataset encodings.", notes = "Returns the supported dataset encodings.")
     @Timed
     @PublicAPI
-    public void listEncodings(final OutputStream output) {
-
-        // Get dataset metadata
+    public StreamingResponseBody listEncodings() {
         HystrixCommand<InputStream> retrieveEncodings = getCommand(DataSetGetEncodings.class);
-
-        try (InputStream content = retrieveEncodings.execute()) {
-            IOUtils.copyLarge(content, output);
-            output.flush();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Listing datasets (pool: {}) done.", getConnectionStats());
-            }
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
-        }
+        return CommandHelper.toStreaming(retrieveEncodings);
     }
 
     @RequestMapping(value = "/api/datasets/imports/{import}/parameters", method = GET, produces = APPLICATION_JSON_VALUE)
@@ -469,20 +425,9 @@ public class DataSetAPI extends APIService {
     @ApiOperation(value = "List supported imports for a dataset.", notes = "Returns the supported import types.")
     @Timed
     @PublicAPI
-    public void listImports(final OutputStream output) {
-
-        // Get dataset metadata
+    public StreamingResponseBody listImports() {
         HystrixCommand<InputStream> retrieveImports = getCommand(DataSetGetImports.class);
-
-        try (InputStream content = retrieveImports.execute()) {
-            IOUtils.copyLarge(content, output);
-            output.flush();
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Listing datasets (pool: {}) done.", getConnectionStats());
-            }
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
-        }
+        return CommandHelper.toStreaming(retrieveImports);
     }
 
 }

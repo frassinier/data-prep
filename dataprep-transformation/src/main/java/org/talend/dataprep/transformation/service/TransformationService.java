@@ -86,10 +86,6 @@ public class TransformationService extends BaseTransformationService {
     /** This class' logger. */
     private static final Logger LOG = LoggerFactory.getLogger(TransformationService.class);
 
-    /** The Spring application context. */
-    @Autowired
-    private WebApplicationContext context;
-
     /** All available transformation actions. */
     @Autowired
     private ActionMetadata[] allActions;
@@ -138,7 +134,7 @@ public class TransformationService extends BaseTransformationService {
         //@formatter:on
 
         // get the dataset content (in an auto-closable block to make sure it is properly closed)
-        final DataSetGet dataSetGet = context.getBean(DataSetGet.class, datasetId, true, sample);
+        final DataSetGet dataSetGet = applicationContext.getBean(DataSetGet.class, datasetId, true, sample);
         try (InputStream datasetContent = dataSetGet.execute()){
 
             // the parser need to be encapsulated within an auto closeable block so that its records can be fully
@@ -284,7 +280,7 @@ public class TransformationService extends BaseTransformationService {
                 throw new TDPException(CommonErrorCodes.UNABLE_TO_AGGREGATE, e);
             }
         } else {
-            final DataSetGet dataSetGet = context.getBean(DataSetGet.class, //
+            final DataSetGet dataSetGet = applicationContext.getBean(DataSetGet.class, //
                     parameters.getDatasetId(), //
                     true, //
                     parameters.getSampleSize());
@@ -340,7 +336,7 @@ public class TransformationService extends BaseTransformationService {
         }
 
         // because of dataset records streaming, the dataset content must be within an auto closeable block
-        final DataSetGet dataSetGet = context.getBean(DataSetGet.class, previewParameters.getDataSetId(), true, null);
+        final DataSetGet dataSetGet = applicationContext.getBean(DataSetGet.class, previewParameters.getDataSetId(), true, null);
         try (InputStream dataSetContent = dataSetGet.execute(); //
              JsonParser parser = mapper.getFactory().createParser(dataSetContent)) {
             final DataSet dataSet = mapper.readerFor(DataSet.class).readValue(parser);
@@ -373,7 +369,7 @@ public class TransformationService extends BaseTransformationService {
         }
 
         // get the dataset content
-        final DataSetGet dataSetGet = context.getBean(DataSetGet.class, previewParameters.getDataSetId(), true, 1L);
+        final DataSetGet dataSetGet = applicationContext.getBean(DataSetGet.class, previewParameters.getDataSetId(), true, 1L);
         try (InputStream content = dataSetGet.execute(); //
              JsonParser parser = mapper.getFactory().createParser(content)) {
             final DataSet dataSet = mapper.readerFor(DataSet.class).readValue(parser);
@@ -448,7 +444,7 @@ public class TransformationService extends BaseTransformationService {
         }
         try (JsonParser parser = mapper.getFactory().createParser(content)) {
             final DataSet dataSet = mapper.readerFor(DataSet.class).readValue(parser);
-            return actionType.getGenerator(context).getParameters(columnId, dataSet);
+            return actionType.getGenerator(applicationContext).getParameters(columnId, dataSet);
         } catch (IOException e) {
             throw new TDPException(CommonErrorCodes.UNABLE_TO_PARSE_JSON, e);
         }
@@ -560,21 +556,6 @@ public class TransformationService extends BaseTransformationService {
         return formatRegistrationService.getExternalFormats().stream() //
                 .sorted((f1, f2) -> f1.getOrder() - f2.getOrder()) // Enforce strict order.
                 .collect(Collectors.toList());
-    }
-
-    /**
-     * @param preparationId the wanted preparation id.
-     * @return the preparation out of its id.
-     */
-    private Preparation getPreparation(String preparationId) {
-
-        final PreparationDetailsGet preparationDetailsGet = context.getBean(PreparationDetailsGet.class, preparationId);
-        try (InputStream details = preparationDetailsGet.execute()) {
-            return mapper.readerFor(Preparation.class).readValue(details);
-        } catch (IOException e) {
-            throw new TDPException(PreparationErrorCodes.UNABLE_TO_READ_PREPARATION, e, build().put("id", preparationId));
-        }
-
     }
 
 }

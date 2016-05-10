@@ -27,12 +27,15 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.talend.dataprep.api.preparation.Preparation;
 import org.talend.dataprep.api.service.api.EnrichedPreparation;
 import org.talend.dataprep.api.service.command.common.HttpResponse;
 import org.talend.dataprep.api.service.command.dataset.DataSetGetMetadata;
 import org.talend.dataprep.api.service.command.folder.*;
 import org.talend.dataprep.api.service.command.preparation.PreparationListByFolder;
+import org.talend.dataprep.command.CommandHelper;
+import org.talend.dataprep.command.GenericCommand;
 import org.talend.dataprep.exception.TDPException;
 import org.talend.dataprep.exception.error.APIErrorCodes;
 import org.talend.dataprep.exception.error.CommonErrorCodes;
@@ -53,51 +56,29 @@ public class FolderAPI extends APIService {
     @RequestMapping(value = "/api/folders", method = GET)
     @ApiOperation(value = "List children folders of the parameter if null list root children.", produces = APPLICATION_JSON_VALUE)
     @Timed
-    public void children(@RequestParam(required = false) String path, final OutputStream output) {
-        final HystrixCommand<InputStream> foldersList = getCommand(FoldersList.class, path);
-        try (InputStream commandResult = foldersList.execute()){
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
-        } catch (IOException e) {
-            throw new TDPException(APIErrorCodes.UNABLE_TO_LIST_FOLDERS, e);
-        }
+    public StreamingResponseBody children(@RequestParam(required = false) String path) {
+        final GenericCommand<InputStream> foldersList = getCommand(FoldersList.class, path);
+        return CommandHelper.toStreaming(foldersList);
     }
 
     @RequestMapping(value = "/api/folders/all", method = GET)
     @ApiOperation(value = "List all folders.", produces = APPLICATION_JSON_VALUE)
     @Timed
-    public void allFolder(final OutputStream output) {
+    public StreamingResponseBody allFolder() {
         final HystrixCommand<InputStream> foldersList = getCommand(AllFoldersList.class);
-        try (InputStream commandResult = foldersList.execute()){
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
-        } catch (Exception e) {
-            throw new TDPException(APIErrorCodes.UNABLE_TO_LIST_FOLDERS, e);
-        }
+        return CommandHelper.toStreaming(foldersList);
     }
 
     @RequestMapping(value = "/api/folders", method = PUT)
     @ApiOperation(value = "Add a folder.", produces = APPLICATION_JSON_VALUE)
     @Timed
-    public void addFolder(@RequestParam(required = true) String path, //
-            final OutputStream output) {
+    public StreamingResponseBody addFolder(@RequestParam() String path) {
         final HystrixCommand<InputStream> createChildFolder = getCommand(CreateChildFolder.class, path);
-        try (InputStream commandResult = createChildFolder.execute()){
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
-        } catch (Exception e) {
-            throw new TDPException(APIErrorCodes.UNABLE_TO_CREATE_FOLDER, e);
-        }
+        return CommandHelper.toStreaming(createChildFolder);
     }
 
     /**
      * no javadoc here so see description in @ApiOperation notes.
-     *
-     * @param path
-     * @return
      */
     @RequestMapping(value = "/api/folders", method = DELETE)
     @ApiOperation(value = "Remove a Folder")
@@ -156,12 +137,10 @@ public class FolderAPI extends APIService {
     @RequestMapping(value = "/api/folders/search", method = GET, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Search Folders with parameter as part of the name", produces = APPLICATION_JSON_VALUE, notes = "")
     @Timed
-    public void search(@RequestParam(required = false) String pathName, final OutputStream output) {
-        final HystrixCommand<InputStream> searchFolders = getCommand(SearchFolders.class, pathName);
-        try (InputStream commandResult = searchFolders.execute()){
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
+    public StreamingResponseBody search(@RequestParam(required = false) String pathName) {
+        try {
+            final GenericCommand<InputStream> searchFolders = getCommand(SearchFolders.class, pathName);
+            return CommandHelper.toStreaming(searchFolders);
         } catch (Exception e) {
             throw new TDPException(APIErrorCodes.UNABLE_TO_LIST_FOLDERS, e);
         }
@@ -201,13 +180,10 @@ public class FolderAPI extends APIService {
     @ApiOperation(value = "List all folder entries of the given content type within the path", produces = APPLICATION_JSON_VALUE)
     @Timed
     @VolumeMetered
-    public void entries(@RequestParam String path, @RequestParam String contentType, final OutputStream output) {
-        final HystrixCommand<InputStream> listFolderEntries = getCommand(FolderEntriesList.class, path,
-                contentType);
-        try (InputStream commandResult = listFolderEntries.execute()) {
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
+    public StreamingResponseBody entries(@RequestParam String path, @RequestParam String contentType, final OutputStream output) {
+        try {
+            final GenericCommand<InputStream> listFolderEntries = getCommand(FolderEntriesList.class, path, contentType);
+            return CommandHelper.toStreaming(listFolderEntries);
         } catch (Exception e) {
             throw new TDPException(APIErrorCodes.UNABLE_TO_LIST_FOLDER_ENTRIES, e);
         }

@@ -17,29 +17,26 @@ import static org.apache.commons.lang.StringUtils.isNotBlank;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
 import javax.validation.Valid;
 
-import org.apache.commons.io.IOUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.talend.dataprep.api.service.api.DynamicParamsInput;
 import org.talend.dataprep.api.service.command.preparation.PreparationGetContent;
 import org.talend.dataprep.api.service.command.transformation.ColumnActions;
 import org.talend.dataprep.api.service.command.transformation.LineActions;
 import org.talend.dataprep.api.service.command.transformation.SuggestActionParams;
 import org.talend.dataprep.api.service.command.transformation.SuggestColumnActions;
+import org.talend.dataprep.command.CommandHelper;
+import org.talend.dataprep.command.GenericCommand;
 import org.talend.dataprep.command.dataset.DataSetGet;
 import org.talend.dataprep.command.preparation.PreparationDetailsGet;
-import org.talend.dataprep.exception.TDPException;
-import org.talend.dataprep.exception.error.APIErrorCodes;
-import org.talend.dataprep.exception.error.CommonErrorCodes;
-import org.talend.dataprep.http.HttpResponseContext;
 import org.talend.dataprep.metrics.Timed;
 
 import com.netflix.hystrix.HystrixCommand;
@@ -62,20 +59,10 @@ public class TransformAPI extends APIService {
     @RequestMapping(value = "/api/transform/actions/column", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get all actions for a data set column.", notes = "Returns all actions for the given column.")
     @Timed
-    public void columnActions(@ApiParam(value = "Optional column Metadata content as JSON") InputStream body,
-                                     final OutputStream output) {
-
+    public StreamingResponseBody columnActions(@ApiParam(value = "Optional column Metadata content as JSON") InputStream body) {
         // Asks transformation service for all actions for column type and domain
         HystrixCommand<InputStream> getSuggestedActions = getCommand(ColumnActions.class, body);
-        // Returns actions
-        try (InputStream commandResult = getSuggestedActions.execute()) {
-            // olamy: this is weird to have to configure that manually whereas there is an annotation for the method!!
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
-        }
+        return CommandHelper.toStreaming(getSuggestedActions);
     }
 
     /**
@@ -89,20 +76,10 @@ public class TransformAPI extends APIService {
     @RequestMapping(value = "/api/transform/suggest/column", method = RequestMethod.POST, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get suggested actions for a data set column.", notes = "Returns the suggested actions for the given column in decreasing order of likeness.")
     @Timed
-    public void suggestColumnActions(@ApiParam(value = "Column Metadata content as JSON") InputStream body,
-            final OutputStream output) {
-
+    public StreamingResponseBody suggestColumnActions(@ApiParam(value = "Column Metadata content as JSON") InputStream body) {
         // Asks transformation service for suggested actions for column type and domain
-        HystrixCommand<InputStream> getSuggestedActions = getCommand(SuggestColumnActions.class, body);
-        // Returns actions
-        try (InputStream commandResult = getSuggestedActions.execute()) {
-            // olamy: this is weird to have to configure that manually whereas there is an annotation for the method!!
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
-        }
+        GenericCommand<InputStream> getSuggestedActions = getCommand(SuggestColumnActions.class, body);
+        return CommandHelper.toStreaming(getSuggestedActions);
     }
 
     /**
@@ -111,14 +88,9 @@ public class TransformAPI extends APIService {
     @RequestMapping(value = "/api/transform/actions/line", method = GET, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get all actions on line", notes = "Returns all actions for the given column.")
     @Timed
-    public void lineActions(OutputStream output) {
+    public StreamingResponseBody lineActions(OutputStream output) {
         final HystrixCommand<InputStream> getSuggestedActions = getCommand(LineActions.class);
-        try (InputStream commandResult = getSuggestedActions.execute()) {
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
-        } catch (final IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
-        }
+        return CommandHelper.toStreaming(getSuggestedActions);
     }
 
     /**
@@ -128,36 +100,24 @@ public class TransformAPI extends APIService {
     @RequestMapping(value = "/api/transform/suggest/{action}/params", method = GET, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get the transformation dynamic parameters", notes = "Returns the transformation parameters.")
     @Timed
-    public void suggestActionParams(@ApiParam(value = "Transformation name.")
+    public StreamingResponseBody suggestActionParams(@ApiParam(value = "Transformation name.")
     @PathVariable("action")
     final String action, @ApiParam(value = "Suggested dynamic transformation input (preparation id or dataset id")
     @Valid
-    final DynamicParamsInput dynamicParamsInput, final OutputStream output) {
-
-        try {
-            // get preparation/dataset content
-            HystrixCommand<InputStream> inputData;
-            final String preparationId = dynamicParamsInput.getPreparationId();
-            if (isNotBlank(preparationId)) {
-                final PreparationDetailsGet preparationDetailsGet = getCommand(PreparationDetailsGet.class, preparationId);
-                inputData = getCommand(PreparationGetContent.class, preparationId, dynamicParamsInput.getStepId(), preparationDetailsGet);
-            } else {
-                inputData = getCommand(DataSetGet.class, dynamicParamsInput.getDatasetId(), true, null);
-            }
-
-            // get params, passing content in the body
-            final HystrixCommand<InputStream> getActionDynamicParams = getCommand(SuggestActionParams.class,
-                    inputData, action, dynamicParamsInput.getColumnId());
-
-
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            // trigger calls and return last execute content
-            try (InputStream commandResult = getActionDynamicParams.execute()) {
-                IOUtils.copyLarge(commandResult, output);
-                output.flush();
-            }
-        } catch (IOException e) {
-            throw new TDPException(APIErrorCodes.UNABLE_TO_GET_DYNAMIC_ACTION_PARAMS, e);
+    final DynamicParamsInput dynamicParamsInput) {
+        // get preparation/dataset content
+        HystrixCommand<InputStream> inputData;
+        final String preparationId = dynamicParamsInput.getPreparationId();
+        if (isNotBlank(preparationId)) {
+            final PreparationDetailsGet preparationDetailsGet = getCommand(PreparationDetailsGet.class, preparationId);
+            inputData = getCommand(PreparationGetContent.class, preparationId, dynamicParamsInput.getStepId(), preparationDetailsGet);
+        } else {
+            inputData = getCommand(DataSetGet.class, dynamicParamsInput.getDatasetId(), true, null);
         }
+
+        // get params, passing content in the body
+        final GenericCommand<InputStream> getActionDynamicParams = getCommand(SuggestActionParams.class,
+                inputData, action, dynamicParamsInput.getColumnId());
+        return CommandHelper.toStreaming(getActionDynamicParams);
     }
 }

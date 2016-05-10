@@ -19,7 +19,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
 import static org.talend.daikon.exception.ExceptionContext.withBuilder;
 import static org.talend.dataprep.exception.error.PreparationErrorCodes.UNABLE_TO_READ_PREPARATION;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -28,11 +27,10 @@ import java.util.List;
 
 import javax.validation.Valid;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.talend.dataprep.api.preparation.Action;
 import org.talend.dataprep.api.preparation.AppendStep;
 import org.talend.dataprep.api.preparation.Preparation;
@@ -41,12 +39,12 @@ import org.talend.dataprep.api.service.api.PreviewDiffParameters;
 import org.talend.dataprep.api.service.api.PreviewUpdateParameters;
 import org.talend.dataprep.api.service.command.dataset.CompatibleDataSetList;
 import org.talend.dataprep.api.service.command.preparation.*;
+import org.talend.dataprep.command.CommandHelper;
+import org.talend.dataprep.command.GenericCommand;
 import org.talend.dataprep.command.preparation.PreparationDetailsGet;
 import org.talend.dataprep.command.preparation.PreparationGetActions;
 import org.talend.dataprep.exception.TDPException;
 import org.talend.dataprep.exception.error.APIErrorCodes;
-import org.talend.dataprep.exception.error.CommonErrorCodes;
-import org.talend.dataprep.http.HttpResponseContext;
 import org.talend.dataprep.metrics.Timed;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -61,25 +59,22 @@ public class PreparationAPI extends APIService {
     @RequestMapping(value = "/api/preparations", method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get all preparations.", notes = "Returns the list of preparations the current user is allowed to see.")
     @Timed
-    public void listPreparations(
-            @RequestParam(value = "format", defaultValue = "long") @ApiParam(name = "format", value = "Format of the returned document (can be 'long' or 'short'). Defaults to 'long'.") String format,
-            final OutputStream output) {
+    public StreamingResponseBody listPreparations(
+            @RequestParam(value = "format", defaultValue = "long") @ApiParam(name = "format", value = "Format of the returned document (can be 'long' or 'short'). Defaults to 'long'.") String format) {
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("Listing preparations (pool: {} )...", getConnectionStats());
         }
 
         PreparationList.Format listFormat = PreparationList.Format.valueOf(format.toUpperCase());
-        HystrixCommand<InputStream> command = getCommand(PreparationList.class, listFormat);
-        try (InputStream commandResult = command.execute()) {
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
+        HystrixCommand<InputStream> command;
+        try {
+            command = getCommand(PreparationList.class, listFormat);
+            return CommandHelper.toStreaming(command);
+        } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Listed preparations (pool: {} )...", getConnectionStats());
             }
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
         }
     }
 
@@ -96,36 +91,26 @@ public class PreparationAPI extends APIService {
     @RequestMapping(value = "/api/preparations/{id}/basedatasets", method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get all data sets that are compatible with a preparation.", notes = "Returns the list of data sets the current user is allowed to see and that are compatible with the preparation.")
     @Timed
-    public void listCompatibleDatasets(
+    public StreamingResponseBody listCompatibleDatasets(
             @PathVariable(value = "id") @ApiParam(name = "id", value = "Preparation id.") String preparationId,
             @ApiParam(value = "Sort key (by name or date), defaults to 'date'.") @RequestParam(defaultValue = "DATE", required = false) String sort,
-            @ApiParam(value = "Order for sort key (desc or asc), defaults to 'desc'.") @RequestParam(defaultValue = "DESC", required = false) String order,
-            final OutputStream output) {
+            @ApiParam(value = "Order for sort key (desc or asc), defaults to 'desc'.") @RequestParam(defaultValue = "DESC", required = false) String order) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("Looking for base data set Id (pool: {} )...", getConnectionStats());
+            LOG.debug("Listing compatible datasets (pool: {} )...", getConnectionStats());
         }
 
         try {
             // get the preparation
-            ByteArrayOutputStream temp = new ByteArrayOutputStream();
-            getPreparation(preparationId, temp);
-            final String preparationJson = new String(temp.toByteArray());
-            if (StringUtils.isEmpty(preparationJson)) {
-                throw new TDPException(APIErrorCodes.UNABLE_TO_RETRIEVE_PREPARATION_CONTENT);
-            }
-            final Preparation preparation = mapper.readerFor(Preparation.class).readValue(preparationJson);
+            final Preparation preparation = internalGetPreparation(preparationId);
 
             // to list compatible datasets
             String dataSetId = preparation.getDataSetId();
             HystrixCommand<InputStream> listCommand = getCommand(CompatibleDataSetList.class, dataSetId, sort, order);
-            InputStream content = listCommand.execute();
-            IOUtils.copyLarge(content, output);
-            output.flush();
+            return CommandHelper.toStreaming(listCommand);
+        } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Listing compatible datasets (pool: {}) done.", getConnectionStats());
             }
-        } catch (IOException e) {
-            throw new TDPException(APIErrorCodes.UNABLE_TO_LIST_COMPATIBLE_DATASETS, e);
         }
     }
 
@@ -190,7 +175,6 @@ public class PreparationAPI extends APIService {
      * @param id the preparation id to copy
      * @param destination where to copy the preparation to.
      * @param newName optional new name for the preparation.
-     * @param output the http response.
      * @return The copied preparation id.
      */
     //@formatter:off
@@ -199,8 +183,7 @@ public class PreparationAPI extends APIService {
     public String copy(
             @ApiParam(value = "Id of the preparation to copy") @PathVariable(value = "id") String id,
             @ApiParam(value = "Optional new name of the copied preparation, if not set the copy will get the original name.") @RequestParam(required = false) String newName,
-            @ApiParam(value = "The destination path to create the entry.") @RequestParam(required = false) String destination,
-            final OutputStream output) {
+            @ApiParam(value = "The destination path to create the entry.") @RequestParam(required = false) String destination) {
     //@formatter:on
 
         if (LOG.isDebugEnabled()) {
@@ -248,31 +231,27 @@ public class PreparationAPI extends APIService {
     @RequestMapping(value = "/api/preparations/{id}/details", method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get a preparation by id and details.", notes = "Returns the preparation details.")
     @Timed
-    public void getPreparation(@PathVariable(value = "id") @ApiParam(name = "id", value = "Preparation id.") String preparationId,
-            final OutputStream output) {
+    public StreamingResponseBody getPreparation(@PathVariable(value = "id") @ApiParam(name = "id", value = "Preparation id.") String preparationId) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Retrieving preparation details (pool: {} )...", getConnectionStats());
         }
 
-        HystrixCommand<InputStream> command = getCommand(PreparationDetailsGet.class, preparationId);
-        try (InputStream commandResult = command.execute()) {
-            // You cannot use Preparation object mapper here: to serialize steps & actions, you'd need a version
-            // repository not available at API level. Code below copies command result direct to response.
-            HttpResponseContext.header("Content-Type", APPLICATION_JSON_VALUE); //$NON-NLS-1$
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
+        // You cannot use Preparation object mapper here: to serialize steps & actions, you'd need a version
+        // repository not available at API level. Code below copies command result direct to response.
+        try {
+            GenericCommand<InputStream> command = getCommand(PreparationDetailsGet.class, preparationId);
+            return CommandHelper.toStreaming(command);
+        } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Retrieved preparation details (pool: {} )...", getConnectionStats());
             }
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
         }
     }
 
     @RequestMapping(value = "/api/preparations/{id}/content", method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get preparation content by id and at a given version.", notes = "Returns the preparation content at version.")
     @Timed
-    public void getPreparation(@PathVariable(value = "id") @ApiParam(name = "id", value = "Preparation id.") String preparationId,
+    public StreamingResponseBody getPreparation(@PathVariable(value = "id") @ApiParam(name = "id", value = "Preparation id.") String preparationId,
             @RequestParam(value = "version", defaultValue = "head") @ApiParam(name = "version", value = "Version of the preparation (can be 'origin', 'head' or the version id). Defaults to 'head'.") String version,
             @RequestParam(required = false, defaultValue = "full") @ApiParam(name = "sample", value = "Size of the wanted sample, if missing or 'full', the full preparation content is returned") String sample, //
             final OutputStream output) {
@@ -286,16 +265,14 @@ public class PreparationAPI extends APIService {
             sampleValue = null;
         }
 
-        final PreparationDetailsGet preparationDetailsGet = getCommand(PreparationDetailsGet.class, preparationId);
-        HystrixCommand<InputStream> command = getCommand(PreparationGetContent.class, preparationId, version, sampleValue, preparationDetailsGet);
-        try (InputStream preparationContent = command.execute()) {
-            IOUtils.copyLarge(preparationContent, output);
-            output.flush();
+        try {
+            final PreparationDetailsGet preparationDetailsGet = getCommand(PreparationDetailsGet.class, preparationId);
+            HystrixCommand<InputStream> command = getCommand(PreparationGetContent.class, preparationId, version, sampleValue, preparationDetailsGet);
+            return CommandHelper.toStreaming(command);
+        } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Retrieved preparation content (pool: {} )...", getConnectionStats());
             }
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
         }
     }
 
@@ -448,7 +425,7 @@ public class PreparationAPI extends APIService {
         final List<Action> previewStepActions = internalGetActions(preparation.getId(), input.getPreviewStepId());
 
         final HystrixCommand<InputStream> transformation = getCommand(PreviewDiff.class, input, preparation, lastActiveStepActions, previewStepActions);
-        executePreviewCommand(output, transformation);
+        executePreviewCommand(transformation);
     }
 
     //@formatter:off
@@ -462,13 +439,13 @@ public class PreparationAPI extends APIService {
         final List<Action> actions = internalGetActions(preparation.getId());
 
         final HystrixCommand<InputStream> transformation = getCommand(PreviewUpdate.class, input, preparation, actions);
-        executePreviewCommand(output, transformation);
+        executePreviewCommand(transformation);
     }
 
     //@formatter:off
     @RequestMapping(value = "/api/preparations/preview/add", method = POST, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get a preview between the head step and a new appended transformation")
-    public void previewAdd(@RequestBody @Valid final PreviewAddParameters input, final OutputStream output) {
+    public StreamingResponseBody previewAdd(@RequestBody @Valid final PreviewAddParameters input) {
     //@formatter:on
 
         Preparation preparation = null;
@@ -481,24 +458,12 @@ public class PreparationAPI extends APIService {
         }
 
         final HystrixCommand<InputStream> transformation = getCommand(PreviewAdd.class, input, preparation, actions);
-
-        executePreviewCommand(output, transformation);
-
+        return executePreviewCommand(transformation);
     }
 
-    private void executePreviewCommand(OutputStream output, HystrixCommand<InputStream> transformation) {
-        try (InputStream commandResult = transformation.execute()) {
-            IOUtils.copyLarge(commandResult, output);
-            output.flush();
-            LOG.info("Done executing preview command");
-        } catch (IOException e) {
-            // Preview commands are very often cancelled by UI, this is not an actual issue.
-            LOG.error("Aborted preview due to I/O exception.", e);
-        } catch (Exception e) {
-            throw new TDPException(APIErrorCodes.UNABLE_TO_TRANSFORM_DATASET, e);
-        }
+    private StreamingResponseBody executePreviewCommand(HystrixCommand<InputStream> transformation) {
+        return CommandHelper.toStreaming(transformation);
     }
-
 
     /**
      * Helper method used to retrieve preparation actions via a hystrix command.
@@ -535,10 +500,9 @@ public class PreparationAPI extends APIService {
      * @return the preparation.
      */
     private Preparation internalGetPreparation(String preparationId) {
-        ByteArrayOutputStream temp = new ByteArrayOutputStream();
-        getPreparation(preparationId, temp);
         try {
-            return mapper.readerFor(Preparation.class).readValue(new ByteArrayInputStream(temp.toByteArray()));
+            GenericCommand<InputStream> command = getCommand(PreparationDetailsGet.class, preparationId);
+            return mapper.readerFor(Preparation.class).readValue(command.execute());
         } catch (IOException e) {
             throw new TDPException(UNABLE_TO_READ_PREPARATION, e, withBuilder().put("id", preparationId).build());
         }

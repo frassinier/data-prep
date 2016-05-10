@@ -16,19 +16,16 @@ package org.talend.dataprep.api.service;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
 import javax.validation.Valid;
 
-import org.apache.commons.io.IOUtils;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.talend.dataprep.api.service.command.aggregation.Aggregate;
-import org.talend.dataprep.exception.TDPException;
-import org.talend.dataprep.exception.error.CommonErrorCodes;
+import org.talend.dataprep.command.CommandHelper;
 import org.talend.dataprep.transformation.aggregation.api.AggregationParameters;
 
 import com.netflix.hystrix.HystrixCommand;
@@ -50,22 +47,15 @@ public class AggregationAPI extends APIService {
      */
     @RequestMapping(value = "/api/aggregate", method = POST, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Compute aggregation", consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE, notes = "Compute aggregation according to the given parameters")
-    public void compute(@RequestBody @Valid final AggregationParameters input, final OutputStream output) {
-
+    public StreamingResponseBody compute(@RequestBody @Valid final AggregationParameters input) {
         LOG.debug("Aggregation computation requested (pool: {} )...", getConnectionStats());
-
-        // get the command and execute it
-        HystrixCommand<InputStream> command = getCommand(Aggregate.class, input);
-
-        // copy the content to the http response
-        try (InputStream result = command.execute()) {
-            IOUtils.copyLarge(result, output);
-            output.flush();
+        // get the command and execute it, then copy the content to the http response
+        try {
+            HystrixCommand<InputStream> command = getCommand(Aggregate.class, input);
+            return CommandHelper.toStreaming(command);
+        } finally {
             LOG.debug("Aggregation done (pool: {} )...", getConnectionStats());
-        } catch (IOException e) {
-            throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
         }
-
     }
 
 }
