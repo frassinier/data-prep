@@ -17,19 +17,23 @@
  * @description Import service. This service provide the entry point to the backend import REST api.
  * @requires data-prep.services.import.service:ImportRestService
  */
-export default function ImportService(ImportRestService, StateService) {
-    'ngInject';
+export default class ImportService {
 
+    constructor(ImportRestService, StateService) {
+        'ngInject';
+        this.ImportRestService = ImportRestService;
+        this.StateService = StateService;
+    }
     /**
      * @ngdoc method
      * @name initImport
      * @methodOf data-prep.services.import.service:ImportService
      * @description Initialize the import types list
      */
-    this.initImport = function initImport() {
-        return ImportRestService.importTypes()
-            .then(function (response) {
-                StateService.setImportTypes(response.data);
+    initImport() {
+        return this.ImportRestService.importTypes()
+            .then( (response) => {
+                this.StateService.setImportTypes(response.data);
             });
-    };
+    }
 }

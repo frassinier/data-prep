@@ -12,27 +12,15 @@
  ============================================================================*/
 
 export const importState = {
-    importTypes: [],
-    currentImportType: null
+    importTypes: []
 };
 
 export function ImportStateService() {
     return {
-        setImportTypes: setImportTypes,
-        setCurrentImportType: setCurrentImportType,
-        reset: reset
+        setImportTypes: setImportTypes
     };
 
     function setImportTypes(importTypes) {
         importState.importTypes = importTypes;
-    }
-
-    function setCurrentImportType(importType) {
-        importState.currentImportType = importType;
-    }
-
-    function reset() {
-        importState.importTypes = [];
-        importState.currentImportType = null;
     }
 }

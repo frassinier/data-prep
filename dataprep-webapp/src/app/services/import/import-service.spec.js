@@ -11,10 +11,10 @@
 
  ============================================================================*/
 
-describe('Import service', function() {
+describe('Import service', () => {
     'use strict';
 
-    var importTypes = [
+    const importTypes = [
         {
             "locationType":"hdfs",
             "contentType":"application/vnd.remote-ds.hdfs",
@@ -133,11 +133,11 @@ describe('Import service', function() {
 
     beforeEach(angular.mock.module('data-prep.services.import'));
 
-    beforeEach(inject(function($q, ImportRestService) {
+    beforeEach(inject(($q, ImportRestService) => {
         spyOn(ImportRestService, 'importTypes').and.returnValue($q.when({data: importTypes}));
     }));
 
-    it('should fetch import types list from REST call', inject(function($rootScope, ImportService, StateService) {
+    it('should fetch import types list from REST call', inject(($rootScope, ImportService, StateService) => {
         //given
         spyOn(StateService, 'setImportTypes');
 

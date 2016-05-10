@@ -63,7 +63,7 @@ describe('Home controller', () => {
 
     describe('with created controller', () => {
 
-        beforeEach(inject(function () {
+        beforeEach(inject( () => {
             ctrl = createController();
         }));
         

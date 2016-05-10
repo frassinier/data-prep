@@ -17,41 +17,47 @@
  * @description Home controller.
  * @requires data-prep.services.state.constant:state
  */
-export default function HomeCtrl($window, $document, $state, state) {
-    'ngInject';
+export default class HomeCtrl {
 
-    var vm = this;
-    var DATA_INVENTORY_PANEL_KEY = 'org.talend.dataprep.data_inventory_panel_display';
-    vm.$state = $state;
-    vm.state = state;
+    constructor($window, $document, $state, state) {
+        'ngInject';
+        this.$window = $window;
+        this.$document = $document;
+        this.$state = $state;
+        this.state = state;
+        this.DATA_INVENTORY_PANEL_KEY = 'org.talend.dataprep.data_inventory_panel_display';
 
-    /**
-     * @ngdoc property
-     * @name showRightPanel
-     * @propertyOf data-prep.home.controller:HomeCtrl
-     * @description Flag that control the right panel display
-     * @type {boolean}
-     */
-    vm.showRightPanel = getRightPanelState();
+        /**
+         * @ngdoc property
+         * @name showRightPanel
+         * @propertyOf data-prep.home.controller:HomeCtrl
+         * @description Flag that control the right panel display
+         * @type {boolean}
+         */
+        this.showRightPanel = this.getRightPanelState();
 
-    /**
-     * @ngdoc property
-     * @name showRightPanelIcon
-     * @propertyOf data-prep.home.controller:HomeCtrl
-     * @description data icon of the state of the right panel
-     * @type {string}
-     */
-    vm.showRightPanelIcon = 'u';
-    updateRightPanelIcon();
+        /**
+         * @ngdoc property
+         * @name showRightPanelIcon
+         * @propertyOf data-prep.home.controller:HomeCtrl
+         * @description data icon of the state of the right panel
+         * @type {string}
+         */
+        this.showRightPanelIcon = 'u';
 
-    /**
-     * @ngdoc property
-     * @name uploadingDatasets
-     * @propertyOf data-prep.home.controller:HomeCtrl
-     * @description The current uploading datasets
-     * @type {object[]}
-     */
-    vm.uploadingDatasets = state.dataset.uploadingDatasets;
+        /**
+         * @ngdoc property
+         * @name uploadingDatasets
+         * @propertyOf data-prep.home.controller:HomeCtrl
+         * @description The current uploading datasets
+         * @type {object[]}
+         */
+        this.uploadingDatasets = state.dataset.uploadingDatasets;
+    }
+
+    $onInit() {
+        this.updateRightPanelIcon();
+    }
 
     //--------------------------------------------------------------------------------------------------------------
     //---------------------------------------------------Right panel------------------------------------------------
@@ -62,12 +68,12 @@ export default function HomeCtrl($window, $document, $state, state) {
      * @methodOf data-prep.home.controller:HomeCtrl
      * @description Toggle the right panel containing inventory data
      */
-    vm.toggleRightPanel = () => {
-        vm.showRightPanel = !vm.showRightPanel;
+    toggleRightPanel() {
+        this.showRightPanel = !this.showRightPanel;
 
-        saveRightPanelState();
-        updateRightPanelIcon();
-    };
+        this.saveRightPanelState();
+        this.updateRightPanelIcon();
+    }
 
     /**
      * @ngdoc method
@@ -75,8 +81,8 @@ export default function HomeCtrl($window, $document, $state, state) {
      * @methodOf data-prep.home.controller:HomeCtrl
      * @description Update the displayed icon to toggle right panel
      */
-    function updateRightPanelIcon() {
-        vm.showRightPanelIcon = vm.showRightPanel ? 't' : 'u';
+     updateRightPanelIcon() {
+        this.showRightPanelIcon = this.showRightPanel ? 't' : 'u';
     }
 
     /**
@@ -85,8 +91,8 @@ export default function HomeCtrl($window, $document, $state, state) {
      * @methodOf data-prep.home.controller:HomeCtrl
      * @description Get the data inventory panel parameters from localStorage
      */
-    function getRightPanelState() {
-        let params = $window.localStorage.getItem(DATA_INVENTORY_PANEL_KEY);
+     getRightPanelState() {
+        let params = this.$window.localStorage.getItem(this.DATA_INVENTORY_PANEL_KEY);
         return params ? JSON.parse(params) : false;
     }
 
@@ -96,7 +102,7 @@ export default function HomeCtrl($window, $document, $state, state) {
      * @methodOf data-prep.home.controller:HomeCtrl
      * @description Save the data inventory panel parameters in localStorage
      */
-    function saveRightPanelState() {
-        $window.localStorage.setItem(DATA_INVENTORY_PANEL_KEY, JSON.stringify(vm.showRightPanel));
+     saveRightPanelState() {
+        this.$window.localStorage.setItem(this.DATA_INVENTORY_PANEL_KEY, JSON.stringify(this.showRightPanel));
     }
 }

@@ -15,7 +15,7 @@ describe('Import REST Service', function () {
     'use strict';
 
     var $httpBackend;
-    var importTypes = [
+    const importTypes = [
         {
             "locationType":"hdfs",
             "contentType":"application/vnd.remote-ds.hdfs",
@@ -134,20 +134,20 @@ describe('Import REST Service', function () {
 
     beforeEach(angular.mock.module('data-prep.services.import'));
 
-    beforeEach(inject(function ($injector) {
+    beforeEach(inject(($injector) => {
         $httpBackend = $injector.get('$httpBackend');
     }));
 
-    it('should get all import types', inject(function($rootScope, RestURLs, ImportRestService) {
+    it('should get all import types', inject(($rootScope, RestURLs, ImportRestService) => {
         //given
-        var types = null;
+        let types = null;
         $httpBackend
             .expectGET(RestURLs.exportUrl+ '/imports')
             .respond(200, importTypes);
 
         //when
         ImportRestService.importTypes()
-            .then(function(response) {
+            .then((response) => {
                 types = response.data;
             });
         $httpBackend.flush();
