@@ -1,21 +1,21 @@
 /*  ============================================================================
 
-  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+ Copyright (C) 2006-2016 Talend Inc. - www.talend.com
 
-  This source code is available under agreement available at
-  https://github.com/Talend/data-prep/blob/master/LICENSE
+ This source code is available under agreement available at
+ https://github.com/Talend/data-prep/blob/master/LICENSE
 
-  You should have received a copy of the agreement
-  along with this program; if not, write to Talend SA
-  9 rue Pages 92150 Suresnes, France
+ You should have received a copy of the agreement
+ along with this program; if not, write to Talend SA
+ 9 rue Pages 92150 Suresnes, France
 
-  ============================================================================*/
+ ============================================================================*/
 
-describe('Datagrid header directive', function () {
-    'use strict';
-    var scope, createElement, element, ctrl;
-    var body = angular.element('body');
-    var column = {
+describe('Datagrid header directive', () => {
+
+    let scope, createElement, element, ctrl;
+    const body = angular.element('body');
+    const column = {
         'id': '0001',
         'name': 'MostPopulousCity',
         'quality': {
@@ -29,11 +29,11 @@ describe('Datagrid header directive', function () {
     beforeEach(angular.mock.module('data-prep.datagrid-header'));
     beforeEach(angular.mock.module('htmlTemplates'));
 
-    beforeEach(inject(function ($rootScope, $compile, $timeout) {
+    beforeEach(inject(($rootScope, $compile, $timeout) => {
         scope = $rootScope.$new(true);
         scope.column = column;
 
-        createElement = function () {
+        createElement = () => {
             element = angular.element('<datagrid-header column="column"></datagrid-header>');
             body.append(element);
             $compile(element)(scope);
@@ -42,16 +42,16 @@ describe('Datagrid header directive', function () {
 
             ctrl = element.controller('datagridHeader');
             spyOn(ctrl, 'updateColumnName').and.returnValue();
-            ctrl.columnNameEdition = {$commitViewValue: jasmine.createSpy('$commitViewValue')};
+            ctrl.columnNameEdition = { $commitViewValue: jasmine.createSpy('$commitViewValue') };
         };
     }));
 
-    afterEach(function () {
+    afterEach(() => {
         scope.$destroy();
         element.remove();
     });
 
-    it('should display column title and domain', function () {
+    it('should display column title and domain', () => {
         //given
         scope.column = {
             id: '0001',
@@ -73,7 +73,7 @@ describe('Datagrid header directive', function () {
         expect(element.find('.grid-header-type').text()).toBe('city');
     });
 
-    it('should display column title and type when there is no domain', function () {
+    it('should display column title and type when there is no domain', () => {
         //when
         createElement();
 
@@ -82,26 +82,28 @@ describe('Datagrid header directive', function () {
         expect(element.find('.grid-header-type').text()).toBe('text');
     });
 
-    it('should close dropdown on get transform list error', inject(function ($timeout) {
+    it('should close dropdown on get transform list error', inject(($timeout, $q, TransformationCacheService) => {
         //given
         createElement();
-        var menu = element.find('.grid-header-menu').eq(0);
-        menu.addClass('show-menu');
-
+        spyOn(TransformationCacheService, 'getColumnTransformations').and.returnValue($q.when({}));
+        element.find('.grid-header-caret').click();
+        const dropdown = element.find('sc-dropdown').eq(0);
+        expect(dropdown.hasClass('show')).toBe(true);
+        
         //when
-        element.controller('datagridHeader').transformationsRetrieveError = true;
-        scope.$apply();
-        $timeout.flush(250);
+        ctrl.transformationsRetrieveError = true;
+        scope.$digest();
+        $timeout.flush();
 
         //then
-        expect(menu.hasClass('show-menu')).toBe(false);
+        expect(dropdown.hasClass('show')).toBe(false);
     }));
 
-    it('should show input to rename column name when double click', function () {
+    it('should show input to rename column name when double click', () => {
         //given
         createElement();
 
-        var headerTitle = element.find('.grid-header-title').eq(0);
+        const headerTitle = element.find('.grid-header-title').eq(0);
         expect(ctrl.isEditMode).toBeFalsy();
 
         //when
@@ -111,11 +113,11 @@ describe('Datagrid header directive', function () {
         expect(ctrl.isEditMode).toBeTruthy();
     });
 
-    it('should select input text when edition mode is tuned on', inject(function ($window, $timeout) {
+    it('should select input text when edition mode is tuned on', inject(($window, $timeout) => {
         //given
         createElement();
 
-        var headerTitle = element.find('.grid-header-title').eq(0);
+        const headerTitle = element.find('.grid-header-title').eq(0);
 
         //when
         headerTitle.dblclick();
@@ -126,13 +128,13 @@ describe('Datagrid header directive', function () {
         expect($window.getSelection().toString()).toBe('MostPopulousCity');
     }));
 
-    it('should switch from input to text on ESC keydown', function () {
+    it('should switch from input to text on ESC keydown', () => {
         //given
         createElement();
 
         ctrl.setEditMode(true);
 
-        var event = angular.element.Event('keydown');
+        const event = angular.element.Event('keydown');
         event.keyCode = 27;
 
         //when
@@ -142,14 +144,14 @@ describe('Datagrid header directive', function () {
         expect(ctrl.isEditMode).toBe(false);
     });
 
-    it('should reset column name on ESC keydown', function () {
+    it('should reset column name on ESC keydown', () => {
         //given
         createElement();
 
         ctrl.setEditMode(true);
         ctrl.newName = 'toto';
 
-        var event = angular.element.Event('keydown');
+        const event = angular.element.Event('keydown');
         event.keyCode = 27;
 
         //when
@@ -159,13 +161,13 @@ describe('Datagrid header directive', function () {
         expect(ctrl.newName).toBe('MostPopulousCity');
     });
 
-    it('should switch from input to text on ENTER event without changes', function () {
+    it('should switch from input to text on ENTER event without changes', () => {
         //given
         createElement();
 
         ctrl.setEditMode(true);
 
-        var event = angular.element.Event('keydown');
+        const event = angular.element.Event('keydown');
         event.keyCode = 13;
 
         //when
@@ -175,14 +177,14 @@ describe('Datagrid header directive', function () {
         expect(ctrl.isEditMode).toBe(false);
     });
 
-    it('should submit update on ENTER with changes', function () {
+    it('should submit update on ENTER with changes', () => {
         //given
         createElement();
 
         ctrl.setEditMode(true);
         ctrl.newName = 'MostPopulousCityInTheWorld';
 
-        var event = angular.element.Event('keydown');
+        const event = angular.element.Event('keydown');
         event.keyCode = 13;
 
         //when
@@ -193,13 +195,13 @@ describe('Datagrid header directive', function () {
         expect(ctrl.columnNameEdition.$commitViewValue).toHaveBeenCalled();
     });
 
-    it('should switch from input to text on BLUR event without changes', function () {
+    it('should switch from input to text on BLUR event without changes', () => {
         //given
         createElement();
 
         ctrl.setEditMode(true);
 
-        var event = angular.element.Event('blur');
+        const event = angular.element.Event('blur');
 
         //when
         element.find('.grid-header-title-input').eq(0).trigger(event);
@@ -208,14 +210,14 @@ describe('Datagrid header directive', function () {
         expect(ctrl.isEditMode).toBe(false);
     });
 
-    it('should submit update on BLUR event with changes', function () {
+    it('should submit update on BLUR event with changes', () => {
         //given
         createElement();
 
         ctrl.setEditMode(true);
         ctrl.newName = 'MostPopulousCityInTheWorld';
 
-        var event = angular.element.Event('blur');
+        const event = angular.element.Event('blur');
 
         //when
         element.find('.grid-header-title-input').eq(0).trigger(event);
@@ -224,10 +226,10 @@ describe('Datagrid header directive', function () {
         expect(ctrl.updateColumnName).toHaveBeenCalled();
     });
 
-    it('should stop click propagation in input', function () {
+    it('should stop click propagation in input', () => {
         //given
         createElement();
-        var event = angular.element.Event('click');
+        const event = angular.element.Event('click');
 
         //when
         element.find('input').eq(0).trigger(event);
@@ -237,13 +239,13 @@ describe('Datagrid header directive', function () {
         expect(event.isDefaultPrevented()).toBe(true);
     });
 
-    it('should hide menu on left click on grid-header', function () {
+    it('should hide menu on left click on grid-header', () => {
         //given
         createElement();
         element.find('.dropdown-menu').addClass('show-menu');
 
         //when
-        var event = angular.element.Event('mousedown');
+        const event = angular.element.Event('mousedown');
         event.which = 1;
         element.find('.grid-header').eq(0).trigger(event);
 
@@ -251,27 +253,28 @@ describe('Datagrid header directive', function () {
         expect(element.find('.dropdown-menu').hasClass('show-menu')).toBeFalsy();
     });
 
-    it('should show menu on right click on grid-header if menu is hidden', function () {
+    it('should show menu on right click on grid-header if menu is hidden', inject(($q, TransformationCacheService) => {
         //given
         createElement();
-        element.find('.dropdown-menu').removeClass('show-menu');
+        spyOn(TransformationCacheService, 'getColumnTransformations').and.returnValue($q.when({}));
+        expect(element.find('sc-dropdown').hasClass('show')).toBeFalsy();
 
         //when
-        var event = angular.element.Event('mousedown');
+        const event = angular.element.Event('mouseup');
         event.which = 3;
         element.find('.grid-header').eq(0).trigger(event);
 
         //then
-        expect(element.find('.dropdown-menu').hasClass('show-menu')).toBeTruthy();
-    });
+        expect(element.find('sc-dropdown').hasClass('show')).toBeTruthy();
+    }));
 
-    it('should hide menu on right click if menu is visible', function () {
+    it('should hide menu on right click if menu is visible', () => {
         //given
         createElement();
         element.find('.dropdown-menu').addClass('show-menu');
 
         //when
-        var event = angular.element.Event('mousedown');
+        const event = angular.element.Event('mousedown');
         event.which = 3;
         element.find('.grid-header').eq(0).trigger(event);
 

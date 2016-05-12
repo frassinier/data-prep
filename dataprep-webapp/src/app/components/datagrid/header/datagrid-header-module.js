@@ -32,6 +32,7 @@ import DatagridHeader from './datagrid-header-directive';
     angular.module('data-prep.datagrid-header',
         [
             'talend.widget',
+            'talend.sunchoke.dropdown',
             'data-prep.transformation-menu',
             'data-prep.services.utils',
             'data-prep.services.playground',

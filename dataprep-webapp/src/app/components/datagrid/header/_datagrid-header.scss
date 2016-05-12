@@ -59,15 +59,12 @@
 
   .grid-header-menu {
     @include menu-list;
+    box-shadow: none;
     font-family: $base-font-family;
+    padding: 0;
     li {
       height: 18px;
     }
-  }
-
-  .dropdown-menu,
-  .dropdown-action {
-    outline: none;
   }
 
   .grid-header-title-input {
@@ -80,6 +77,10 @@
   .talend-dropdown-div {
     width: 20px;
     float: right;
+
+    .sc-dropdown-trigger {
+      padding: 0;
+    }
   }
 
   .talend-dropdown-text-div {

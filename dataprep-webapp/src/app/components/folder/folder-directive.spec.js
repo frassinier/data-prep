@@ -67,8 +67,9 @@ describe('folder directive', () => {
 
         //then
         expect(element.find('.breadcrumb > ul > li').length).toBe(3);
-        expect(element.find('.breadcrumb > ul > li').eq(1).attr('id')).toBe('folder_1');
-        expect(element.find('talend-dropdown').length).toBe(3);
-        expect(element.find('.dropdown-menu').length).toBe(3);
+        expect(element.find('.breadcrumb > ul > li > .folder-name').eq(0).text()).toBe('HOME_FOLDER');
+        expect(element.find('.breadcrumb > ul > li > .folder-name').eq(1).text()).toBe('1');
+        expect(element.find('.breadcrumb > ul > li > .folder-name').eq(2).text()).toBe('2');
+        expect(element.find('sc-dropdown').length).toBe(3);
     });
 });

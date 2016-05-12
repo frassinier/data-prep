@@ -20,13 +20,14 @@
     @include align-items(center);
 
     .chart-control-options {
+      border: 1px solid;
+      border-radius: 3px;
+      padding: 5px;
+      text-transform: uppercase;
 
       .chart-control-trigger {
-        border: 1px solid;
-        border-radius: 3px;
-        max-width: 240px;
-        padding: 5px 10px;
-        text-transform: uppercase;
+        @include ellipsis(140px);
+        vertical-align: middle;
       }
 
       .chart-control-form {

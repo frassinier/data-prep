@@ -26,7 +26,7 @@ $navigation-item-space: 10px;
   }
 
   > ul,
-  #playground-help-nav .dropdown-menu {
+  .playground-help-menu {
     > li {
       @include flex-row-center();
       height: $navigation-height;
@@ -42,10 +42,8 @@ $navigation-item-space: 10px;
 
   #playground-help-nav {
     @media (max-width: ($responsive-sm-screen-width - 1)) {
-      .dropdown-menu {
-        &.show-menu {
-          @include display(flex);
-        }
+      &.show .playground-help-menu {
+        @include display(flex);
 
         > li .icon {
           @include filter(none);
@@ -59,31 +57,37 @@ $navigation-item-space: 10px;
     }
 
     @media (min-width: $responsive-sm-screen-width) {
-      ul > li {
-        &:first-child {
-          padding-left: 0;
-        }
-
-        &:last-child {
-          padding-right: 0;
-        }
+      .sc-dropdown-trigger {
+        display: none;
       }
 
-      .dropdown {
-        &-action {
-          display: none;
+      .sc-dropdown-content {
+        display: block;
+        position: relative;
+        background: none;
+        border: none;
+        box-shadow: none;
+        z-index: 0;
+
+        .playground-help-content {
+          padding: 0;
         }
 
-        &-menu {
-          @include display(inline-flex);
-          position: relative;
-          background: none;
-          border: none;
-          box-shadow: none;
-          z-index: 0;
+        &::before {
+          content: none;
+        }
 
-          &::before {
-            content: none;
+        .playground-help-menu {
+          @include display(inline-flex);
+
+          > li {
+            &:first-child {
+              padding-left: 0;
+            }
+
+            &:last-child {
+              padding-right: 0;
+            }
           }
         }
       }

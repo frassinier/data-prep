@@ -142,11 +142,9 @@ export default function DatagridHeader($timeout) {
                  * @description Attach a 'Click' event listener on grid header
                  */
                 function attachClickListener() {
-                    gridHeader.mousedown(function (event) {
+                    gridHeader.mouseup(function (event) {
                         if (event.which === 3) { //Right click
-                            //stop propagation not to hide dropdown and hide/show menu on right click
-                            event.stopPropagation();
-                            gridHeader.find('.dropdown-action').click();
+                            gridHeader.find('.grid-header-caret').click();
                         }
                     });
                 }
@@ -175,8 +173,10 @@ export default function DatagridHeader($timeout) {
                     },
                     function (newValue) {
                         if (newValue) {
-                            var headerDropdownAction = iElement.find('.dropdown-action').eq(0);
-                            headerDropdownAction.click();
+                            $timeout(() => {
+                                var headerDropdownAction = iElement.find('.grid-header-caret').eq(0);
+                                headerDropdownAction.click();
+                            });
                         }
                     });
 

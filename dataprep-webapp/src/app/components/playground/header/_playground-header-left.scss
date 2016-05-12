@@ -2,10 +2,6 @@
 
   .playground-dataset-name {
     @include ellipsis(300px);
-
-    &.preview-mode {
-      @include ellipsis(150px);
-    }
   }
 
   .playground-dataset-limit {

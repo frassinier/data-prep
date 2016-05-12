@@ -15,20 +15,18 @@
 
 <div class="grid-header">
     <div class="talend-dropdown-div">
-        <talend-dropdown on-open="datagridHeaderCtrl.initTransformations()">
-            <div class="dropdown-container">
-                <div class="dropdown-action">
-                    <div class="dropdown-button" title="{{ datagridHeaderCtrl.column.name }}"></div>
-                </div>
-                <ul class="dropdown-menu grid-header-menu">
+        <sc-dropdown on-open="datagridHeaderCtrl.initTransformations()">
+            <sc-dropdown-trigger class="grid-header-caret" title="{{ datagridHeaderCtrl.column.name }}">&nbsp;</sc-dropdown-trigger>
+            <sc-dropdown-content class="grid-header-menu">
+                <ul>
                     <li ng-if="datagridHeaderCtrl.initTransformationsInProgress" translate-once="LOADING"></li>
                     <li ng-if="datagridHeaderCtrl.transformations && !datagridHeaderCtrl.transformations.length" translate-once="NO_TRANSFORMATION"></li>
                     <transform-menu column="datagridHeaderCtrl.column"
                                     menu-items="datagridHeaderCtrl.transformations"
                                     ng-if="datagridHeaderCtrl.transformations.length"></transform-menu>
                 </ul>
-            </div>
-        </talend-dropdown>
+            </sc-dropdown-content>
+        </sc-dropdown>
     </div>
 
     <div class="talend-dropdown-text-div">

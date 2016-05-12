@@ -23,16 +23,14 @@ $subheader-background: $light-gray;
 
   .subheader-wrapper {
     @include outer-container;
+    padding: 10px;
 
-    >ul {
-      padding-top: 10px;
+    > ul {
+      @include flex-row();
+      @include align-items(center);
       
-      >li {
-        float: left;
-
-        &.primary {
-          padding-right: 30px;
-        }
+      > li.primary {
+        padding-right: 30px;
       }
       
     }
