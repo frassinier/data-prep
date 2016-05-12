@@ -19,6 +19,7 @@
                        preview="playgroundCtrl.previewInProgress()"
                        lookup-visible="playgroundCtrl.state.playground.lookup.visibility"
                        parameters-visible="playgroundCtrl.state.playground.parameters.visible"
+                       feedback-visible="!playgroundCtrl.state.ee"
                        preparation-picker="!playgroundCtrl.recipeService.getRecipe().length"
                        on-parameters="playgroundCtrl.toggleParameters()"
                        on-lookup="playgroundCtrl.toggleLookup()"

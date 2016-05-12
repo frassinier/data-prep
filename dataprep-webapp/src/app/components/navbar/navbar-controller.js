@@ -22,11 +22,11 @@
  * @requires data-prep.services.easter-eggs.service::EasterEggsService
  */
 
-export default function NavbarCtrl($timeout, $state, version, copyRights, OnboardingService, DatasetService, StateService) {
+export default function NavbarCtrl($timeout, $state, state, version, copyRights, OnboardingService, DatasetService, StateService) {
     'ngInject';
 
     var vm = this;
-
+    this.state = state;
     //--------------------------------------------------------------------------------------------------------------
     //-------------------------------------------ONBOARDING---------------------------------------------------------
     //--------------------------------------------------------------------------------------------------------------

@@ -48,6 +48,7 @@ const PlaygroundHeader = {
         preview: '<',
         lookupVisible: '<',
         parametersVisible: '<',
+        feedbackVisible: '<',
         onParameters: '&',
         onLookup: '&',
         onOnboarding: '&',

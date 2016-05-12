@@ -35,6 +35,7 @@ describe('Playground header component', () => {
                     display-nb-lines="displayNbLines"
                     preview="preview"
                     lookup-visible="lookupVisible"
+                    feedback-visible="feedbackVisible"
                     parameters-visible="parametersVisible"
                     on-parameters="onParameters()"
                     on-lookup="onLookup()"
@@ -224,9 +225,19 @@ describe('Playground header component', () => {
             expect(scope.onOnboarding).toHaveBeenCalled();
         });
 
+        it('should not render  feedback icon', () => {
+            //when
+            scope.feedbackVisible = false;
+            createElement();
+
+            //then
+            expect(element.find('#playground-feedback-icon').length).toBe(0);
+        });
+
         it('should call feedback callback', () => {
             //given
             scope.onFeedback = jasmine.createSpy('onFeedback');
+            scope.feedbackVisible = true;
             createElement();
 
             //when

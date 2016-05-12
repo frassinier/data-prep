@@ -26,7 +26,7 @@
                    ng-click="navbarCtrl.startTour('dataset')">
                 </a>
             </li>
-            <li id="message-icon" class="nav-link" translate-once-title="FEEDBACK_TOOLTIP">
+            <li ng-if="!navbarCtrl.state.ee" $ctrlid="message-icon" class="nav-link" translate-once-title="FEEDBACK_TOOLTIP">
                 <a class="icon enabled"
                    data-icon="H"
                    ng-click="navbarCtrl.openFeedbackForm()">

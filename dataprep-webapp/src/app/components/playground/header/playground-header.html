@@ -75,7 +75,7 @@
                                    data-icon="y"
                                    ng-click="$ctrl.onOnboarding()"></a>
                             </li>
-                            <li class="nav-link" translate-once-title="FEEDBACK_TOOLTIP">
+                            <li ng-if="$ctrl.feedbackVisible" class="nav-link" translate-once-title="FEEDBACK_TOOLTIP">
                                 <a id="playground-feedback-icon"
                                    class="icon"
                                    data-icon="H"
