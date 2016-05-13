@@ -13,21 +13,19 @@
 
 package org.talend.dataprep.transformation.api.action.metadata.clear;
 
-import static com.google.common.collect.Sets.newHashSet;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 import static org.talend.dataprep.transformation.api.action.metadata.ActionMetadataTestUtils.getColumn;
 
 import java.io.IOException;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.talend.dataprep.api.dataset.ColumnMetadata;
 import org.talend.dataprep.api.dataset.DataSetRow;
 import org.talend.dataprep.api.dataset.RowMetadata;
 import org.talend.dataprep.api.type.Type;
@@ -41,7 +39,7 @@ import org.talend.dataprep.transformation.api.action.metadata.category.ActionCat
  *
  * @see ClearInvalid
  */
-public class ClearInvalidTest  extends AbstractMetadataBaseTest {
+public class ClearInvalidTest extends AbstractMetadataBaseTest {
 
     /** The action to test. */
     @Autowired
@@ -80,16 +78,12 @@ public class ClearInvalidTest  extends AbstractMetadataBaseTest {
         values.put("0002", "N");
         values.put("0003", "Something");
 
-        final RowMetadata rowMetadata = new RowMetadata();
-        rowMetadata.setColumns(Collections.singletonList(ColumnMetadata.Builder.column() //
-                .type(Type.STRING) //
-                .computedId("0002") //
-                .invalidValues(newHashSet("N")) //
-                .build()));
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMetadata = row.getRowMetadata();
+        rowMetadata.getById("0002").setType(Type.STRING.getName());
+        rowMetadata.getById("0002").getQuality().getInvalidValues().add("N");
 
-        final DataSetRow row = new DataSetRow(rowMetadata, values);
-
-        final Map<String, Object> expectedValues = new HashMap<>();
+        final Map<String, Object> expectedValues = new LinkedHashMap<>();
         expectedValues.put("0001", "David Bowie");
         expectedValues.put("0002", "");
         expectedValues.put("0003", "Something");
@@ -109,14 +103,9 @@ public class ClearInvalidTest  extends AbstractMetadataBaseTest {
         values.put("0002", "N");
         values.put("0003", "Something");
 
-        final RowMetadata rowMetadata = new RowMetadata();
-        rowMetadata.setColumns(Collections.singletonList(ColumnMetadata.Builder.column() //
-                .type(Type.STRING) //
-                .computedId("0002") //
-                .invalidValues(newHashSet()) //
-                .build()));
-
-        final DataSetRow row = new DataSetRow(rowMetadata, values);
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMetadata = row.getRowMetadata();
+        rowMetadata.getById("0002").setType(Type.STRING.getName());
 
         final Map<String, Object> expectedValues = new HashMap<>();
         expectedValues.put("0001", "David Bowie");
@@ -138,16 +127,12 @@ public class ClearInvalidTest  extends AbstractMetadataBaseTest {
         values.put("0002", "N");
         values.put("0003", "Something");
 
-        final RowMetadata rowMetadata = new RowMetadata();
-        rowMetadata.setColumns(Collections.singletonList(ColumnMetadata.Builder.column() //
-                .type(Type.INTEGER) //
-                .computedId("0002") //
-                .invalidValues(newHashSet()) //
-                .build()));
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMetadata = row.getRowMetadata();
+        rowMetadata.getById("0002").setType(Type.INTEGER.getName());
+        rowMetadata.getById("0002").getQuality().getInvalidValues().add("N");
 
-        final DataSetRow row = new DataSetRow(rowMetadata, values);
-
-        final Map<String, Object> expectedValues = new HashMap<>();
+        final Map<String, Object> expectedValues = new LinkedHashMap<>();
         expectedValues.put("0001", "David Bowie");
         expectedValues.put("0002", "");
         expectedValues.put("0003", "Something");
@@ -172,16 +157,12 @@ public class ClearInvalidTest  extends AbstractMetadataBaseTest {
         values.put("0002", "N");
         values.put("0003", "Something");
 
-        final RowMetadata rowMetadata = new RowMetadata();
-        rowMetadata.setColumns(Collections.singletonList(ColumnMetadata.Builder.column() //
-                .type(Type.DATE) //
-                .computedId("0002") //
-                .invalidValues(newHashSet()) //
-                .build()));
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMetadata = row.getRowMetadata();
+        rowMetadata.getById("0002").setType(Type.DATE.getName());
+        rowMetadata.getById("0002").getQuality().getInvalidValues().add("N");
 
-        final DataSetRow row = new DataSetRow(rowMetadata, values);
-
-        final Map<String, Object> expectedValues = new HashMap<>();
+        final Map<String, Object> expectedValues = new LinkedHashMap<>();
         expectedValues.put("0001", "David Bowie");
         expectedValues.put("0002", "");
         expectedValues.put("0003", "Something");
@@ -206,16 +187,11 @@ public class ClearInvalidTest  extends AbstractMetadataBaseTest {
         values.put("0002", "20-09-1975");
         values.put("0003", "Something");
 
-        final RowMetadata rowMetadata = new RowMetadata();
-        rowMetadata.setColumns(Collections.singletonList(ColumnMetadata.Builder.column() //
-                .type(Type.DATE) //
-                .computedId("0002") //
-                .invalidValues(newHashSet()) //
-                .build()));
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMetadata = row.getRowMetadata();
+        rowMetadata.getById("0002").setType(Type.DATE.getName());
 
-        final DataSetRow row = new DataSetRow(rowMetadata, values);
-
-        final Map<String, Object> expectedValues = new HashMap<>();
+        final Map<String, Object> expectedValues = new LinkedHashMap<>();
         expectedValues.put("0001", "David Bowie");
         expectedValues.put("0002", "20-09-1975");
         expectedValues.put("0003", "Something");
@@ -239,16 +215,12 @@ public class ClearInvalidTest  extends AbstractMetadataBaseTest {
         values.put("0002", "1.1");
         values.put("0003", "Something");
 
-        final RowMetadata rowMetadata = new RowMetadata();
-        rowMetadata.setColumns(Collections.singletonList(ColumnMetadata.Builder.column() //
-                .type(Type.INTEGER) //
-                .computedId("0002") //
-                .invalidValues(newHashSet()) //
-                .build()));
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMetadata = row.getRowMetadata();
+        rowMetadata.getById("0002").setType(Type.INTEGER.getName());
+        rowMetadata.getById("0002").getQuality().getInvalidValues().add("1.1");
 
-        final DataSetRow row = new DataSetRow(rowMetadata, values);
-
-        final Map<String, Object> expectedValues = new HashMap<>();
+        final Map<String, Object> expectedValues = new LinkedHashMap<>();
         expectedValues.put("0001", "David Bowie");
         expectedValues.put("0002", "");
         expectedValues.put("0003", "Something");

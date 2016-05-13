@@ -27,11 +27,14 @@ import org.talend.dataprep.transformation.format.JsonFormat;
  */
 public class Configuration {
 
+
+
     public enum Volume {
         LARGE,
-        SMALL
+        SMALL;
     }
-    
+    private final String stepId;
+
     /** The format format {@link ExportFormat} */
     private final String format;
 
@@ -44,6 +47,8 @@ public class Configuration {
     /** Where to write the transformed content. */
     private final OutputStream output;
 
+    private final boolean allowMetadataChange;
+
     private final Volume dataVolume;
 
     /** List of transformation context, one per action. */
@@ -53,14 +58,18 @@ public class Configuration {
      * Constructor for the transformer configuration.
      */
     protected Configuration(final OutputStream output, //
-            final String format, //
-            final String actions, //
-            final Map<String, String> arguments, //
-            final Volume dataVolume) {
+                            final String format, //
+                            final String actions, //
+                            final Map<String, String> arguments, //
+                            final String stepId, //
+                            boolean allowMetadataChange, //
+                            final Volume dataVolume) {
         this.output = output;
         this.format = format;
         this.actions = actions;
         this.arguments = arguments;
+        this.stepId = stepId;
+        this.allowMetadataChange = allowMetadataChange;
         this.dataVolume = dataVolume;
         this.transformationContext = new TransformationContext();
     }
@@ -70,6 +79,10 @@ public class Configuration {
      */
     public static Builder builder() {
         return new Builder();
+    }
+
+    public String stepId() {
+        return stepId;
     }
 
     /**
@@ -111,6 +124,10 @@ public class Configuration {
         return dataVolume;
     }
 
+    public boolean isAllowMetadataChange() {
+        return allowMetadataChange;
+    }
+
     /**
      * Builder pattern used to simplify code writing.
      */
@@ -137,6 +154,10 @@ public class Configuration {
         /** Gives hint on the amount of data the transformer may expect */
         private Volume dataVolume = Volume.SMALL;
 
+        private String stepId;
+
+        private boolean allowMetadataChange = true;
+
         /**
          * @param output where to write the transformed dataset.
          * @return the mapper to chain calls.
@@ -150,7 +171,7 @@ public class Configuration {
          * @return a new {@link Configuration} from the mapper setup.
          */
         public Configuration build() {
-            return new Configuration(output, format, actions, arguments, dataVolume);
+            return new Configuration(output, format, actions, arguments, stepId, allowMetadataChange, dataVolume);
         }
 
         /**
@@ -186,10 +207,19 @@ public class Configuration {
             return this;
         }
 
+        public Builder stepId(final String stepId) {
+            this.stepId = stepId;
+            return this;
+        }
+
         public Builder volume(Volume dataVolume) {
             this.dataVolume = dataVolume;
             return this;
         }
 
+        public Builder allowMetadataChange(boolean allowMetadataChange) {
+            this.allowMetadataChange = allowMetadataChange;
+            return this;
+        }
     }
 }

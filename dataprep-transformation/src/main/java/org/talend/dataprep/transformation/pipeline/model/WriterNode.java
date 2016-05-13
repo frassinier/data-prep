@@ -1,22 +1,32 @@
 package org.talend.dataprep.transformation.pipeline.model;
 
 import java.io.IOException;
+import java.io.OutputStream;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.dataprep.api.dataset.DataSetRow;
 import org.talend.dataprep.api.dataset.RowMetadata;
+import org.talend.dataprep.cache.ContentCache;
 import org.talend.dataprep.transformation.api.transformer.TransformerWriter;
+import org.talend.dataprep.transformation.cache.TransformationMetadataCacheKey;
 import org.talend.dataprep.transformation.pipeline.Monitored;
 import org.talend.dataprep.transformation.pipeline.Signal;
 import org.talend.dataprep.transformation.pipeline.Visitor;
 import org.talend.dataprep.transformation.pipeline.node.TerminalNode;
+
+import com.fasterxml.jackson.databind.ObjectWriter;
 
 public class WriterNode extends TerminalNode implements Monitored {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(WriterNode.class);
 
     private final TransformerWriter writer;
+
+    private final ContentCache contentCache;
+
+    private final String stepId;
 
     private RowMetadata lastRowMetadata;
 
@@ -26,8 +36,10 @@ public class WriterNode extends TerminalNode implements Monitored {
 
     private int count;
 
-    public WriterNode(TransformerWriter writer) {
+    public WriterNode(TransformerWriter writer, ContentCache contentCache, String stepId) {
         this.writer = writer;
+        this.contentCache = contentCache;
+        this.stepId = stepId;
     }
 
     @Override
@@ -72,9 +84,22 @@ public class WriterNode extends TerminalNode implements Monitored {
                 LOGGER.error("Unable to end writer.", e);
             } finally {
                 totalTime += System.currentTimeMillis() - start;
+
             }
         } else {
             LOGGER.debug("Unhandled signal {}.", signal);
+        }
+
+        // Cache computed metadata for later reuse
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            final ObjectWriter objectWriter = mapper.writerFor(RowMetadata.class);
+            final OutputStream stream = contentCache.put(new TransformationMetadataCacheKey(stepId), ContentCache.TimeToLive.DEFAULT);
+            objectWriter.writeValue(stream, lastRowMetadata);
+            writer.flush();
+            stream.close();
+        } catch (IOException e) {
+            LOGGER.debug("Unable to cache metadata for step #{}", stepId, e);
         }
     }
 

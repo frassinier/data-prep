@@ -20,10 +20,6 @@ public abstract class Visitor {
         doNodeVisit(compileNode);
     }
 
-    public void visitInlineAnalysis(InlineAnalysisNode inlineAnalysisNode) {
-        doNodeVisit(inlineAnalysisNode);
-    }
-
     public void visitSource(SourceNode sourceNode) {
         doNodeVisit(sourceNode);
     }

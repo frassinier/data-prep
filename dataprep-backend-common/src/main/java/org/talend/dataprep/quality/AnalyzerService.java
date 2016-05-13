@@ -36,7 +36,6 @@ import org.talend.dataprep.api.type.Type;
 import org.talend.dataprep.api.type.TypeUtils;
 import org.talend.dataprep.exception.TDPException;
 import org.talend.dataprep.exception.error.CommonErrorCodes;
-import org.talend.dataprep.transformation.api.action.metadata.common.ActionMetadataUtils;
 import org.talend.dataprep.transformation.api.action.metadata.date.DateParser;
 import org.talend.dataprep.transformation.api.transformer.json.NullAnalyzer;
 import org.talend.dataquality.semantic.classifier.SemanticCategoryEnum;
@@ -354,14 +353,6 @@ public class AnalyzerService implements DisposableBean {
     @Override
     public void destroy() throws Exception {
         LOGGER.info("Clean up analyzers...");
-        final Map<String, Analyzer<Analyzers.Result>> cache = ActionMetadataUtils.getAnalyzerCache();
-        for (Map.Entry<String, Analyzer<Analyzers.Result>> entry : cache.entrySet()) {
-            try {
-                entry.getValue().close();
-            } catch (Exception e) {
-                LOGGER.error("Unable to close analyzer for type '" + entry.getKey() + "'.", e);
-            }
-        }
         ClassPathDirectory.destroy();
         LOGGER.info("Clean up analyzers done.");
     }

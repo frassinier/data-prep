@@ -79,7 +79,7 @@ public class GenericCommand<T> extends HystrixCommand<T> {
 
     /** DataPrep security holder. */
     @Autowired
-    private Security security;
+    protected Security security;
 
     /** The http client. */
     @Autowired

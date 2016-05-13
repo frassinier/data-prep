@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 import org.talend.dataprep.api.dataset.ColumnMetadata;
 import org.talend.dataprep.transformation.api.action.context.ActionContext;
 import org.talend.dataprep.transformation.api.action.metadata.common.ActionMetadata;
-import org.talend.dataprep.transformation.api.action.metadata.common.ActionMetadataUtils;
 import org.talend.dataprep.transformation.api.action.metadata.common.ColumnAction;
 
 /**
@@ -73,12 +72,7 @@ public class ClearInvalid extends AbstractClear implements ColumnAction {
 
     @Override
     public boolean toClear(ColumnMetadata colMetadata, String value, ActionContext context) {
-        // update invalid values of column metadata to prevent unnecessary future analysis
-        if (ActionMetadataUtils.checkInvalidValue(colMetadata, value)) {
-            return true;
-        }
-        // valid value
-        return false;
+        return colMetadata.getQuality().getInvalidValues().contains(value);
     }
 
     @Override

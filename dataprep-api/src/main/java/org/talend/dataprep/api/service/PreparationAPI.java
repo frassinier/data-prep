@@ -21,7 +21,6 @@ import static org.talend.dataprep.exception.error.PreparationErrorCodes.UNABLE_T
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -253,8 +252,7 @@ public class PreparationAPI extends APIService {
     @Timed
     public StreamingResponseBody getPreparation(@PathVariable(value = "id") @ApiParam(name = "id", value = "Preparation id.") String preparationId,
             @RequestParam(value = "version", defaultValue = "head") @ApiParam(name = "version", value = "Version of the preparation (can be 'origin', 'head' or the version id). Defaults to 'head'.") String version,
-            @RequestParam(required = false, defaultValue = "full") @ApiParam(name = "sample", value = "Size of the wanted sample, if missing or 'full', the full preparation content is returned") String sample, //
-            final OutputStream output) {
+            @RequestParam(required = false, defaultValue = "full") @ApiParam(name = "sample", value = "Size of the wanted sample, if missing or 'full', the full preparation content is returned") String sample) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Retrieving preparation content (pool: {} )...", getConnectionStats());
         }
@@ -416,7 +414,7 @@ public class PreparationAPI extends APIService {
     @RequestMapping(value = "/api/preparations/preview/diff", method = POST, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get a preview diff between 2 steps of the same preparation.")
     @Timed
-    public void previewDiff(@RequestBody final PreviewDiffParameters input, final OutputStream output) {
+    public StreamingResponseBody previewDiff(@RequestBody final PreviewDiffParameters input) {
     //@formatter:on
 
         // get preparation details
@@ -425,13 +423,13 @@ public class PreparationAPI extends APIService {
         final List<Action> previewStepActions = internalGetActions(preparation.getId(), input.getPreviewStepId());
 
         final HystrixCommand<InputStream> transformation = getCommand(PreviewDiff.class, input, preparation, lastActiveStepActions, previewStepActions);
-        executePreviewCommand(transformation);
+        return executePreviewCommand(transformation);
     }
 
     //@formatter:off
     @RequestMapping(value = "/api/preparations/preview/update", method = POST, consumes = APPLICATION_JSON_VALUE, produces = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Get a preview diff between the same step of the same preparation but with one step update.")
-    public void previewUpdate(@RequestBody final PreviewUpdateParameters input, final OutputStream output) {
+    public StreamingResponseBody previewUpdate(@RequestBody final PreviewUpdateParameters input) {
     //@formatter:on
 
         // get preparation details
@@ -439,7 +437,7 @@ public class PreparationAPI extends APIService {
         final List<Action> actions = internalGetActions(preparation.getId());
 
         final HystrixCommand<InputStream> transformation = getCommand(PreviewUpdate.class, input, preparation, actions);
-        executePreviewCommand(transformation);
+        return executePreviewCommand(transformation);
     }
 
     //@formatter:off

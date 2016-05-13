@@ -56,7 +56,7 @@ public abstract class BaseTransformationService {
 
     /** The transformer factory. */
     @Autowired
-    private TransformerFactory factory;
+    protected TransformerFactory factory;
 
     /** The format registration service. */
     @Autowired
@@ -108,6 +108,7 @@ public abstract class BaseTransformationService {
                 .args(arguments) //
                 .output(response) //
                 .actions(actions) //
+                .stepId(stepId) //
                 .build();
 
         factory.get(configuration).transform(dataSet, configuration);

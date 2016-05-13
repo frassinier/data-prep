@@ -22,7 +22,10 @@ import static org.talend.dataprep.transformation.api.action.metadata.category.Sc
 import static org.talend.dataprep.transformation.api.action.metadata.category.ScopeCategory.LINE;
 
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -38,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.context.WebApplicationContext;
 import org.talend.daikon.exception.ExceptionContext;
 import org.talend.dataprep.api.dataset.ColumnMetadata;
 import org.talend.dataprep.api.dataset.DataSet;
@@ -47,10 +49,8 @@ import org.talend.dataprep.api.preparation.Preparation;
 import org.talend.dataprep.api.preparation.StepDiff;
 import org.talend.dataprep.cache.ContentCache;
 import org.talend.dataprep.command.dataset.DataSetGet;
-import org.talend.dataprep.command.preparation.PreparationDetailsGet;
 import org.talend.dataprep.exception.TDPException;
 import org.talend.dataprep.exception.error.CommonErrorCodes;
-import org.talend.dataprep.exception.error.PreparationErrorCodes;
 import org.talend.dataprep.exception.error.TransformationErrorCodes;
 import org.talend.dataprep.exception.json.JsonErrorCodeDescription;
 import org.talend.dataprep.format.export.ExportFormat;
@@ -195,7 +195,6 @@ public class TransformationService extends BaseTransformationService {
         // head is not allowed as step id
         if (StringUtils.equals("head", stepId)) {
             Preparation preparation = getPreparation(preparationId);
-
             version = preparation.getSteps().get(preparation.getSteps().size() - 1);
         }
 
@@ -210,7 +209,7 @@ public class TransformationService extends BaseTransformationService {
             key = new TransformationCacheKey(preparationId, dataSet.getMetadata(), formatName, parameters, version, sample);
         } catch (IOException e) {
             LOG.warn("cannot generate transformation cache key for {}. Cache will not be used.", dataSet.getMetadata(), e);
-            internalTransform(preparationId, dataSet, output, formatName, stepId, name, optionalParams);
+            internalTransform(preparationId, dataSet, output, formatName, version, name, optionalParams);
             return;
         }
 
@@ -225,7 +224,7 @@ public class TransformationService extends BaseTransformationService {
         // or save it into the cache (and make sure the cache entry is closed properly)
         try (final OutputStream newCacheEntry = contentCache.put(key, ContentCache.TimeToLive.DEFAULT)) {
             OutputStream outputStreams = new TeeOutputStream(output, newCacheEntry);
-            internalTransform(preparationId, dataSet, outputStreams, formatName, stepId, name, optionalParams);
+            internalTransform(preparationId, dataSet, outputStreams, formatName, version, name, optionalParams);
         } catch (RuntimeException e) {
             contentCache.evict(key); // TDP-1729: Don't cache a potentially wrong content.
             throw e;

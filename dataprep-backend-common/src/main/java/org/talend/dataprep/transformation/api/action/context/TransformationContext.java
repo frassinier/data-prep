@@ -82,11 +82,6 @@ public final class TransformationContext {
         return contexts.values();
     }
 
-    public void freezeActionContexts() {
-        LOGGER.debug("freezing action contexts");
-        contexts.replaceAll((action, actionContext) -> actionContext.asImmutable());
-    }
-
     public void freezeActionContext(ActionContext actionContext) {
         contexts.replaceAll((action, ac) -> {
             if (ac == actionContext) {

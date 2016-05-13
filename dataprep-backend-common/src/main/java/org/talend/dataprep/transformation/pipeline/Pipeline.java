@@ -107,6 +107,7 @@ public class Pipeline implements Node, RuntimeNode {
         private StatisticsAdapter adapter;
 
         private Supplier<Node> outputSupplier = () -> NullNode.INSTANCE;
+        private boolean allowMetadataChange;
 
         public static Builder builder() {
             return new Builder();
@@ -149,6 +150,11 @@ public class Pipeline implements Node, RuntimeNode {
 
         public Builder withOutput(Supplier<Node> outputSupplier) {
             this.outputSupplier = outputSupplier;
+            return this;
+        }
+
+        public Builder allowMetadataChange(boolean allowMetadataChange) {
+            this.allowMetadataChange = allowMetadataChange;
             return this;
         }
 
@@ -206,23 +212,34 @@ public class Pipeline implements Node, RuntimeNode {
             return analysisResult;
         }
 
+        private void addReservoirStatistics(Action action, ActionAnalysis analysis, NodeBuilder builder) {
+            if (allowMetadataChange) {
+                if (actionToMetadata.get(action).getBehavior().contains(ActionMetadata.Behavior.NEED_STATISTICS)) {
+                    if (actionRegistry != null) {
+                        builder.to(new ReservoirNode(inlineAnalyzer, analysis.filter, adapter));
+                    } else {
+                        builder.to(new ReservoirNode(inlineAnalyzer, c -> true, adapter));
+                    }
+                }
+                if (action.getParameters().containsKey(ImplicitParameters.FILTER.getKey())) {
+                    // action has a filter, to cover cases where filters are on invalid values
+                    builder.to(new ReservoirNode(inlineAnalyzer, c -> true, adapter));
+                }
+            }
+        }
+
         public Pipeline build() {
             final ActionAnalysis analysis = analyzeActions();
             final NodeBuilder current = NodeBuilder.source();
             // Apply actions
             for (Action action : actions) {
+                addReservoirStatistics(action, analysis, current);
                 current.to(new CompileNode(action, context.create(action.getRowAction())));
-                if (action.getParameters().containsKey(ImplicitParameters.FILTER.getKey())) {
-                    // action has a filter, to cover cases where filters are on invalid values
-                    // TODO Perform static analysis of filter to discover if filter holds conditions that needs up-to-date statistics
-                    current.to(new InlineAnalysisNode(inlineAnalyzer, c -> true, adapter));
-                }
                 current.to(new ActionNode(action, context.in(action.getRowAction())));
             }
             // Analyze (delayed)
             if (analysis.needDelayedAnalysis) {
-                current.to(new InlineAnalysisNode(inlineAnalyzer, analysis.filter, adapter));
-                current.to(new DelayedAnalysisNode(delayedAnalyzer, analysis.filter, adapter));
+                current.to(new ReservoirNode(delayedAnalyzer, analysis.filter , adapter));
             }
             // Output
             current.to(new CleanUpNode(context));

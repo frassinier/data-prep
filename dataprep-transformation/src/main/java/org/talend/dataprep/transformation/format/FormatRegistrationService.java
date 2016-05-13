@@ -50,7 +50,7 @@ public class FormatRegistrationService {
      * @return the wanted export format or null if not found.
      */
     public ExportFormat getByName(String formatName) {
-        final Optional<ExportFormat> format = types.stream().filter(f -> StringUtils.equals(formatName, f.getName())).findFirst();
+        final Optional<ExportFormat> format = types.stream().filter(f -> StringUtils.equalsIgnoreCase(formatName, f.getName())).findFirst();
         return format.isPresent() ? format.get() : null;
     }
 }

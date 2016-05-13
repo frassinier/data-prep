@@ -328,7 +328,6 @@ public class PipelineTest {
                 .to(new BasicNode()) //
                 .toMany(new BasicNode()) //
                 .to(new ActionNode(new Action(), new ActionContext(new TransformationContext()))) //
-                .to(new InlineAnalysisNode(c -> NullAnalyzer.INSTANCE, c -> true, new StatisticsAdapter())) //
                 .to(new DelayedAnalysisNode(c -> NullAnalyzer.INSTANCE, c -> true, new StatisticsAdapter())) //
                 .to(output) //
                 .build();
@@ -340,7 +339,7 @@ public class PipelineTest {
 
         // Then
         final Class[] expectedClasses = { Pipeline.class, SourceNode.class, BasicLink.class, BasicNode.class, CloneLink.class,
-                ActionNode.class, InlineAnalysisNode.class, DelayedAnalysisNode.class };
+                ActionNode.class, DelayedAnalysisNode.class };
         Assert.assertThat(visitor.traversedClasses, CoreMatchers.hasItems(expectedClasses));
         Assert.assertNotNull(pipeline.toString());
     }
@@ -420,12 +419,6 @@ public class PipelineTest {
         public void visitCompile(CompileNode compileNode) {
             traversedClasses.add(compileNode.getClass());
             super.visitCompile(compileNode);
-        }
-
-        @Override
-        public void visitInlineAnalysis(InlineAnalysisNode inlineAnalysisNode) {
-            traversedClasses.add(inlineAnalysisNode.getClass());
-            super.visitInlineAnalysis(inlineAnalysisNode);
         }
 
         @Override

@@ -40,13 +40,6 @@ public class PipelineConsoleDump extends Visitor {
     }
 
     @Override
-    public void visitInlineAnalysis(InlineAnalysisNode inlineAnalysisNode) {
-        buildMonitorInformation(inlineAnalysisNode);
-        builder.append("INLINE ANALYSIS").append('\n');
-        super.visitInlineAnalysis(inlineAnalysisNode);
-    }
-
-    @Override
     public void visitSource(SourceNode sourceNode) {
         builder.append("-> SOURCE").append('\n');
         super.visitSource(sourceNode);

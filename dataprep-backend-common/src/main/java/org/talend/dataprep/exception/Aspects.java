@@ -37,7 +37,7 @@ class Aspects {
     @Around("execution(* *(..)) && @annotation(requestMapping) && @annotation(apiOperation)")
     public Object exception(ProceedingJoinPoint pjp, RequestMapping requestMapping, ApiOperation apiOperation) throws Throwable {
         try {
-            return pjp.proceed(pjp.getArgs());
+            return pjp.proceed();
         } catch (TDPException e) {
             throw e; // Let TDPException pass through (to be processed in correct HTTP code by controller advice).
         } catch (HystrixRuntimeException hre) {
