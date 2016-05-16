@@ -17,6 +17,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.talend.dataprep.schema.csv.CSVSerializer;
 
 @Configuration
@@ -67,7 +70,7 @@ public class TaskExecution {
      */
     @Bean(name = "serializer#json#executor")
     TaskExecutor getJsonTaskExecutor() {
-        final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        final ThreadPoolTaskExecutor executor = new AuthenticatedTaskExecutor();
         executor.setCorePoolSize(4);
         executor.setMaxPoolSize(10);
         executor.setWaitForTasksToCompleteOnShutdown(false);
