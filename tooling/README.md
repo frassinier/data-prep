@@ -1,6 +1,7 @@
 ### IntelliJ idea
  * Install [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546) plugin
- * Import the java formatter file [IDEs/intellij/format.xml](/tooling/IDEs/intellij/format.xml)
+ * Clone the GIT repository  https://github.com/Talend/tools
+ * Import the java formatter file in <tools_clone_location>/tools-java-formatter/src/main/resources/talend_java_eclipse_formatter.xml
  * Set the order import manually as followed `java;javax;org;com;`
  * Enable the copyright plugin
  * extract the [IDEs/intellij/copyright.tar.gz](/tooling/IDEs/intellij/copyright.tar.gz) in your .idea folder and restart IntelliJ idea
