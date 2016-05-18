@@ -242,7 +242,7 @@ public class DataSetAPI extends APIService {
             LOG.debug("Listing datasets (pool: {})...", getConnectionStats());
         }
         try {
-            GenericCommand<InputStream> listCommand = getCommand(DataSetList.class, sort, order);
+            GenericCommand<InputStream> listCommand = getCommand(DataSetList.class, sort, order, name, certified, favorite, limit);
             return CommandHelper.toStreaming(listCommand);
         } finally {
             if (LOG.isDebugEnabled()) {
