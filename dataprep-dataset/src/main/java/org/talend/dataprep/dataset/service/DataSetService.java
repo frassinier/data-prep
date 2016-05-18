@@ -192,6 +192,9 @@ public class DataSetService extends BaseDataSetService {
     @Value("#{'${dataset.imports}'.split(',')}")
     private Set<String> enabledImports;
 
+    @Value("${dataset.list.limit}")
+    private int datasetListLimit;
+
     /**
      * Sort the synchronous analyzers.
      */
@@ -235,25 +238,32 @@ public class DataSetService extends BaseDataSetService {
     }
 
     @RequestMapping(value = "/datasets", method = RequestMethod.GET, produces = APPLICATION_JSON_VALUE)
-    @ApiOperation(value = "List all data sets", notes = "Returns the list of data sets the current user is allowed to see. Creation date is a Epoch time value (in UTC time zone).")
+    @ApiOperation(value = "List all data sets and filters on certified, or favorite or a limited number when asked", notes = "Returns the list of data sets (and filters) the current user is allowed to see. Creation date is a Epoch time value (in UTC time zone).")
     @Timed
     public Iterable<DataSetMetadata> list(
-            @ApiParam(value = "Sort key (by name or date).") @RequestParam(defaultValue = "DATE", required = false) String sort,
-            @ApiParam(value = "Order for sort key (desc or asc).") @RequestParam(defaultValue = "DESC", required = false) String order) {
+            @ApiParam(value = "Sort key (by name, creation or modification date).") @RequestParam(defaultValue = "DATE", required = false) String sort,
+            @ApiParam(value = "Order for sort key (desc or asc).") @RequestParam(defaultValue = "DESC", required = false) String order,
+            @ApiParam(value = "Filter on certified data sets") @RequestParam(defaultValue = "false", required = false) boolean certified,
+            @ApiParam(value = "Filter on favorite data sets") @RequestParam(defaultValue = "false", required = false) boolean favorite,
+            @ApiParam(value = "Only return a limite number of data sets") @RequestParam(defaultValue = "false", required = false) boolean limit) {
 
         Spliterator<DataSetMetadata> iterator = dataSetMetadataRepository.list().spliterator();
 
-        final Comparator<DataSetMetadata> comparator = getDataSetMetadataComparator(sort, order);
-
         // Return sorted results
         try (Stream<DataSetMetadata> stream = stream(iterator, false)) {
-            return stream.filter(metadata -> !metadata.getLifecycle().importing()) //
+            // @formatter:off
+            final Comparator<DataSetMetadata> comparator = getDataSetMetadataComparator(sort, order);
+            return stream.filter(metadata -> !metadata.getLifecycle().importing())
                     .map(metadata -> {
                         completeWithUserData(metadata);
                         return metadata;
-                    }) //
-                    .sorted(comparator) //
+                    })
+                    .filter(metadata -> !favorite || metadata.isFavorite())
+                    .filter(metadata -> !certified || Certification.CERTIFIED.equals(metadata.getGovernance().getCertificationStep()))
+                    .sorted(comparator)
+                    .limit(limit ? datasetListLimit : Long.MAX_VALUE)
                     .collect(Collectors.toList());
+            // @formatter:on
         }
     }
 

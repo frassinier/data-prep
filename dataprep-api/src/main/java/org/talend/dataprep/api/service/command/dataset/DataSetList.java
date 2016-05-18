@@ -34,11 +34,11 @@ import org.talend.dataprep.exception.error.CommonErrorCodes;
 @Scope("request")
 public class DataSetList extends GenericCommand<InputStream> {
 
-    private DataSetList(String sort, String order) {
+    private DataSetList(String sort, String order, boolean certified, boolean favorite, boolean limit) {
         super(GenericCommand.DATASET_GROUP);
 
         try {
-            execute(() -> onExecute( sort, order));
+            execute(() -> onExecute(sort, order, certified, favorite, limit));
             onError(e -> new TDPException(APIErrorCodes.UNABLE_TO_LIST_DATASETS, e));
             on(HttpStatus.NO_CONTENT, HttpStatus.ACCEPTED).then(emptyStream());
             on(HttpStatus.OK).then(pipeStream());
@@ -48,12 +48,15 @@ public class DataSetList extends GenericCommand<InputStream> {
         }
     }
 
-    private HttpRequestBase onExecute(String sort, String order) {
+    private HttpRequestBase onExecute(String sort, String order, boolean certified, boolean favorite, boolean limit) {
         try {
 
             URIBuilder uriBuilder = new URIBuilder(datasetServiceUrl + "/datasets");
             uriBuilder.addParameter( "sort", sort );
             uriBuilder.addParameter( "order", order );
+            uriBuilder.addParameter( "certified", Boolean.toString(certified));
+            uriBuilder.addParameter( "favorite", Boolean.toString(favorite));
+            uriBuilder.addParameter( "limit", Boolean.toString(limit));
             return new HttpGet( uriBuilder.build() );
         } catch (URISyntaxException e) {
             throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);

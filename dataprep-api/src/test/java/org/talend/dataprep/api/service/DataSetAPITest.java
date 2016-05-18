@@ -17,13 +17,15 @@ import static com.jayway.restassured.RestAssured.given;
 import static com.jayway.restassured.RestAssured.when;
 import static com.jayway.restassured.path.json.JsonPath.from;
 import static org.hamcrest.CoreMatchers.not;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
 import static org.talend.dataprep.test.SameJSONFile.sameJSONAsFile;
 import static uk.co.datumedge.hamcrest.json.SameJSONAs.sameJSONAs;
 
 import java.io.InputStream;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -525,6 +527,81 @@ public class DataSetAPITest extends ApiServiceTestBase {
         assertThat(encodings.isEmpty(), is(false));
         assertThat(encodings.get(0), is("UTF-8"));
         assertThat(encodings.get(1), is("UTF-16"));
+    }
+
+    @Test
+    public void should_list_filtered_datasets_properly() throws Exception {
+        // create data sets
+        final String dataSetId1 = createDataset("dataset/dataset.csv", "dataset1", "text/csv");
+        final String dataSetId2 = createDataset("dataset/dataset.csv", "dataset2", "text/csv");
+        final String dataSetId3 = createDataset("dataset/dataset.csv", "dataset3", "text/csv");
+        createDataset("dataset/dataset.csv", "dataset4", "text/csv");
+
+        // Make dataset1 more recent
+        final DataSetMetadata dataSetMetadata1 = dataSetMetadataRepository.get(dataSetId1);
+        dataSetMetadata1.setFavorite(true);
+        dataSetMetadata1.getGovernance().setCertificationStep(DataSetGovernance.Certification.CERTIFIED);
+        dataSetMetadata1.setLastModificationDate(Instant.now().getEpochSecond()+1);
+        dataSetMetadataRepository.add(dataSetMetadata1);
+        final DataSetMetadata dataSetMetadata2 = dataSetMetadataRepository.get(dataSetId2);
+        dataSetMetadata2.setFavorite(true);
+        dataSetMetadataRepository.add(dataSetMetadata2);
+        final DataSetMetadata dataSetMetadata3 = dataSetMetadataRepository.get(dataSetId3);
+        dataSetMetadata3.getGovernance().setCertificationStep(DataSetGovernance.Certification.CERTIFIED);
+        dataSetMetadataRepository.add(dataSetMetadata3);
+
+        // @formatter:off
+        // certified, favorite and recent
+        given()
+                .queryParam("favorite", "true")
+                .queryParam("certified", "true")
+                .queryParam("limit", "true")
+                .when()
+                .get("/api/datasets")
+                .then()
+                .statusCode(200)
+                .body("name", hasItem("dataset1"))
+                .body("name", hasSize(1));
+
+        // only favorites
+        given()
+                .queryParam("favorite", "true")
+                .when()
+                .get("/api/datasets")
+                .then()
+                .statusCode(200)
+                .body("name", hasItems("dataset1", "dataset2"))
+                .body("name", hasSize(2));;
+
+        // only certified
+        given()
+                .queryParam("certified", "true")
+                .when()
+                .get("/api/datasets")
+                .then()
+                .statusCode(200)
+                .body("name", hasItems("dataset1", "dataset3"))
+                .body("name", hasSize(2));
+
+        // only recent
+        given()
+                .queryParam("limit", "true")
+                .when()
+                .get("/api/datasets")
+                .then()
+                .statusCode(200)
+                .body("name", hasItems("dataset2", "dataset3", "dataset4"))
+                .body("name", hasSize(3));
+
+        // all
+        when()
+                .get("/api/datasets")
+                .then()
+                .statusCode(200)
+                .body("name", hasItems("dataset1", "dataset2", "dataset3", "dataset4"))
+                .body("name", hasSize(4));
+
+        // @formatter:on
     }
 
 }
