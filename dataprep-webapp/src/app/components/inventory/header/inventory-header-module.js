@@ -29,6 +29,7 @@ import InventoryHeaderDirective from './inventory-header-directive';
             'pascalprecht.translate',
             'talend.widget',
             'data-prep.services.utils',
+            'data-prep.preparation-creator'
         ])
         .controller('InventoryHeaderCtrl', InventoryHeaderCtrl)
         .directive('inventoryHeader', InventoryHeaderDirective);

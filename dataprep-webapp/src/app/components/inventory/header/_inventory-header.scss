@@ -21,17 +21,33 @@
   font-size: 0.9em;
   height: 50px;
 
-  .add-folder {
-    color: $dark-gray;
-    font-weight: 600;
+  .primary {
+    margin: 5px 8px;
+  }
 
-    background-color: $light-gray;
-    border: 1px solid $medium-gray;
-    border-radius: 5px;
+  .preparations-list-header {
 
-    height: 30px;
-    margin: 8px;
-    padding: 5px 10px;
+    .add-preparation {
+      margin: 8px 10px;
+      float:left;
+      background: #b6be00;
+      color: #FFFFFF;
+      cursor: pointer;
+      height: 30px;
+      padding: 0 5px;
+      text-transform: uppercase;
+    }
+
+    .add-folder {
+      color: $dark-gray;
+      font-weight: 600;
+      background-color: $light-gray;
+      border: 1px solid $medium-gray;
+      border-radius: 5px;
+      height: 30px;
+      margin: 8px 0px;
+      padding: 5px 10px;
+    }
   }
 
   .inventory-sort {

@@ -1,0 +1,99 @@
+/*  ============================================================================
+
+  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+
+  This source code is available under agreement available at
+  https://github.com/Talend/data-prep/blob/master/LICENSE
+
+  You should have received a copy of the agreement
+  along with this program; if not, write to Talend SA
+  9 rue Pages 92150 Suresnes, France
+
+  ============================================================================*/
+
+
+.inventory-item {
+    @include flex-grow(0);
+    @include flex-shrink(0);
+
+    @include flex-row();
+    border-bottom: 1px solid #CECECE;
+    height: 80px;
+    padding: 10px;
+
+    &:hover {
+        background-color: tint($pale-blue, 30%);
+
+        .btn-transparent {
+            opacity: 1;
+        }
+
+        .inventory-text .edit-btn {
+            display: block;
+        }
+    }
+
+    .inventory-icon {
+        @include display(flex);
+        @include align-items(center);
+
+        padding: 0 3px;
+        position: relative;
+
+        img {
+            width: 40px;
+        }
+
+        .pin {
+            position: absolute;
+            left: 0;
+            top: -5px;
+            width: 25px;
+        }
+
+        .preparation-icon-div {
+            font-size: 1.7em;
+            color: $dark-blue;
+        }
+
+        .documentation-icon-div {
+            font-size: 1.3em;
+            color: $dark-blue;
+        }
+    }
+
+    .inventory-text {
+        @include flex-column();
+        @include justify-content(center);
+        padding-left: 10px;
+
+        .inventory-title {
+            @include ellipsis(400px);
+            padding: 3px 0;
+            cursor: pointer;
+
+            color: $black;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .inventory-description {
+            color: $medium-gray;
+            font-weight: 300;
+            font-size: .8em;
+
+            overflow: hidden;
+            white-space: normal;
+            max-height: 2.8em;
+        }
+
+        .edition-text-input {
+            padding: 4px;
+            width: 220px;
+        }
+
+        .edit-btn {
+            display: none;
+        }
+    }
+}

@@ -28,11 +28,6 @@ $subheader-background: $light-gray;
     > ul {
       @include flex-row();
       @include align-items(center);
-      
-      > li.primary {
-        padding-right: 30px;
-      }
-      
     }
   }
 }

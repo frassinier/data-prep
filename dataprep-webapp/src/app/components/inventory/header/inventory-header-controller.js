@@ -45,4 +45,14 @@ export default class InventoryHeaderCtrl {
                 this.folderNameModal = false
             });
     }
+
+    /**
+     * @ngdoc method
+     * @name openAddPreparationModal
+     * @methodOf data-prep.inventory-header.controller:InventoryHeaderCtrl
+     * @description Opens add preparation Modal
+     */
+    openAddPreparationModal() {
+        this.showAddPrepModal = true;
+    }
 }
