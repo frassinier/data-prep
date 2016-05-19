@@ -1133,7 +1133,7 @@ public class DataSetServiceTest extends DataSetBaseTest {
         assertNull(metadata);
         int statusCode = when().get("/datasets/{id}/metadata", "9876").statusCode();
 
-        assertThat(statusCode, is(HttpStatus.NO_CONTENT.value()));
+        assertThat(statusCode, is(HttpStatus.BAD_REQUEST.value()));
 
     }
 

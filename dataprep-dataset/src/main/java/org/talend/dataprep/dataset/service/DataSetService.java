@@ -450,8 +450,7 @@ public class DataSetService {
         }
         DataSetMetadata metadata = dataSetMetadataRepository.get(dataSetId);
         if (metadata == null) {
-            HttpResponseContext.status(HttpStatus.NO_CONTENT);
-            return null;
+            throw new TDPException(DataSetErrorCodes.DATASET_DOES_NOT_EXIST, ExceptionContext.build().put("id", dataSetId));
         }
         if (!metadata.getLifecycle().schemaAnalyzed()) {
             HttpResponseContext.status(HttpStatus.ACCEPTED);
