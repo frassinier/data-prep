@@ -33,7 +33,7 @@
  * @restrict E
  */
 export default function Datagrid($timeout, state, DatagridGridService, DatagridColumnService, DatagridStyleService, DatagridSizeService,
-                                 DatagridTooltipService, DatagridExternalService) {
+                                 DatagridTooltipService, DatagridExternalService, StatisticsService) {
     'ngInject';
 
     return {
@@ -64,19 +64,19 @@ export default function Datagrid($timeout, state, DatagridGridService, DatagridC
 
             /**
              * @ngdoc method
-             * @name getSelectedColumn
+             * @name getSelectedColumns
              * @methodOf data-prep.datagrid.directive:Datagrid
-             * @description Get the selected column
+             * @description Get the selected columns
              */
-            function getSelectedColumn() {
-                return state.playground.grid.selectedColumn;
+            function getSelectedColumns() {
+                return state.playground.grid.selectedColumns;
             }
 
             /**
              * @ngdoc method
-             * @name getSelectedColumn
+             * @name getSelectedLine
              * @methodOf data-prep.datagrid.directive:Datagrid
-             * @description Get the selected column
+             * @description Get the selected line
              */
             function getSelectedLine() {
                 return state.playground.grid.selectedLine;
@@ -155,7 +155,7 @@ export default function Datagrid($timeout, state, DatagridGridService, DatagridC
                         DatagridSizeService.autosizeColumns(columns); // IMPORTANT : this set columns in the grid
                         DatagridColumnService.renewAllColumns(false);
 
-                        var selectedColumnId = getSelectedColumn() && getSelectedColumn().id;
+                        var selectedColumnId = getSelectedColumns() && getSelectedColumns().id;
                         DatagridStyleService.updateColumnClass(selectedColumnId);
                         grid.invalidate();
                     }, 0, false);
@@ -196,26 +196,37 @@ export default function Datagrid($timeout, state, DatagridGridService, DatagridC
                     DatagridStyleService.resetHighlightStyles();
 
                     //Update column style
-                    $timeout.cancel(columnStyleTimeout);
-                    columnStyleTimeout = $timeout(function () {
-                        var selectedColumnId = getSelectedColumn() && getSelectedColumn().id;
+                    if(getSelectedColumns().length === 1) {
+                        $timeout.cancel(columnStyleTimeout);
+                        columnStyleTimeout = $timeout(function () {
+                            var selectedColumnId = getSelectedColumns()[0] && getSelectedColumns()[0].id;
 
-                        if (getSelectedLine()) {
-                            DatagridStyleService.updateColumnClass(selectedColumnId);
-                        }
-                        else {
-                            DatagridStyleService.resetStyles(selectedColumnId);
-                        }
-                        grid.invalidate();
-                    }, 0, false);
+                            if (getSelectedLine()) {
+                                DatagridStyleService.updateColumnClass(selectedColumnId);
+                            }
+                            else {
+                                DatagridStyleService.resetStyles(selectedColumnId);
+                            }
+                            grid.invalidate();
+                        }, 0, false);
 
-                    //manage column selection (external)
-                    $timeout.cancel(externalTimeout);
-                    if (getData() && !getData().preview) {
-                        externalTimeout = $timeout(
-                            () => DatagridExternalService.updateSuggestionPanel(true),
-                            500
-                        );
+                        //manage column selection (external)
+                        $timeout.cancel(externalTimeout);
+                        if (getData() && !getData().preview) {
+                            externalTimeout = $timeout(
+                                () => DatagridExternalService.updateSuggestionPanel(true),
+                                500
+                            );
+                        }
+                    } else {
+                        StatisticsService.reset();
+
+                        if(getSelectedColumns().length > 1) {
+                            $timeout(function () {
+                                DatagridStyleService.updateColumnsClass(getSelectedColumns());
+                                grid.invalidate();
+                            }, 0, false);
+                        }
                     }
                 }
             };
@@ -229,25 +240,27 @@ export default function Datagrid($timeout, state, DatagridGridService, DatagridC
             var onSelectionChange = function onSelectionChange() {
                 if (grid) {
                     const stateSelectedLine = getSelectedLine();
-                    const stateSelectedColumn = getSelectedColumn();
                     const stateGridData = getData();
 
-                    $timeout.cancel(cellHighlightTimeout);
-                    if (stateSelectedLine && stateSelectedColumn) {
-                        const lineIndex = state.playground.grid.dataView.getRowById(stateSelectedLine.tdpId);
-                        const columnIndex = grid.getColumnIndex(stateSelectedColumn.id);
-                        grid.setActiveCell(lineIndex, columnIndex);
-                    }
+                    if(getSelectedColumns().length === 1) {
+                        const stateSelectedColumn = getSelectedColumns()[0];
+                        $timeout.cancel(cellHighlightTimeout);
+                        if (stateSelectedLine && stateSelectedColumn) {
+                            const lineIndex = state.playground.grid.dataView.getRowById(stateSelectedLine.tdpId);
+                            const columnIndex = grid.getColumnIndex(stateSelectedColumn.id);
+                            grid.setActiveCell(lineIndex, columnIndex);
+                        }
 
-                    if (stateSelectedLine && stateGridData && !stateGridData.preview) {
-                        cellHighlightTimeout = $timeout(() => {
-                                const colId = stateSelectedColumn && stateSelectedColumn.id;
-                                const content = stateSelectedLine[colId];
-                                DatagridStyleService.highlightCellsContaining(colId, content);
-                            },
-                            500,
-                            false
-                        );
+                        if (stateSelectedLine && stateGridData && !stateGridData.preview) {
+                            cellHighlightTimeout = $timeout(() => {
+                                    const colId = stateSelectedColumn && stateSelectedColumn.id;
+                                    const content = stateSelectedLine[colId];
+                                    DatagridStyleService.highlightCellsContaining(colId, content);
+                                },
+                                500,
+                                false
+                            );
+                        }
                     }
                 }
             };
@@ -310,12 +323,12 @@ export default function Datagrid($timeout, state, DatagridGridService, DatagridC
             /**
              * when a new column is selected
              */
-            scope.$watch(getSelectedColumn, onColumnSelectionChange);
+            scope.$watch(getSelectedColumns, onColumnSelectionChange, true);
 
             /**
              * when the active cell change
              */
-            scope.$watchGroup([getSelectedLine, getSelectedColumn], onSelectionChange);
+            scope.$watchGroup([getSelectedLine, getSelectedColumns], onSelectionChange);
         }
     };
 }

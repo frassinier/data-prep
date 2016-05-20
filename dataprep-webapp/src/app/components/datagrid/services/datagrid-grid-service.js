@@ -74,7 +74,7 @@ export default class DatagridGridService {
         this.grid.onActiveCellChanged.subscribe((e, args) => {
             this.$timeout.cancel(this.changeActiveTimeout);
             this.changeActiveTimeout = this.$timeout(() => {
-                let columnMetadata = this.state.playground.grid.selectedColumn;
+                let columnMetadata = this.state.playground.grid.selectedColumns[0];
                 if (angular.isDefined(args.cell)) {
                     const column = this.grid.getColumns()[args.cell];
                     columnMetadata = column && column.tdpColMetadata;
@@ -88,7 +88,13 @@ export default class DatagridGridService {
         });
 
         this.grid.onHeaderClick.subscribe((e, args) => {
-            this.$timeout(() => this.StateService.setGridSelection(args.column.tdpColMetadata, null));
+            this.$timeout(() => {
+                if(e.ctrlKey) {
+                    this.StateService.updateGridSelection(args.column.tdpColMetadata, null);
+                } else {
+                    this.StateService.setGridSelection(args.column.tdpColMetadata, null);
+                }
+            });
         });
 
         this.grid.onColumnsReordered.subscribe((e, args) => {

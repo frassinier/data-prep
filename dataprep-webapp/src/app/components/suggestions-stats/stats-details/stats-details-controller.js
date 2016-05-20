@@ -36,7 +36,7 @@ export default function StatsDetailsCtrl(state, FilterService, StatisticsService
      * @description Add a pattern filter from selected pattern item
      */
     vm.addPatternFilter = function addPatternFilter(item) {
-        var column = state.playground.grid.selectedColumn;
+        var column = state.playground.grid.selectedColumns[0];
         return item.pattern ?
             FilterService.addFilterAndDigest('matches', column.id, column.name, {pattern: item.pattern}) :
             FilterService.addFilterAndDigest('empty_records', column.id, column.name);

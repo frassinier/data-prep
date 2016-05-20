@@ -33,7 +33,7 @@ export default function ColumnProfileCtrl($translate, $timeout, state, Statistic
     //------------------------------------------------FILTER------------------------------------------------
     //------------------------------------------------------------------------------------------------------
     function addExactFilter(value) {
-        var column = state.playground.grid.selectedColumn;
+        var column = state.playground.grid.selectedColumns[0];
         return value.length ?
             FilterService.addFilterAndDigest('exact', column.id, column.name, {
                 phrase: value,
@@ -61,7 +61,7 @@ export default function ColumnProfileCtrl($translate, $timeout, state, Statistic
      * @param {object} interval The interval [min, max] to filter
      */
     vm.addRangeFilter = function addRangeFilter(interval) {
-        var selectedColumn = state.playground.grid.selectedColumn;
+        var selectedColumn = state.playground.grid.selectedColumns[0];
 
         if (!interval.label) {
             var min = d3.format(',')(interval.min);

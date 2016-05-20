@@ -121,8 +121,8 @@ export default function LookupCtrl($timeout, state, StateService, LookupService,
      */
     function getParams() {
         var params = extractLookupParams(state.playground.lookup.dataset);
-        params.column_id = state.playground.grid.selectedColumn.id;
-        params.column_name = state.playground.grid.selectedColumn.name;
+        params.column_id = state.playground.grid.selectedColumns[0].id;
+        params.column_name = state.playground.grid.selectedColumn[0].name;
         params.lookup_join_on = state.playground.lookup.selectedColumn.id;
         params.lookup_join_on_name = state.playground.lookup.selectedColumn.name;
         params.lookup_selected_cols = state.playground.lookup.columnsToAdd;

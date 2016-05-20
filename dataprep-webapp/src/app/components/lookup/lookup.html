@@ -45,8 +45,8 @@
 
             <button id="lookup-submit-btn-id"
                     ng-disabled="!lookupCtrl.state.playground.lookup.columnsToAdd.length ||
-                                !lookupCtrl.state.playground.lookup.selectedColumn ||
-                                !lookupCtrl.state.playground.grid.selectedColumn"
+                                !lookupCtrl.state.playground.lookup.selectedColumns.length ||
+                                !lookupCtrl.state.playground.grid.selectedColumns.length"
                     class="param-primary-button btn-primary"
                     ng-click="lookupCtrl.submit()"
                     ng-mouseenter="lookupCtrl.hoverSubmitBtn()"

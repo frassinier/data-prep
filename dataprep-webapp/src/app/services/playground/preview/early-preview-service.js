@@ -86,7 +86,7 @@ export default function EarlyPreviewService($timeout, state, RecipeService, Prev
 
             previewTimeout = $timeout(function () {
                 var line = state.playground.grid.selectedLine;
-                var column = state.playground.grid.selectedColumn;
+                var column = state.playground.grid.selectedColumns[0];
                 var preparationId = state.playground.preparation ? state.playground.preparation.id : null;
 
                 params.scope = scope;

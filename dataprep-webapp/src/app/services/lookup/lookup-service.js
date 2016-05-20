@@ -266,7 +266,7 @@ export default class LookupService {
      * @description Fetch the last step in recipe that is a lookup action for the selected column
      */
     _getSelectedColumnLastLookup() {
-        const selectedColumn = this.state.playground.grid.selectedColumn;
+        const selectedColumn = this.state.playground.grid.selectedColumns[0];
         return selectedColumn && _.findLast(this.RecipeService.getRecipe(), (nextStep) => {
             return nextStep.column.id === selectedColumn.id &&
                 nextStep.transformation.name === 'lookup';
@@ -282,7 +282,7 @@ export default class LookupService {
      */
     _getSelectedColumnLookup(lookupAction) {
         const datasetId = this._getDsId(lookupAction);
-        const selectedColumn = this.state.playground.grid.selectedColumn;
+        const selectedColumn = this.state.playground.grid.selectedColumns[0];
         return selectedColumn && _.findLast(this.RecipeService.getRecipe(), (nextStep) => {
             return nextStep.column.id === selectedColumn.id &&
                 nextStep.transformation.name === 'lookup' &&

@@ -80,6 +80,20 @@ export default class DatagridStyleService {
 
     /**
      * @ngdoc method
+     * @name updateSelectionClass
+     * @methodOf data-prep.datagrid.service:DatagridStyleService
+     * @description Add 'selected' class if the column is the selected one
+     * @param {object} column The target column
+     * @param {string} selectedColId The selected column id
+     */
+    updateSelectionsClass(column, selectedCols) {
+        if(_.find(selectedCols, { 'id': column.id})){
+            this._addClass(column, 'selected');
+        }
+    }
+
+    /**
+     * @ngdoc method
      * @name updateNumbersClass
      * @methodOf data-prep.datagrid.service:DatagridStyleService
      * @description Add the 'number' class to the column if its type is a number type
@@ -107,6 +121,26 @@ export default class DatagridStyleService {
             else {
                 column.cssClass = null;
                 this.updateSelectionClass(column, selectedColId);
+                this.updateNumbersClass(column);
+            }
+        });
+    }
+
+    /**
+     * @ngdoc method
+     * @name updateColumnsClass
+     * @methodOf data-prep.datagrid.service:DatagridStyleService
+     * @description Set style classes on columns depending on its state (type, selection, ...)
+     * @param {array} selectedCols The grid selected columns
+     */
+    updateColumnsClass(selectedCols) {
+        _.forEach(this.grid.getColumns(), (column) => {
+            if (column.id === 'tdpId') {
+                column.cssClass = 'index-column';
+            }
+            else {
+                column.cssClass = null;
+                this.updateSelectionsClass(column, selectedCols);
                 this.updateNumbersClass(column);
             }
         });

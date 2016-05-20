@@ -16,9 +16,9 @@
 <div class="actions-suggestions">
     <div class="suggestions-title">
         <span class="title"
-              title="{{actionsSuggestionsCtrl.state.playground.grid.selectedColumn.name}}"
-              ng-if="actionsSuggestionsCtrl.state.playground.grid.selectedColumn.name">
-            {{actionsSuggestionsCtrl.state.playground.grid.selectedColumn.name}}
+              title="{{actionsSuggestionsCtrl.state.playground.grid.selectedColumns[0].name}}"
+              ng-if="actionsSuggestionsCtrl.state.playground.grid.selectedColumns[0].name">
+            {{actionsSuggestionsCtrl.state.playground.grid.selectedColumns[0].name}}
         </span>
     </div>
 
@@ -56,7 +56,7 @@
             </div>
         </sc-tabs-item>
         <sc-tabs-item tab-title="Column" is-default="true">
-            <div ng-switch="!!actionsSuggestionsCtrl.state.playground.grid.selectedColumn">
+            <div ng-if="actionsSuggestionsCtrl.state.playground.grid.selectedColumns.length">
                 <input type="search"
                        class="action-search"
                        id="action-suggestions-search"
@@ -64,21 +64,19 @@
                        ng-model="actionsSuggestionsCtrl.state.playground.suggestions.column.searchActionString"
                        ng-model-options="{debounce: { default: 300, blur: 0 }}"
                        ng-change="actionsSuggestionsCtrl.columnSuggestionService.filterTransformations()"
-                       talend-search-input
-                       ng-switch-when="true">
+                       talend-search-input>
 
                 <actions-list class="action-suggestion-tab-items"
                               actions="actionsSuggestionsCtrl.state.playground.suggestions.column.filteredTransformations"
                               scope="column"
                               should-render-category="actionsSuggestionsCtrl.shouldRenderCategory"
                               should-render-action="actionsSuggestionsCtrl.shouldRenderAction"
-                              ng-switch-when="true"
                               scroll-to-bottom="actionsSuggestionsCtrl.scrollToBottom"></actions-list>
-
-                <div class="watermark"
-                     ng-switch-when="false"
-                     translate-once="SELECT_COLUMN_TO_DISPLAY_ACTIONS"></div>
             </div>
+            <div ng-if="!actionsSuggestionsCtrl.state.playground.grid.selectedColumns.length"
+                 class="watermark"
+                 translate-once="SELECT_COLUMN_TO_DISPLAY_ACTIONS"></div>
+
         </sc-tabs-item>
 
         <sc-tabs-item tab-title="Table">

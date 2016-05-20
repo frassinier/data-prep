@@ -83,7 +83,7 @@ export default function StatisticsService($log, $filter, state, StateService,
             label: label,
             keyField: keyField,
             valueField: valueField,
-            column: state.playground.grid.selectedColumn,
+            column: state.playground.grid.selectedColumns[0],
             vertical: false,
             className: className
         };
@@ -105,7 +105,7 @@ export default function StatisticsService($log, $filter, state, StateService,
             keyField: keyField,
             valueField: valueField,
             label: label,
-            column: state.playground.grid.selectedColumn,
+            column: state.playground.grid.selectedColumns[0],
             vertical: true
         };
     }
@@ -147,7 +147,7 @@ export default function StatisticsService($log, $filter, state, StateService,
      * @description prepares the numeric data details
      */
     function createNumberRangeHistograms() {
-        var histoData = state.playground.grid.selectedColumn.statistics.histogram;
+        var histoData = state.playground.grid.selectedColumns[0].statistics.histogram;
         if (!histoData) {
             return;
         }
@@ -225,7 +225,7 @@ export default function StatisticsService($log, $filter, state, StateService,
             return;
         }
 
-        var column = state.playground.grid.selectedColumn;
+        var column = state.playground.grid.selectedColumns[0];
         var statistics = column.statistics;
         var currentRangeFilter = _.find(state.playground.filter.gridFilters, function (filter) {
             return filter.colId === column.id && filter.type === 'inside_range';
@@ -262,7 +262,7 @@ export default function StatisticsService($log, $filter, state, StateService,
      * @description prepares the date data to be visualized
      */
     function createDateRangeHistogram() {
-        var histoData = state.playground.grid.selectedColumn.statistics.histogram;
+        var histoData = state.playground.grid.selectedColumns[0].statistics.histogram;
         if (!histoData) {
             return;
         }
@@ -315,7 +315,7 @@ export default function StatisticsService($log, $filter, state, StateService,
     function createFilteredDateRangeHistogram() {
         var parameters = {
             rangeData: state.playground.statistics.histogram.data,
-            patterns: _.chain(state.playground.grid.selectedColumn.statistics.patternFrequencyTable)
+            patterns: _.chain(state.playground.grid.selectedColumns[0].statistics.patternFrequencyTable)
                 .pluck('pattern')
                 .map(TextFormatService.convertJavaDateFormatToMomentDateFormat)
                 .value(),
@@ -457,7 +457,7 @@ export default function StatisticsService($log, $filter, state, StateService,
      * @return {Object} The classical and filtered histograms
      */
     function createClassicHistograms() {
-        var dataTable = state.playground.grid.selectedColumn.statistics.frequencyTable;
+        var dataTable = state.playground.grid.selectedColumns[0].statistics.frequencyTable;
         if (!dataTable || !dataTable.length) {
             return;
         }
@@ -532,7 +532,7 @@ export default function StatisticsService($log, $filter, state, StateService,
      * @description Initialize the statistics to display in the values TAB of the stats part
      */
     function initStatisticsValues() {
-        var column = state.playground.grid.selectedColumn;
+        var column = state.playground.grid.selectedColumns[0];
         var stats = column.statistics;
         var colType = ConverterService.simplifyType(column.type);
         var commonStats = {
@@ -583,7 +583,7 @@ export default function StatisticsService($log, $filter, state, StateService,
      * @description update patterns statistics
      */
     function initPatternsFrequency() {
-        var patternFrequency = state.playground.grid.selectedColumn.statistics.patternFrequencyTable;
+        var patternFrequency = state.playground.grid.selectedColumns[0].statistics.patternFrequencyTable;
         if (patternFrequency) {
             StateService.setStatisticsPatterns(patternFrequency);
             createFilteredPatternsFrequency()
@@ -600,7 +600,7 @@ export default function StatisticsService($log, $filter, state, StateService,
      * @description Create the filtered patterns statistics
      */
     function createFilteredPatternsFrequency() {
-        var column = state.playground.grid.selectedColumn;
+        var column = state.playground.grid.selectedColumns[0];
         var parameters = {
             columnId: column.id,
             patternFrequencyTable: column.statistics.patternFrequencyTable,
@@ -757,12 +757,12 @@ export default function StatisticsService($log, $filter, state, StateService,
      * @description Create a remove callback to reinit the current active limits on the current column range chart
      */
     function getRangeFilterRemoveFn() {
-        var selectedColumn = state.playground.grid.selectedColumn;
+        var selectedColumn = state.playground.grid.selectedColumns[0];
         var columnMin = selectedColumn.statistics.min;
         var columnMax = selectedColumn.statistics.max;
 
         return function removeFilterFn(filter) {
-            var actualSelectedColumn = state.playground.grid.selectedColumn;
+            var actualSelectedColumn = state.playground.grid.selectedColumns[0];
             if (filter.colId === actualSelectedColumn.id) {
                 initRangeLimits();
                 //to reset the vertical bars colors
@@ -785,7 +785,7 @@ export default function StatisticsService($log, $filter, state, StateService,
         resetCharts();
         removeSavedColumnAggregation();
 
-        var column = state.playground.grid.selectedColumn;
+        var column = state.playground.grid.selectedColumns[0];
         var simplifiedType = ConverterService.simplifyType(column.type);
         switch (simplifiedType) {
             case 'integer':
@@ -823,7 +823,7 @@ export default function StatisticsService($log, $filter, state, StateService,
         var datasetId = state.playground.dataset.id;
         var preparationId = state.playground.preparation && state.playground.preparation.id;
         var stepId = preparationId && RecipeService.getLastActiveStep() && RecipeService.getLastActiveStep().transformation.stepId;
-        var selectedColumn = state.playground.grid.selectedColumn;
+        var selectedColumn = state.playground.grid.selectedColumns[0];
 
         var aggregationParameters = {
             datasetId: preparationId ? null : datasetId,
@@ -860,7 +860,7 @@ export default function StatisticsService($log, $filter, state, StateService,
     function getSavedColumnAggregation() {
         var datasetId = state.playground.dataset && state.playground.dataset.id;
         var preparationId = state.playground.preparation && state.playground.preparation.id;
-        var columnId = state.playground.grid.selectedColumn && state.playground.grid.selectedColumn.id;
+        var columnId = state.playground.grid.selectedColumns[0] && state.playground.grid.selectedColumns[0].id;
         return StorageService.getAggregation(datasetId, preparationId, columnId);
     }
 
@@ -873,7 +873,7 @@ export default function StatisticsService($log, $filter, state, StateService,
     function removeSavedColumnAggregation() {
         var datasetId = state.playground.dataset && state.playground.dataset.id;
         var preparationId = state.playground.preparation && state.playground.preparation.id;
-        var columnId = state.playground.grid.selectedColumn && state.playground.grid.selectedColumn.id;
+        var columnId = state.playground.grid.selectedColumns[0] && state.playground.grid.selectedColumns[0].id;
         return StorageService.removeAggregation(datasetId, preparationId, columnId);
     }
 
@@ -886,7 +886,7 @@ export default function StatisticsService($log, $filter, state, StateService,
     function saveColumnAggregation(aggregationName, colId) {
         var datasetId = state.playground.dataset && state.playground.dataset.id;
         var preparationId = state.playground.preparation && state.playground.preparation.id;
-        var columnId = state.playground.grid.selectedColumn && state.playground.grid.selectedColumn.id;
+        var columnId = state.playground.grid.selectedColumns[0] && state.playground.grid.selectedColumns[0].id;
 
         var aggregation = {
             aggregation: aggregationName,
@@ -912,7 +912,7 @@ export default function StatisticsService($log, $filter, state, StateService,
         var aggregationName = columnAggregation && columnAggregation.aggregation;
 
         if (!aggregationName) {
-            var column = state.playground.grid.selectedColumn;
+            var column = state.playground.grid.selectedColumns[0];
 
             var simplifiedType = ConverterService.simplifyType(column.type);
             switch (simplifiedType) {

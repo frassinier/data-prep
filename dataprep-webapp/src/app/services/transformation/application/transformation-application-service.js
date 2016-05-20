@@ -72,7 +72,7 @@ export default function TransformationApplicationService(state, PlaygroundServic
      */
     function appendClosure(action, scope) {
         return function (params) {
-            var column = state.playground.grid.selectedColumn;
+            var column = state.playground.grid.selectedColumns[0];
             var line = state.playground.grid.selectedLine;
 
             params = params || {};

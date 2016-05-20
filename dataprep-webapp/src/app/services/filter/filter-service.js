@@ -227,7 +227,7 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
     function createDateRangeFilterFn(colId, values) {
         var minTimestamp = values[0];
         var maxTimestamp = values[1];
-        var patterns = _.chain(state.playground.grid.selectedColumn.statistics.patternFrequencyTable)
+        var patterns = _.chain(state.playground.grid.selectedColumns[0].statistics.patternFrequencyTable)
             .pluck('pattern')
             .map(TextFormatService.convertJavaDateFormatToMomentDateFormat)
             .value();

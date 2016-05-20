@@ -23,14 +23,15 @@ const NUMERIC_TYPES = ['numeric', 'integer', 'double', 'float', 'decimal'];
  * @name data-prep.services.state.service:GridStateService
  * @description Grid state service. Manage the grid part state
  */
-export function GridStateService() {
+export function GridStateService($timeout) {
     return {
         reset: reset,
 
         setColumnFocus: setColumnFocus,
         setData: setData,
         setFilter: setFilter,
-        setGridSelection: setGridSelection
+        setGridSelection: setGridSelection,
+        updateGridSelection: updateGridSelection
     };
 
     /**
@@ -67,15 +68,16 @@ export function GridStateService() {
      * @description Update the occurrences of the filtered records
      */
     function updateFilteredOccurrencesOnSelectedColumn() {
-        gridState.filteredOccurences = !gridState.selectedColumn ?
-        {} :
-            _.chain(gridState.filteredRecords)
-                .pluck(gridState.selectedColumn.id)
-                .groupBy(function (value) {
-                    return value;
-                })
-                .mapValues('length')
-                .value();
+        if(gridState.selectedColumns.length === 1) {
+            gridState.filteredOccurences =
+                _.chain(gridState.filteredRecords)
+                    .pluck(gridState.selectedColumns[0].id)
+                    .groupBy(function (value) {
+                        return value;
+                    })
+                    .mapValues('length')
+                    .value();
+        }
     }
 
     /**
@@ -162,7 +164,7 @@ export function GridStateService() {
         }
 
         const hasSelectedLine = angular.isNumber(gridState.lineIndex);
-        if(!hasSelectedLine || gridState.selectedColumn) {
+        if(!hasSelectedLine || (gridState.selectedColumns.length === 1)) {
             updateSelectedColumn(data);
         }
         if(hasSelectedLine) {
@@ -179,12 +181,12 @@ export function GridStateService() {
      */
     function updateSelectedColumn(data) {
         //if there is already a selected column, we update the column metadata to reference one of the new columns
-        if (gridState.selectedColumn) {
-            gridState.selectedColumn = _.find(data.metadata.columns, {id: gridState.selectedColumn.id}) || data.metadata.columns[0];
+        if (gridState.selectedColumns.length > 0) {
+            gridState.selectedColumns = [_.find(data.metadata.columns, {id: gridState.selectedColumns[0].id}) || data.metadata.columns[0]];
         }
         //the first column is selected by default
         else {
-            gridState.selectedColumn = data.metadata.columns[0];
+            gridState.selectedColumns = [data.metadata.columns[0]];
         }
         updateFilteredOccurrencesOnSelectedColumn();
     }
@@ -210,11 +212,39 @@ export function GridStateService() {
     function setGridSelection(column, lineIndex) {
         const hasIndex = !isNaN(lineIndex);
 
-        gridState.selectedColumn = column;
+        if (column) {
+            gridState.selectedColumns = [column];
+        } else {
+            gridState.selectedColumns = [];
+        }
+
         gridState.lineIndex = hasIndex ? lineIndex : null;
         gridState.selectedLine = hasIndex ? gridState.dataView.getItem(lineIndex) : null;
 
         updateFilteredOccurrencesOnSelectedColumn();
+    }
+
+    /**
+     * @ngdoc method
+     * @name updateGridSelection
+     * @methodOf data-prep.services.state.service:GridStateService
+     * @param {object} column The column metadata
+     * @param {number} lineIndex The line number
+     * @description update the actual selected columns and lines
+     */
+    function updateGridSelection(column, lineIndex) {
+        const hasIndex = !isNaN(lineIndex);
+        if (column) {
+            if(_.find(gridState.selectedColumns, { 'id': column.id})){
+                if(gridState.selectedColumns.length > 1) {
+                    $timeout(() => {gridState.selectedColumns = _.reject(gridState.selectedColumns,{ 'id': column.id});});
+                }
+            } else {
+                $timeout(() => gridState.selectedColumns.push(column));
+            }
+        }
+        gridState.lineIndex = hasIndex ? lineIndex : null;
+        gridState.selectedLine = hasIndex ? gridState.dataView.getItem(lineIndex) : null;
     }
 
     /**
@@ -241,7 +271,7 @@ export function GridStateService() {
      */
     function reset() {
         gridState.columnFocus = null;
-        gridState.selectedColumn = null;
+        gridState.selectedColumns = [];
         gridState.selectedLine = null;
         gridState.filteredRecords = [];
         gridState.filteredOccurences = {};

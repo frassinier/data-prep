@@ -49,7 +49,7 @@ export default class DatagridExternalService {
      * Ex : StatisticsService for dataviz, ColumnSuggestionService for transformation list
      */
     updateSuggestionPanel() {
-        const column = this.state.playground.grid.selectedColumn;
+        const column = this.state.playground.grid.selectedColumns[0];
         const line = this.state.playground.grid.selectedLine;
 
         const columnHasChanged = column !== this.lastSelectedColumn;

@@ -60,6 +60,7 @@ export function PlaygroundStateService(RecipeStateService, recipeState,
         //datagrid
         setColumnFocus: GridStateService.setColumnFocus,
         setGridSelection: GridStateService.setGridSelection,
+        updateGridSelection: GridStateService.updateGridSelection,
 
         //lookup
         setLookupActions: LookupStateService.setActions,

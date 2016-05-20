@@ -22,7 +22,7 @@ describe('Early Preview Service', () => {
     }));
 
     beforeEach(inject(($q, PlaygroundService, PreviewService, RecipeService, EarlyPreviewService) => {
-        stateMock.playground.grid.selectedColumn = column;
+        stateMock.playground.grid.selectedColumns[0] = column;
         stateMock.playground.grid.selectedLine = line;
 
         transfoScope = 'column';
