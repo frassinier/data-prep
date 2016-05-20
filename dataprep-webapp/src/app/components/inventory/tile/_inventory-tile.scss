@@ -7,6 +7,9 @@ $standard-color: $black;
 
 .inventory-tile-list {
   @include display(flex);
+  @include flex-wrap(wrap);
+  overflow-y: auto;
+  height: 60vh;
 
   > * {
     @include flex-basis(300px);
