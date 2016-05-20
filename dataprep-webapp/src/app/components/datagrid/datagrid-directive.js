@@ -190,7 +190,7 @@ export default function Datagrid($timeout, state, DatagridGridService, DatagridC
              * @methodOf data-prep.datagrid.directive:Datagrid
              * @description Refresh selected column grid styles
              */
-            var onColumnSelectionChange = function onColumnSelectionChange() {
+            var onColumnSelectionChange = function onColumnSelectionChange(newValue, oldValue, scope) {
                 if (grid) {
                     //Update cell highlights
                     DatagridStyleService.resetHighlightStyles();
@@ -217,6 +217,11 @@ export default function Datagrid($timeout, state, DatagridGridService, DatagridC
                                 () => DatagridExternalService.updateSuggestionPanel(true),
                                 500
                             );
+                        }
+                        //TODO: find another way
+                        //mode multi columns to one column
+                        if(oldValue.length > 1) {
+                            StatisticsService.updateStatistics();
                         }
                     } else {
                         StatisticsService.reset();
