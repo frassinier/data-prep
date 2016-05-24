@@ -1426,6 +1426,28 @@ public class DataSetServiceTest extends DataSetBaseTest {
             .body("name", hasItem("dataset1"))
             .body("name", hasSize(1));
 
+        // certified, favorite and recent
+        given()
+            .queryParam("favorite", "true")
+            .queryParam("certified", "true")
+            .queryParam("limit", "true")
+            .queryParam("name", "2")
+        .when()
+            .get("/datasets")
+        .then()
+            .statusCode(200)
+            .body("name", hasSize(0));
+
+        // only names
+        given()
+            .queryParam("name", "ataset2")
+        .when()
+            .get("/datasets")
+        .then()
+            .statusCode(200)
+            .body("name", hasItem("dataset2"))
+            .body("name", hasSize(1));
+
         // only favorites
         given()
             .queryParam("favorite", "true")

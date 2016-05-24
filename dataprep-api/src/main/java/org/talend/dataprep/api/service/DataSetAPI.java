@@ -234,6 +234,7 @@ public class DataSetAPI extends APIService {
     @ApiOperation(value = "List data sets.", produces = APPLICATION_JSON_VALUE, notes = "Returns a list of data sets the user can use.")
     public StreamingResponseBody list(@ApiParam(value = "Sort key (by name or date), defaults to 'date'.") @RequestParam(defaultValue = "DATE", required = false) String sort,
                      @ApiParam(value = "Order for sort key (desc or asc), defaults to 'desc'.") @RequestParam(defaultValue = "DESC", required = false) String order,
+                     @ApiParam(value = "Filter on name containing the specified name") @RequestParam(defaultValue = "", required = false) String name,
                      @ApiParam(value = "Filter on certified data sets") @RequestParam(defaultValue = "false", required = false) boolean certified,
                      @ApiParam(value = "Filter on favorite data sets") @RequestParam(defaultValue = "false", required = false) boolean favorite,
                      @ApiParam(value = "Filter on recent data sets") @RequestParam(defaultValue = "false", required = false) boolean limit) {

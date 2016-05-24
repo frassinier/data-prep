@@ -313,8 +313,7 @@ public class DataSetAPITest extends ApiServiceTestBase {
         final String originalId = createDataset("dataset/dataset.csv", "original", "text/csv");
 
         // when
-        final Response response = given()
-                .param("name", "copy") //
+        final Response response = given().param("name", "copy") //
                 .when() //
                 .expect().statusCode(200).log().ifError() //
                 .post("/api/datasets/{id}/copy", originalId);
@@ -331,8 +330,7 @@ public class DataSetAPITest extends ApiServiceTestBase {
         final String originalId = createDataset("dataset/dataset.csv", "taken", "text/csv");
 
         // when
-        final Response response = given()
-                .param("name", "taken") //
+        final Response response = given().param("name", "taken") //
                 .when() //
                 .expect().statusCode(409).log().ifError() //
                 .post("/api/datasets/{id}/copy", originalId);
@@ -541,7 +539,7 @@ public class DataSetAPITest extends ApiServiceTestBase {
         final DataSetMetadata dataSetMetadata1 = dataSetMetadataRepository.get(dataSetId1);
         dataSetMetadata1.setFavorite(true);
         dataSetMetadata1.getGovernance().setCertificationStep(DataSetGovernance.Certification.CERTIFIED);
-        dataSetMetadata1.setLastModificationDate(Instant.now().getEpochSecond()+1);
+        dataSetMetadata1.setLastModificationDate(Instant.now().getEpochSecond() + 1);
         dataSetMetadataRepository.add(dataSetMetadata1);
         final DataSetMetadata dataSetMetadata2 = dataSetMetadataRepository.get(dataSetId2);
         dataSetMetadata2.setFavorite(true);
@@ -553,53 +551,76 @@ public class DataSetAPITest extends ApiServiceTestBase {
         // @formatter:off
         // certified, favorite and recent
         given()
-                .queryParam("favorite", "true")
-                .queryParam("certified", "true")
-                .queryParam("limit", "true")
-                .when()
-                .get("/api/datasets")
-                .then()
-                .statusCode(200)
-                .body("name", hasItem("dataset1"))
+            .queryParam("favorite", "true")
+            .queryParam("certified", "true")
+            .queryParam("limit", "true")
+            .queryParam("name", "dataset")
+        .when()
+            .get("/api/datasets")
+        .then()
+            .statusCode(200)
+            .body("name", hasItem("dataset1"))
+            .body("name", hasSize(1));
+
+        // certified, favorite and recent
+        given()
+            .queryParam("favorite", "true")
+            .queryParam("certified", "true")
+            .queryParam("limit", "true")
+            .queryParam("name", "2")
+        .when()
+            .get("/api/datasets")
+        .then()
+            .statusCode(200)
+            .body("name", hasSize(0));
+
+        // only names
+        given()
+            .queryParam("name", "ataset2")
+        .when()
+            .get("/api/datasets")
+        .then()
+            .statusCode(200)
+                .body("name", hasItem("dataset2"))
                 .body("name", hasSize(1));
 
         // only favorites
         given()
-                .queryParam("favorite", "true")
-                .when()
-                .get("/api/datasets")
-                .then()
-                .statusCode(200)
-                .body("name", hasItems("dataset1", "dataset2"))
-                .body("name", hasSize(2));;
+            .queryParam("favorite", "true")
+        .when()
+            .get("/api/datasets")
+        .then()
+            .statusCode(200)
+            .body("name", hasItems("dataset1", "dataset2"))
+            .body("name", hasSize(2));;
 
         // only certified
         given()
-                .queryParam("certified", "true")
-                .when()
-                .get("/api/datasets")
-                .then()
-                .statusCode(200)
-                .body("name", hasItems("dataset1", "dataset3"))
-                .body("name", hasSize(2));
+            .queryParam("certified", "true")
+        .when()
+            .get("/api/datasets")
+        .then()
+            .statusCode(200)
+            .body("name", hasItems("dataset1", "dataset3"))
+            .body("name", hasSize(2));
 
         // only recent
         given()
-                .queryParam("limit", "true")
-                .when()
-                .get("/api/datasets")
-                .then()
-                .statusCode(200)
-                .body("name", hasItems("dataset2", "dataset3", "dataset4"))
-                .body("name", hasSize(3));
+            .queryParam("limit", "true")
+        .when()
+            .get("/api/datasets")
+        .then()
+            .statusCode(200)
+            .body("name", hasItems("dataset2", "dataset3", "dataset4"))
+            .body("name", hasSize(3));
 
         // all
         when()
-                .get("/api/datasets")
-                .then()
-                .statusCode(200)
-                .body("name", hasItems("dataset1", "dataset2", "dataset3", "dataset4"))
-                .body("name", hasSize(4));
+            .get("/api/datasets")
+        .then()
+            .statusCode(200)
+            .body("name", hasItems("dataset1", "dataset2", "dataset3", "dataset4"))
+            .body("name", hasSize(4));
 
         // @formatter:on
     }

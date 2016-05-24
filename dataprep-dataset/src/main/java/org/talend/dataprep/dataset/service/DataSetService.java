@@ -241,14 +241,14 @@ public class DataSetService extends BaseDataSetService {
     @ApiOperation(value = "List all data sets and filters on certified, or favorite or a limited number when asked", notes = "Returns the list of data sets (and filters) the current user is allowed to see. Creation date is a Epoch time value (in UTC time zone).")
     @Timed
     public Iterable<DataSetMetadata> list(
-            @ApiParam(value = "Sort key (by name, creation or modification date).") @RequestParam(defaultValue = "DATE", required = false) String sort,
-            @ApiParam(value = "Order for sort key (desc or asc).") @RequestParam(defaultValue = "DESC", required = false) String order,
+            @ApiParam(value = "Sort key (by name, creation or modification date)") @RequestParam(defaultValue = "DATE", required = false) String sort,
+            @ApiParam(value = "Order for sort key (desc or asc or modif)") @RequestParam(defaultValue = "DESC", required = false) String order,
+            @ApiParam(value = "Filter on name containing the specified name") @RequestParam(defaultValue = "", required = false) String name,
             @ApiParam(value = "Filter on certified data sets") @RequestParam(defaultValue = "false", required = false) boolean certified,
             @ApiParam(value = "Filter on favorite data sets") @RequestParam(defaultValue = "false", required = false) boolean favorite,
-            @ApiParam(value = "Only return a limite number of data sets") @RequestParam(defaultValue = "false", required = false) boolean limit) {
+            @ApiParam(value = "Only return a limited number of data sets") @RequestParam(defaultValue = "false", required = false) boolean limit) {
 
         Spliterator<DataSetMetadata> iterator = dataSetMetadataRepository.list().spliterator();
-
         // Return sorted results
         try (Stream<DataSetMetadata> stream = stream(iterator, false)) {
             // @formatter:off
@@ -260,6 +260,7 @@ public class DataSetService extends BaseDataSetService {
                     })
                     .filter(metadata -> !favorite || metadata.isFavorite())
                     .filter(metadata -> !certified || Certification.CERTIFIED.equals(metadata.getGovernance().getCertificationStep()))
+                    .filter (metadata -> StringUtils.isEmpty(name) || StringUtils.contains(metadata.getName(), name))
                     .sorted(comparator)
                     .limit(limit ? datasetListLimit : Long.MAX_VALUE)
                     .collect(Collectors.toList());
