@@ -153,6 +153,28 @@ describe('Dataset Rest Service', () => {
             //then
             expect(dataset).toEqual(undefined);
         }));
+
+        it('should call dataset list with a filter on the name', inject(($rootScope, $q, DatasetRestService, RestURLs) => {
+            //given
+            let result = null;
+            const datasets = [
+                { name: 'Customers (50 lines)' },
+                { name: 'Customers (1K lines)' }
+            ];
+            $httpBackend
+                .expectGET(RestURLs.datasetUrl + '?name=Cust')
+                .respond(200, datasets);
+
+            //when
+            DatasetRestService.loadFilteredDatasets(RestURLs.datasetUrl + '?name=Cust').then((response) => {
+                result = response;
+            });
+            $httpBackend.flush();
+            $rootScope.$digest();
+
+            //then
+            expect(result).toEqual(datasets);
+        }));
     });
 
     describe('creation', () => {

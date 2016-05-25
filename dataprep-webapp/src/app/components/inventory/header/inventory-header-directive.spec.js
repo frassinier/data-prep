@@ -22,7 +22,8 @@ describe('Inventory header directive', () => {
             'SORT_IN': 'in',
             'SORT_ORDER': 'order',
             'NAME_SORT': 'name',
-            'ASC_ORDER': 'asc'
+            'ASC_ORDER': 'asc',
+            'ADD_PREPARATION': 'Add Preparation'
         });
         $translateProvider.preferredLanguage('en');
     }));
@@ -102,6 +103,29 @@ describe('Inventory header directive', () => {
 
             // then
             expect(angular.element('body #create-folder-modal').length).toBe(1);
+        });
+    });
+
+    describe('Add Inventory', () => {
+        it('should render add preparation button', () => {
+            //when
+            const options = { createFolder: true };
+            createElement(options);
+
+            //then
+            expect(angular.element('#add-preparation').length).toBe(1);
+            expect(angular.element('#add-preparation').eq(0).text()).toBe('Add Preparation');
+            expect(angular.element('import').length).toBe(0);
+        });
+
+        it('should render add dataset button', () => {
+            //when
+            const options = { createFolder: false };
+            createElement(options);
+
+            //then
+            expect(angular.element('#add-preparation').length).toBe(0);
+            expect(angular.element('import').length).toBe(1);
         });
     });
 

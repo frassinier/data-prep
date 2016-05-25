@@ -21,34 +21,34 @@
     font-size: 0.9em;
     height: 50px;
 
-  .primary {
-    margin: 5px 8px;
-  }
-
-  .preparations-list-header {
-
-    .add-preparation {
-      margin: 8px 10px;
-      float:left;
-      background: #b6be00;
-      color: #FFFFFF;
-      cursor: pointer;
-      height: 30px;
-      padding: 0 5px;
-      text-transform: uppercase;
+    .primary {
+        margin: 5px 8px;
     }
 
-    .add-folder {
-      color: $dark-gray;
-      font-weight: 600;
-      background-color: $light-gray;
-      border: 1px solid $medium-gray;
-      border-radius: 5px;
-      height: 30px;
-      margin: 8px 0px;
-      padding: 5px 10px;
+    .preparations-list-header {
+        #add-folder-button {
+            color: $dark-gray;
+            font-weight: 600;
+            background-color: $light-gray;
+            border: 1px solid $medium-gray;
+            border-radius: 2px;
+            height: 36px;
+            margin: 10px 5px 5px 5px;
+            padding: 5px 10px;
+        }
+
+        #add-preparation {
+            margin: 10px 3px 5px 10px;
+            float: left;
+            background: #b6be00;
+            color: #FFFFFF;
+            cursor: pointer;
+            height: 36px;
+            padding: 5px 8px;
+            text-transform: uppercase;
+            border-radius: 2px;
+        }
     }
-  }
 
         .add-preparation {
             margin: 10px 3px 5px 10px;

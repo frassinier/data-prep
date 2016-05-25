@@ -80,10 +80,11 @@
 
 <talend-modal id="add-preparation-modal"
               fullscreen="false"
-              close-button="true"
+              close-button="false"
               state="$ctrl.showAddPrepModal"
               ng-if="$ctrl.showAddPrepModal"
-              disable-enter="true">
+              disable-close-on-background-click="true"
+              disable-enter="false">
     <div class="modal-title"
          translate-once="ADD_PREPARATION_MODAL_TITLE"></div>
 

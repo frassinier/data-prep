@@ -97,4 +97,19 @@ describe('Inventory Header controller', () => {
             expect(ctrl.folderNameModal).toBe(false);
         }));
     });
+
+    describe('add preparation modal', () => {
+        it('should update modal visibility', () => {
+            //given
+            const ctrl = createController();
+            expect(ctrl.showAddPrepModal).toBeFalsy();
+
+            //when
+            ctrl.openAddPreparationModal();
+
+            //then
+            expect(ctrl.showAddPrepModal).toBe(true);
+
+        });
+    });
 });

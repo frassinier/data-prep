@@ -42,6 +42,30 @@ describe('Dataset header component', () => {
                 orderList: orderList,
                 datasetsSort: sortList[0],
                 datasetsOrder: orderList[0]
+            },
+            import:{
+                importTypes: [
+                    {
+                        "locationType": "local",
+                        "contentType": "text/plain",
+                        "parameters": [
+                            {
+                                "name": "datasetFile",
+                                "type": "file",
+                                "implicit": false,
+                                "canBeBlank": false,
+                                "placeHolder": "*.csv",
+                                "description": "File",
+                                "label": "File",
+                                "default": ""
+                            }
+                        ],
+                        "dynamic": false,
+                        "defaultImport": true,
+                        "label": "Local File",
+                        "title": "Add local file dataset"
+                    }
+                ]
             }
         };
         $provide.constant('state', stateMock);

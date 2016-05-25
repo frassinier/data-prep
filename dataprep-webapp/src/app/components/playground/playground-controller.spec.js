@@ -151,6 +151,102 @@ describe('Playground controller', () => {
                 expect(MessageService.error).toHaveBeenCalledWith('PLAYGROUND_FILE_NOT_FOUND_TITLE', 'PLAYGROUND_FILE_NOT_FOUND', {type: 'preparation'});
                 expect($state.go).toHaveBeenCalledWith('nav.index.preparations', undefined);
             }));
+
+            it('should fetch statistics when they are not computed yet', inject(($q, $stateParams, PlaygroundService, StateService) => {
+                //given
+                $stateParams.prepid = 'fbaa18e82e913e97e5f0e9d40f04413412be1126';
+                $stateParams.datasetid = null;
+                spyOn(PlaygroundService, 'updateStatistics').and.returnValue($q.when());
+                spyOn(PlaygroundService, 'load').and.returnValue($q.when());
+
+                //when
+                createController();
+                expect(StateService.setIsFetchingStats).not.toHaveBeenCalled();
+                expect(PlaygroundService.updateStatistics).not.toHaveBeenCalled();
+
+                stateMock.playground.data = {metadata: {statistics: {frequencyTable: []}}}; // stats not computed
+                scope.$digest();
+
+                //then
+                expect(StateService.setIsFetchingStats).toHaveBeenCalledWith(true);
+                expect(PlaygroundService.updateStatistics).toHaveBeenCalled();
+                expect(StateService.setIsFetchingStats).toHaveBeenCalledWith(false);
+            }));
+
+            it('should retry statistics fetch when the previous fetch has been rejected (stats not computed yet) with a delay of 1500ms', inject(($q, $timeout, $stateParams, PlaygroundService, StateService) => {
+                //given
+                let retry = 0;
+                $stateParams.prepid = 'fbaa18e82e913e97e5f0e9d40f04413412be1126';
+                $stateParams.datasetid = null;
+                spyOn(PlaygroundService, 'load').and.returnValue($q.when());
+                spyOn(PlaygroundService, 'updateStatistics').and.callFake(() => {
+                    if (retry === 0) {
+                        retry++;
+                        return $q.reject();
+                    }
+                    else {
+                        return $q.when();
+                    }
+                });
+
+                //when
+                createController();
+                expect(StateService.setIsFetchingStats).not.toHaveBeenCalled();
+                expect(PlaygroundService.updateStatistics).not.toHaveBeenCalled();
+
+                stateMock.playground.data = {
+                    metadata: {
+                        columns: [{
+                            statistics: {
+                                frequencyTable: []       // stats not computed
+                            }
+                        }]
+                    }
+                };
+                scope.$digest();
+
+                expect(StateService.setIsFetchingStats.calls.count()).toBe(1);
+                expect(StateService.setIsFetchingStats).toHaveBeenCalledWith(true);
+                expect(PlaygroundService.updateStatistics.calls.count()).toBe(1); //first call: rejected
+                $timeout.flush(1500);
+
+                //then
+                expect(PlaygroundService.updateStatistics.calls.count()).toBe(2);
+                expect(StateService.setIsFetchingStats).toHaveBeenCalledWith(false);
+            }));
+
+            it('should NOT fetch statistics when they are already computed', inject(($q, $stateParams, PlaygroundService, StateService) => {
+                //given
+                $stateParams.prepid = 'fbaa18e82e913e97e5f0e9d40f04413412be1126';
+                $stateParams.datasetid = null;
+                spyOn(PlaygroundService, 'updateStatistics').and.returnValue($q.when());
+                spyOn(PlaygroundService, 'load').and.returnValue($q.when());
+
+                //when
+                expect(StateService.setIsFetchingStats).not.toHaveBeenCalled();
+                createController();
+                expect(StateService.setIsFetchingStats).not.toHaveBeenCalled();
+                expect(PlaygroundService.updateStatistics).not.toHaveBeenCalled();
+
+                stateMock.playground.data = {
+                    metadata: {
+                        columns: [{
+                            statistics: {
+                                frequencyTable: [{      // stats already computed
+                                    value: 'toto',
+                                    frequency: 10
+                                }]
+                            }
+                        }]
+                    }
+                };
+                scope.$digest();
+
+                //then
+                expect(StateService.setIsFetchingStats).not.toHaveBeenCalled();
+                expect(PlaygroundService.updateStatistics).not.toHaveBeenCalled();
+            }));
+
         });
 
         describe('dataset', () => {
