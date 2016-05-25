@@ -49,6 +49,7 @@ export default function DatasetService($q, state, StateService, DatasetListServi
         getDatasetById: getDatasetById,     //retrieve dataset by id
         getDatasetByName: getDatasetByName, //retrieve dataset by name
         getSheetPreview: getSheetPreview,
+        loadFilteredDatasets: DatasetRestService.loadFilteredDatasets, //retrieve datasets given a set of filters
 
         //dataset update
         rename: rename,

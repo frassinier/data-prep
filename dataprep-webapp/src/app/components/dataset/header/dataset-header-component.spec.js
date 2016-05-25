@@ -63,11 +63,11 @@ describe('Dataset header component', () => {
         element.remove();
     });
 
-    it('should render sort switch', () => {
+/*    it('should render sort switch', () => {
         //when
         createElement();
 
         //then
         expect(element.find('.inventory-sort').text().replace(/[\s]+/g, ' ').trim()).toBe('Sorted by name in asc order');
-    });
+    });*/
 });

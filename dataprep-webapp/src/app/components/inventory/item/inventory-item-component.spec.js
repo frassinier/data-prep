@@ -268,6 +268,7 @@ describe('InventoryItem directive', () => {
                 // then
                 expect(element.find('.inventory-actions-related-item').length).toBe(0);
             });
+
             it('should display bottle icon: at least 1 related inventory', () => {
                 // given
                 scope.preparations = dataset.preparations;

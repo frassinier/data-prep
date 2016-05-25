@@ -11,7 +11,7 @@
 
  ============================================================================*/
 
-import PreparationCreatorComponent from './prepration-creator-component';
+import PreparationCreatorComponent from './preparation-creator-component';
 
 (() => {
     'use strict';
@@ -27,7 +27,11 @@ import PreparationCreatorComponent from './prepration-creator-component';
         [
             'data-prep.inventory-item',
             'data-prep.datasets-filters',
-            'data-prep.services.dataset'
+            'data-prep.services.dataset',
+            'data-prep.dataset-upload-list',
+            'data-prep.import',
+            'data-prep.services.preparation',
+            'data-prep.services.utils',
         ])
         .component('preparationCreator', PreparationCreatorComponent);
 })();

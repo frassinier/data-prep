@@ -1,0 +1,107 @@
+/*  ============================================================================
+
+ Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+
+ This source code is available under agreement available at
+ https://github.com/Talend/data-prep/blob/master/LICENSE
+
+ You should have received a copy of the agreement
+ along with this program; if not, write to Talend SA
+ 9 rue Pages 92150 Suresnes, France
+
+ ============================================================================*/
+
+import PreparationCreatorCtrl from './preparation-creator-controller';
+
+export default {
+    controller: PreparationCreatorCtrl,
+    bindings: {
+        showAddPrepModal: '='
+    },
+    template: `
+    <dataset-upload-list class="base-datasets-uploads"
+                         id="upload-base-dataset"
+                         datasets="$ctrl.uploadingDatasets"></dataset-upload-list>
+
+    <div class="preparation-creator-header">
+        <span class="filters-list-title" translate-once="EXISTING_DATASETS"></span>
+        <input id="filtered-datasets-search"
+           type="search"
+           class="action-search no-focus"
+           translate-once-placeholder="FIND_DATASETS"
+           ng-model="$ctrl.enteredFilterText"
+           ng-model-options="{debounce: { default: 300, blur: 0 }}"
+           ng-change="$ctrl.applyNameFilter()"
+           ng-disabled="$ctrl.whileImport"
+           talend-search-input/>
+    </div>
+
+    <div class="panels">
+        <div class="filters-left-panel"
+                 ng-class="{'disabled-import': $ctrl.whileImport}">
+            <datasets-filters importing="$ctrl.whileImport" on-filter-select="$ctrl.loadDatasets(filter)"></datasets-filters>
+            <input type="file"
+               id="localFileImport"
+               name="datasetFile"
+               class="ng-hide"
+               ng-file-select
+               accept="*.csv,*.xlsx,*.xls"
+               ng-model="$ctrl.datasetFile"
+               ng-file-change="$ctrl.import()"/>
+
+            <div class="import-button-panel"
+                title="{{$ctrl.getImportTitle() | translate}}"
+                ng-class="{'disabled-import' : $ctrl.alreadyExistingName || $ctrl.whileImport}"
+                ng-click="$ctrl.importFile()">
+                <div class="import-icon">
+                    <div><img src="assets/images/folder/folder_open_small-icon.png"/></div>
+                </div>
+
+                <div class="import-text">
+                    <span class="import-title" translate-once="IMPORT_FILE"></span>
+                    <div class="import-description" translate-once="IMPORT_FILE_DESCRIPTION"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="inventory-list" ng-class="{'disabled-import': $ctrl.whileImport}">
+            <span ng-if="$ctrl.isFetchingDatasets" class="fetching-spinner">
+                <i data-icon="c" class="continuous-rotate icon"></i>
+            </span>
+            <div ng-if="!$ctrl.isFetchingDatasets"
+                 class="inventory-item-row"
+                 ng-repeat="dataset in $ctrl.filteredDatasets track by dataset.id"
+                 ng-click="$ctrl.whileImport ? angular.noop(): $ctrl.selectBaseDataset(dataset)"
+                 ng-class="{'selected-dataset': dataset.isSelected}">
+                <inventory-item
+                        type="dataset"
+                        item="dataset"
+                        details="DATASET_DETAILS"
+                        toggle-favorite="angular.noop">
+                </inventory-item>
+            </div>
+        </div>
+    </div>
+
+    <form name="$ctrl.addPreparationForm">
+        <span translate-once="NEW_PREPARATION_NAME" class="preparation-name-input"></span>
+        <span class="name-error" translate-once="NAME_ALREADY_EXISTS" ng-if="$ctrl.alreadyExistingName"></span>
+        <input type="text"
+            ng-model="$ctrl.enteredName"
+            ng-disabled="$ctrl.whileImport"
+            ng-change="$ctrl.checkExistingPrepName('user')"
+            required/>
+    </form>
+
+    <div class="modal-buttons">
+        <button type="button"
+                class="talend-modal-close btn-secondary modal-secondary-button"
+                ng-disabled="$ctrl.whileImport"
+                translate-once="CANCEL"></button>
+        <button class="btn-primary modal-primary-button"
+                translate-once="CONFIRM"
+                ng-click="$ctrl.createPreparation()"
+                ng-disabled="!$ctrl.anyMissingEntries()"></button>
+    </div>
+    `
+}

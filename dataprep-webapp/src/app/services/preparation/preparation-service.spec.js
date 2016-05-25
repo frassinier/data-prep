@@ -99,6 +99,24 @@ describe('Preparation Service', () => {
 
     describe('lifecycle', () => {
         describe('create', () => {
+
+            beforeEach(inject((StateService) => {
+                spyOn(StateService, 'setPreviousRoute').and.returnValue();
+            }));
+
+            it('should set previous route', inject(($stateParams, $rootScope, PreparationService, PreparationListService, StateService) => {
+                //given
+                const datasetId = '2430e5df845ab6034c85';
+                const name = 'my preparation';
+                $stateParams.folderPath = '';
+
+                //when
+                PreparationService.create(datasetId, name, 'destinationFolder');
+
+                //then
+                expect(StateService.setPreviousRoute).toHaveBeenCalledWith('nav.index.preparations', {folderPath: $stateParams.folderPath});
+            }));
+
             it('should create a new preparation', inject(($rootScope, PreparationService, PreparationListService) => {
                 //given
                 const datasetId = '2430e5df845ab6034c85';
@@ -106,11 +124,11 @@ describe('Preparation Service', () => {
                 expect(PreparationListService.create).not.toHaveBeenCalled();
 
                 //when
-                PreparationService.create(datasetId, name);
+                PreparationService.create(datasetId, name, 'destinationFolder');
                 $rootScope.$digest();
 
                 //then
-                expect(PreparationListService.create).toHaveBeenCalledWith(datasetId, name, stateMock.inventory.homeFolderId);
+                expect(PreparationListService.create).toHaveBeenCalledWith(datasetId, name, 'destinationFolder');
             }));
 
             it('should save aggregations for preparation from dataset aggregations', inject(($rootScope, PreparationService, StorageService) => {
@@ -119,7 +137,7 @@ describe('Preparation Service', () => {
                 expect(StorageService.savePreparationAggregationsFromDataset).not.toHaveBeenCalled();
 
                 //when
-                PreparationService.create(datasetId, 'my preparation');
+                PreparationService.create(datasetId, 'my preparation', 'destinationFolder');
                 $rootScope.$digest();
 
                 //then

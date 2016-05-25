@@ -234,11 +234,12 @@ export default function ImportCtrl($document,
                     return;
                 }
                 return DatasetService.getUniqueName(name)
-                    .then((name) => createDataset(
+                    .then((name) => {
+                        return createDataset(
                         file,
                         name,
                         importType
-                    ));
+                    )});
             });
     }
 }

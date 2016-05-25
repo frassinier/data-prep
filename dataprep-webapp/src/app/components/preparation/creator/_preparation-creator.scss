@@ -1,0 +1,133 @@
+/*  ============================================================================
+
+  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+
+  This source code is available under agreement available at
+  https://github.com/Talend/data-prep/blob/master/LICENSE
+
+  You should have received a copy of the agreement
+  along with this program; if not, write to Talend SA
+  9 rue Pages 92150 Suresnes, France
+
+  ============================================================================*/
+
+.preparation-creator-header {
+    @include display(flex);
+    @include flex-direction(row);
+    @include justify-content(space-between);
+    @include align-items(center);
+    margin-top: 10px;
+    input {
+        width: 150px;
+        height: 25px;
+        font-size: 0.8em;
+        padding: 0 0 0 5px;
+        border-top: none;
+        border-right: none;
+        border-left: none;
+        box-shadow: none;
+    }
+    .filters-list-title {
+        font-weight: 700;
+    }
+}
+
+.panels {
+    @include display(flex);
+    @include flex-direction(row);
+    height: 40vh;
+
+    .filters-left-panel {
+        width: 250px;
+        border: 1px solid $light-gray;
+        flex-basis: 250px;
+        @include display(flex);
+        @include flex-direction(column);
+        @include justify-content(space-between);
+    }
+
+    .inventory-list {
+        border: 1px solid $light-gray;
+        @include flex-grow(1);
+
+        .fetching-spinner {
+            position: absolute;
+            left: 60%;
+            top: 40%;
+            .continuous-rotate {
+                display: flex;
+            }
+        }
+
+        .inventory-item {
+            cursor:pointer;
+            &:hover {
+                background-color: tint($pale-blue, 70%);
+            }
+        }
+
+        .selected-dataset {
+            background-color: tint($pale-blue, 70%);
+        }
+    }
+}
+
+.disabled-import {
+    opacity: .3;
+}
+
+.import-button-panel {
+    border-top: 1px solid #EEEEEF;
+    @include flex-grow(0);
+    @include flex-shrink(0);
+    @include flex-row();
+
+    height: 60px;
+    padding: 10px;
+    cursor: pointer;
+
+    .import-icon {
+        @include display(flex);
+        @include align-items(center);
+
+        padding: 0 3px;
+        position: relative;
+        width: 40px;
+    }
+
+    .import-text {
+        @include flex-column();
+        @include justify-content(center);
+        padding-left: 10px;
+
+        .import-title {
+            @include ellipsis(200px);
+            padding: 3px 0;
+            color: $black;
+        }
+
+        .import-description {
+            color: $medium-gray;
+            font-weight: 300;
+            font-size: .8em;
+            overflow: hidden;
+            white-space: normal;
+            max-height: 2.8em;
+        }
+    }
+}
+
+form {
+    padding: 5px 0;
+
+    .preparation-name-input {
+        font-weight: 700;
+        margin: 15px 0;
+    }
+    .name-error{
+        color: red;
+        font-weight: 600;
+        float: right;
+        font-size: small;
+    }
+}

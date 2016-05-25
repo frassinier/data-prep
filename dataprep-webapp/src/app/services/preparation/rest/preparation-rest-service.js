@@ -100,7 +100,7 @@ export default function PreparationRestService($http, RestURLs) {
      * @description Create a new preparation
      * @returns {promise} The POST promise
      */
-    function create(datasetId, name, folderId) {
+    function create(datasetId, name, folderId = '') {
         const request = {
             method: 'POST',
             url: `${RestURLs.preparationUrl}?folder=${folderId}`,

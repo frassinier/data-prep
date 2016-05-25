@@ -10,7 +10,6 @@
   9 rue Pages 92150 Suresnes, France
 
   ============================================================================*/
-
 @import "menu";
 @import "subheader";
 
@@ -19,52 +18,52 @@ $footer-height: 49px;
 
 .home {
 
-  /* -------------------------------------------------------------------------------------------------------------------
-                                                        Layout
-  --------------------------------------------------------------------------------------------------------------------*/
-  @include calc(height, "100vh - 2 * " + $header-height + " - " + $footer-height);
-  width: 1140px;
-  margin: auto;
+    /* -------------------------------------------------------------------------------------------------------------------
+                                                          Layout
+    --------------------------------------------------------------------------------------------------------------------*/
+    @include calc(height, "100vh - 2 * " + $header-height + " - " + $footer-height);
+    width: 1140px;
+    margin: auto;
 
-  @include flex-row();
-  @include flex-grow(1);
-  @include justify-content(center);
+    @include flex-row();
+    @include flex-grow(1);
+    @include justify-content(center);
 
-  .side-menu {
-    @extend .flex-left-panel;
-  }
-
-  .inventory-data {
-    box-shadow: $box-shadow-to-left;
-    @include slidable-right(240px, 0);
-    .content {
-      .content-container {
-        padding: 20px;
-      }
-    }
-  }
-
-  .home-main {
-    @extend .flex-center;
-    @extend .flex-column;
-
-    #inventory-list-header,
-    #upload-list-container {
-      @include flex-shrink(0);
+    .side-menu {
+        @extend .flex-left-panel;
     }
 
-    #inventory-list-container {
-      @include flex-flexible();
-      position: relative;
+    .inventory-data {
+        box-shadow: $box-shadow-to-left;
+        @include slidable-right(240px, 0);
+        .content {
+            .content-container {
+                padding: 20px;
+            }
+        }
     }
-  }
 
-  /* -------------------------------------------------------------------------------------------------------------------
-                                                        Components
-  --------------------------------------------------------------------------------------------------------------------*/
-  .large{
-    font-size: 5em;
-    color: $light-blue;
-    @include filter(none);
-  }
+    .home-main {
+        @extend .flex-center;
+        @extend .flex-column;
+
+        #inventory-list-header,
+        #upload-list-container {
+            @include flex-shrink(0);
+        }
+
+        #inventory-list-container {
+            @include flex-flexible();
+            position: relative;
+        }
+    }
+
+    /* -------------------------------------------------------------------------------------------------------------------
+                                                          Components
+    --------------------------------------------------------------------------------------------------------------------*/
+    .large {
+        font-size: 5em;
+        color: $light-blue;
+        @include filter(none);
+    }
 }

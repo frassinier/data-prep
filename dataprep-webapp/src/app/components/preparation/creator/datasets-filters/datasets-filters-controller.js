@@ -11,15 +11,16 @@
 
  ============================================================================*/
 
-class InventoryCopyMoveCtrl {
+class DatasetsFiltersCtrl {
     constructor() {
         'ngInject';
 
-        this.datasetsFilters = [
+        this.datasetsFilters = [//The order is important
             {
                 value: 'RECENT_DATASETS',
-                icon: 'c',
-                description:'RECENT_DATASETS_DESCRIPTION'
+                imageUrl: '/assets/images/inventory/recent-datasets.png',
+                description:'RECENT_DATASETS_DESCRIPTION',
+                isSelected: true
             },
             {
                 value: 'FAVORITE_DATASETS',
@@ -28,16 +29,28 @@ class InventoryCopyMoveCtrl {
             },
             {
                 value: 'CERTIFIED_DATASETS',
-                imageUrl: '/assets/images/inventory/certification-certified',
+                imageUrl: '/assets/images/inventory/certified_no_shadow.png',
                 description:'CERTIFIED_DATASETS_DESCRIPTION'
             },
             {
                 value: 'ALL_DATASETS',
-                icon: 'c',
+                imageUrl: '/assets/images/inventory/all-datasets.png',
                 description:'ALL_DATASETS_DESCRIPTION'
             }
-        ];//The order is important
+        ];
+
+        this.selectedFilter = this.datasetsFilters[0];
+    }
+
+    selectFilter(filter) {
+        if(this.importing){
+            return;
+        }
+        this.selectedFilter.isSelected = false;
+        this.selectedFilter = filter;
+        this.selectedFilter.isSelected = true;
+        this.onFilterSelect({filter: filter.value});
     }
 }
 
-export default InventoryCopyMoveCtrl;
+export default DatasetsFiltersCtrl;

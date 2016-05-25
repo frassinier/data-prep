@@ -272,6 +272,11 @@ export default function PlaygroundCtrl($timeout, $state, $stateParams, state, St
         }
         else {
             PlaygroundService.load(preparation)
+                .then(() => {
+                    if (shouldFetchStatistics()) {
+                        fetchStatistics();
+                    }
+                })
                 .catch(() => errorGoBack({type: 'preparation'}));
         }
     }

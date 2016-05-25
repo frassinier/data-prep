@@ -78,6 +78,10 @@ describe('Export controller', () => {
         $provide.constant('state', stateMock);
     }));
 
+    beforeEach(inject((RestURLs) => {
+        RestURLs.setServerUrl('');
+    }));
+
     beforeEach(inject(($rootScope, $controller, $q, ExportService, StorageService) => {
         form = {
             submit: () => {
