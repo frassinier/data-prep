@@ -225,16 +225,20 @@ export default function StatisticsService($log, $filter, state, StateService,
             return;
         }
 
-        var column = state.playground.grid.selectedColumn;
-        var statistics = column.statistics;
-        var currentRangeFilter = _.find(state.playground.filter.gridFilters, function (filter) {
+        const
+            column = state.playground.grid.selectedColumn,
+            statistics = column.statistics,
+            histogram = statistics.histogram,
+            isDateTypeColumn = column.type === 'date';
+
+        const currentRangeFilter = _.find(state.playground.filter.gridFilters, function (filter) {
             return filter.colId === column.id && filter.type === 'inside_range';
         });
 
         let rangeLimits;
-        if (state.playground.grid.selectedColumn.type === 'date') {
-            const firstHistogramItem = _.first(state.playground.grid.selectedColumn.statistics.histogram.items),
-                  lastHistogramItem = _.last(state.playground.grid.selectedColumn.statistics.histogram.items);
+        if (isDateTypeColumn) {
+            const firstHistogramItem = _.first(histogram.items),
+                  lastHistogramItem = _.last(histogram.items);
             rangeLimits = {
                 min: firstHistogramItem.range.min,
                 max: lastHistogramItem.range.max
@@ -246,7 +250,7 @@ export default function StatisticsService($log, $filter, state, StateService,
             };
         }
 
-        rangeLimits.type = state.playground.grid.selectedColumn.type;
+        rangeLimits.type = column.type;
 
         if (currentRangeFilter) {
             var filterMin = currentRangeFilter.args.interval[0];
@@ -255,9 +259,28 @@ export default function StatisticsService($log, $filter, state, StateService,
             rangeLimits.minFilterVal = filterMin;
             rangeLimits.maxFilterVal = filterMax;
 
-            rangeLimits.minBrush = getValueWithinRange(filterMin, statistics.min, statistics.max);
-            rangeLimits.maxBrush = getValueWithinRange(filterMax, statistics.min, statistics.max);
-
+            if (filterMin !== null) {
+                rangeLimits.minBrush = getValueWithinRange(filterMin, statistics.min, statistics.max);
+            }
+            else {
+                if (isDateTypeColumn) {
+                    rangeLimits.minBrush = rangeLimits.min;
+                }
+                else {
+                    rangeLimits.minBrush = statistics.min;
+                }
+            }
+            if (filterMax !== null) {
+                rangeLimits.maxBrush = getValueWithinRange(filterMax, statistics.min, statistics.max);
+            }
+            else {
+                if (isDateTypeColumn) {
+                    rangeLimits.maxBrush = rangeLimits.max;
+                }
+                else {
+                    rangeLimits.maxBrush = statistics.max;
+                }
+            }
             StateService.setStatisticsHistogramActiveLimits([rangeLimits.minBrush, rangeLimits.maxBrush]);
         }
 

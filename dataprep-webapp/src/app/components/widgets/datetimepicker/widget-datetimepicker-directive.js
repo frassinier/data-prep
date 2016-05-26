@@ -95,7 +95,11 @@ export default function TalendDatetimePicker($filter) {
                 // Only date time values need to be filtered
                 scope.$watch(
                     () => ctrl.value,
-                    (newValue) => ctrl.value = $filter('date')(newValue, 'dd/MM/yyyy')
+                    (newValue) => {
+                        if(newValue !== null || newValue !== '') {
+                            ctrl.value = $filter('date')(newValue, 'dd/MM/yyyy');
+                        }
+                    }
                 );
             }
         }

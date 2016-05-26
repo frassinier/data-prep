@@ -207,9 +207,17 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
                 var numberValue = ConverterService.adaptValue('numeric', item[colId]);
                 var min = values[0];
                 var max = values[1];
-                return isMaxReached ?
-                (numberValue === min) || (numberValue > min && numberValue <= max):
-                (numberValue === min) || (numberValue > min && numberValue < max);
+                if(min === null) {
+                    return numberValue <= max;
+                } 
+                else if (max === null) {
+                    return numberValue >= min;
+                } 
+                else {
+                    return isMaxReached ?
+                    (numberValue === min) || (numberValue > min && numberValue <= max) :
+                    (numberValue === min) || (numberValue > min && numberValue < max);
+                }
             };
         };
     }
@@ -381,7 +389,9 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
                 };
 
                 filterExists = function filterExists() {
-                    return _.isEqual(sameColAndTypeFilter.args.interval, args.interval);
+                    return _.isEqual(sameColAndTypeFilter.args.interval, args.interval)
+                        // If min and max are empty, then we need to remove simple valued range.
+                        || (args && args.interval && args.interval[0] === null && args.interval[1] === null);
                 };
                 break;
             case 'matches':

@@ -343,6 +343,44 @@ describe('Filter service', function () {
                 expect(filterInfo2.filterFn()({col2: ''})).toBeFalsy();
             }));
 
+            it('should create simple valued number filter with no max', inject(function (FilterService, StateService) {
+                //when
+                FilterService.addFilter('inside_range', 'col1', 'ColumnName1', {interval: [0, null], label: '≥ 0', type: 'integer', isMaxReached: false});
+
+                //then
+                expect(StateService.addGridFilter).toHaveBeenCalled();
+
+                const filterInfo1 = StateService.addGridFilter.calls.argsFor(0)[0];
+                expect(filterInfo1.type).toBe('inside_range');
+                expect(filterInfo1.colId).toBe('col1');
+                expect(filterInfo1.colName).toBe('ColumnName1');
+                expect(filterInfo1.value).toBe('≥ 0');
+                expect(filterInfo1.editable).toBe(false);
+                expect(filterInfo1.args).toEqual({interval: [0, null], label: '≥ 0', type: 'integer', isMaxReached: false});
+                expect(filterInfo1.filterFn()({col1:'5'})).toBeTruthy();
+                expect(filterInfo1.filterFn()({col1:'-5'})).toBeFalsy();
+                expect(filterInfo1.filterFn()({col1: ''})).toBeFalsy();
+            }));
+
+            it('should create simple valued number filter with no min', inject(function (FilterService, StateService) {
+                //when
+                FilterService.addFilter('inside_range', 'col2', 'ColumnName2', {interval: [null, 1000000], label: '≤ 1,000,000', type: 'integer', isMaxReached: true});
+
+                //then
+                expect(StateService.addGridFilter).toHaveBeenCalled();
+
+                const filterInfo2 = StateService.addGridFilter.calls.argsFor(0)[0];
+                expect(filterInfo2.type).toBe('inside_range');
+                expect(filterInfo2.colId).toBe('col2');
+                expect(filterInfo2.colName).toBe('ColumnName2');
+                expect(filterInfo2.value).toBe('≤ 1,000,000');
+                expect(filterInfo2.editable).toBe(false);
+                expect(filterInfo2.args).toEqual({interval: [null, 1000000], label: '≤ 1,000,000', type: 'integer', isMaxReached: true});
+                expect(filterInfo2.filterFn()({col2: '1000'})).toBeTruthy();
+                expect(filterInfo2.filterFn()({col2: '-5'})).toBeTruthy();
+                expect(filterInfo2.filterFn()({col2: ''})).toBeFalsy();
+            }));
+
             it('should create date filter', inject(function (FilterService, StateService) {
                 //given
                 stateMock.playground.grid = {
@@ -392,6 +430,23 @@ describe('Filter service', function () {
 
                 //when
                 FilterService.addFilter('inside_range', 'col1', 'column name', {interval: [0, 22]});
+
+                //then
+                expect(StateService.removeGridFilter).toHaveBeenCalledWith(oldFilter);
+            }));
+
+            it('should remove filter if both min and max values are empty', inject(function (FilterService, StateService) {
+                //given
+                var oldFilter = {
+                    colId: 'col1',
+                    type: 'inside_range',
+                    args: {interval: [0, 22]}
+                };
+                stateMock.playground.filter.gridFilters = [oldFilter];
+                spyOn(StateService, 'removeGridFilter').and.returnValue();
+
+                //when
+                FilterService.addFilter('inside_range', 'col1', 'column name', {interval: [null, null]});
 
                 //then
                 expect(StateService.removeGridFilter).toHaveBeenCalledWith(oldFilter);

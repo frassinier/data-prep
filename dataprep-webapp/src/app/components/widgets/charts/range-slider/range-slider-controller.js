@@ -16,7 +16,7 @@
  * @name talend.widget.controller:RangeSliderCtrl
  * @description The rangeSlider controller
  */
-export default function RangeSliderCtrl() {
+export default function RangeSliderCtrl(DateService) {
     var vm = this;
 
     /**
@@ -38,15 +38,41 @@ export default function RangeSliderCtrl() {
 
     /**
      * @ngdoc method
-     * @name areMinMaxNumbers
+     * @name hasAtLeastOneInvalidValue
      * @propertyOf talend.widget.controller:RangeSliderCtrl
-     * @description checks if both of the entered values are numbers
-     * @returns {boolean}
+     * @description Checks if both of the entered values are numbers
+     * @returns {boolean} true if one of them is invalid
      */
-    vm.areMinMaxNumbers = function areMinMaxNumbers() {
-        var isMinNumber = vm.toNumber(vm.minMaxModel.minModel);
-        var isMaxNumber = vm.toNumber(vm.minMaxModel.maxModel);
-        return !(isMinNumber === null || isMaxNumber === null);
+    vm.hasAtLeastOneInvalidValue = function hasAtLeastOneInvalidValue() {
+        const
+            minModel = vm.minMaxModel.minModel,
+            maxModel = vm.minMaxModel.maxModel,
+            isMinModelBlank = vm.isBlank(minModel),
+            isMaxModelBlank = vm.isBlank(maxModel);
+        let
+            minValueIsInvalid,
+            maxValueIsInvalid;
+        if (vm.rangeLimits && vm.rangeLimits.type === 'date') {
+            minValueIsInvalid = (!isMinModelBlank && DateService.getFormattedDateFromTime(minModel) === null);
+            maxValueIsInvalid = (!isMaxModelBlank && DateService.getFormattedDateFromTime(maxModel) === null);
+        }
+        else {
+            minValueIsInvalid = (!isMinModelBlank && vm.toNumber(`${minModel}`) === null);
+            maxValueIsInvalid = (!isMaxModelBlank && vm.toNumber(`${maxModel}`) === null);
+        }
+        return (minValueIsInvalid || maxValueIsInvalid);
+    };
+
+    /**
+     * @ngdoc method
+     * @name isBlank
+     * @propertyOf talend.widget.controller:RangeSliderCtrl
+     * @description Check if input is blank
+     * @param value Input value
+     * @returns {boolean} true if null or empty string
+     */
+    vm.isBlank = function isBlank(value) {
+        return (value === null || ('' + value).trim() === '');
     };
 
     /**
@@ -105,6 +131,19 @@ export default function RangeSliderCtrl() {
      * @param maximum The maximum value in the range
      */
     vm.adaptRangeValues = function adaptRangeValues(enteredMin, enteredMax, minimum, maximum) {
+        if (enteredMin === null || isNaN(enteredMin)) {
+            return {
+                min: minimum,
+                max: enteredMax
+            };
+        }
+        if (enteredMax === null || isNaN(enteredMax)) {
+            return {
+                min: enteredMin,
+                max: maximum
+            };
+        }
+
         //switch entered values if necessary
         if (enteredMin > enteredMax) {
             var _aux = enteredMin;

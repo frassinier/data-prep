@@ -27,6 +27,17 @@ describe('Date service', function () {
         expect(result).toEqual('01/01/2016');
     }));
 
+    it('should not transform empty timestamp to human readable date', inject(function (DateService) {
+        // given
+        const date = null;
+
+        // when
+        const result = DateService.getFormattedDateFromTime(date);
+
+        // then
+        expect(result).toBeNull();
+    }));
+
     it('should transform human readable date to timestamp', inject(function (DateService) {
         // given
         const date = new Date(2016, 0, 1);
@@ -36,5 +47,27 @@ describe('Date service', function () {
 
         // then
         expect(result).toEqual(date.getTime());
+    }));
+
+    it('should not transform empty string to timestamp', inject(function (DateService) {
+        // given
+        const emptyFormattedDate = '';
+
+        // when
+        const result = DateService.getTimeFromFormattedDate(emptyFormattedDate);
+
+        // then
+        expect(result).toBeNull();
+    }));
+
+    it('should not transform null to timestamp', inject(function (DateService) {
+        // given
+        const nullFormattedDate = null;
+
+        // when
+        const result = DateService.getTimeFromFormattedDate(nullFormattedDate);
+
+        // then
+        expect(result).toBeNull();
     }));
 });

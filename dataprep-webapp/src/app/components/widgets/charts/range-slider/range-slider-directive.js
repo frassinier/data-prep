@@ -127,7 +127,13 @@ export default function RangeSlider($timeout, DateService) {
                 //--------------------------------------------------------------------------------------------------
 
                 function triggerFilter(filterToTrigger) {
-                    ctrl.onBrushEnd({interval: ctrl.adaptFilterInterval(filterToTrigger)});
+                    const
+                        isEnteredMinEmpty = (ctrl.isBlank(ctrl.minMaxModel.minModel)),
+                        isEnteredMaxEmpty = (ctrl.isBlank(ctrl.minMaxModel.maxModel));
+                    if (!isEnteredMinEmpty && !isEnteredMaxEmpty) {
+                        filterToTrigger = ctrl.adaptFilterInterval(filterToTrigger);
+                    }
+                    ctrl.onBrushEnd({interval: filterToTrigger});
                 }
 
                 function prepareBrushFilter(initialBrushValues) {
@@ -162,26 +168,32 @@ export default function RangeSlider($timeout, DateService) {
                 }
 
                 ctrl.prepareInputFilter = function prepareInputFilter(dateAsTime, type) {
-                    if (!ctrl.areMinMaxNumbers() && !ctrl.isDateType) {
+                    if (ctrl.hasAtLeastOneInvalidValue() && !ctrl.isDateType) {
                         initInputValues();
                     }
                     else {
                         if (ctrl.isDateType) {
-                            if (type === 'from') {
-                                ctrl.minMaxModel.minModel = dateAsTime;
-                            } else {
-                                ctrl.minMaxModel.minModel = DateService.getTimeFromFormattedDate(ctrl.minMaxModel.minModel);
+                            if (!ctrl.isBlank(ctrl.minMaxModel.minModel)) {
+                                if (type === 'from') {
+                                    ctrl.minMaxModel.minModel = dateAsTime;
+                                } else {
+                                    ctrl.minMaxModel.minModel = DateService.getTimeFromFormattedDate(ctrl.minMaxModel.minModel);
+                                }
                             }
-                            if (type === 'to') {
-                                ctrl.minMaxModel.maxModel = dateAsTime;
-                            } else {
-                                ctrl.minMaxModel.maxModel = DateService.getTimeFromFormattedDate(ctrl.minMaxModel.maxModel);
+                            if (!ctrl.isBlank(ctrl.minMaxModel.maxModel)) {
+                                if (type === 'to') {
+                                    ctrl.minMaxModel.maxModel = dateAsTime;
+                                } else {
+                                    ctrl.minMaxModel.maxModel = DateService.getTimeFromFormattedDate(ctrl.minMaxModel.maxModel);
+                                }
                             }
                         }
 
                         const
-                            enteredMin = +ctrl.minMaxModel.minModel,
-                            enteredMax = +ctrl.minMaxModel.maxModel;
+                            isEnteredMinBlank = ctrl.isBlank(ctrl.minMaxModel.minModel),
+                            isEnteredMaxBlank = ctrl.isBlank(ctrl.minMaxModel.maxModel),
+                            enteredMin = isEnteredMinBlank ? null : +ctrl.minMaxModel.minModel,
+                            enteredMax = isEnteredMaxBlank ? null : +ctrl.minMaxModel.maxModel;
 
                         //2 Cases:
                         //- ONBLUR: the user selects the input then he selects sth else
@@ -212,6 +224,18 @@ export default function RangeSlider($timeout, DateService) {
                 //--------------------------------------------------------------------------------------------------
                 //--------------------BRUSH WIDGET------------------------------------------------------------------
                 //--------------------------------------------------------------------------------------------------
+                /**
+                 * Format value as human readable one
+                 * @param value Could be blank, timestamp or not yet formatted d3 value
+                 * @returns {string} formatted value
+                 */
+                function formatAsHumanReadableText(value) {
+                    if (ctrl.isBlank(value)) {
+                        return '';
+                    }
+                    return ctrl.isDateType ? DateService.getFormattedDateFromTime(value) : d3.format(',')(value);
+                }
+
                 function initBrush() {
                     //create axis + brush
                     var axisTicksNumber = rangeLimits.max >= 1e10 || rangeLimits.min <= 1e-10 ? 1 : 3;
@@ -222,9 +246,7 @@ export default function RangeSlider($timeout, DateService) {
                             .scale(scale)
                             .orient('top')
                             .ticks(axisTicksNumber)
-                            .tickFormat(function (d) {
-                                return d3.format(',')(d);
-                            }))
+                            .tickFormat(formatAsHumanReadableText))
                         .selectAll('text').attr('y', -13);
 
                     svg.append('g').append('text')
@@ -233,9 +255,7 @@ export default function RangeSlider($timeout, DateService) {
                         .attr('y', height)
                         .attr('text-anchor', 'start')
                         .attr('fill', 'grey')
-                        .text(function () {
-                            return ctrl.isDateType ? DateService.getFormattedDateFromTime(rangeLimits.min) : d3.format(',')(rangeLimits.min);
-                        });
+                        .text(formatAsHumanReadableText(rangeLimits.min));
 
                     svg.append('g').append('text')
                         .attr('class', 'the-maximum-label')
@@ -243,9 +263,7 @@ export default function RangeSlider($timeout, DateService) {
                         .attr('y', height)
                         .attr('text-anchor', 'end')
                         .attr('fill', 'grey')
-                        .text(function () {
-                            return ctrl.isDateType ? DateService.getFormattedDateFromTime(rangeLimits.max) : d3.format(',')(rangeLimits.max);
-                        });
+                        .text(formatAsHumanReadableText(rangeLimits.max));
 
                     ctrl.brush = d3.svg.brush()
                         .x(scale)
@@ -315,7 +333,7 @@ export default function RangeSlider($timeout, DateService) {
                 function showMsgErr() {
                     ctrl.invalidNumber = true;
                     var minMaxStr = ctrl.minMaxModel.minModel + ctrl.minMaxModel.maxModel;
-                    ctrl.invalidNumberWithComma = ctrl.checkCommaExistence(minMaxStr);
+                    ctrl.invalidNumberWithComma = ctrl.checkCommaExistence(`${minMaxStr}`);
                 }
 
                 //hides the message Error
@@ -328,36 +346,27 @@ export default function RangeSlider($timeout, DateService) {
                 function initInputValues() {
                     hideMsgErr();
                     $timeout(function () {
-                        ctrl.minMaxModel.minModel = '' + lastValues.input.min;
-                        ctrl.minMaxModel.maxModel = '' + lastValues.input.max;
+                        ctrl.minMaxModel.minModel = lastValues.input.min;
+                        ctrl.minMaxModel.maxModel = lastValues.input.max;
                     });
 
                     //filterToApply = [lastValues.input.min, lastValues.input.max];
                 }
 
                 function initRangeInputsListeners() {
-                    var minCorrectness, maxCorrectness;
                     //create a key listener closure
-                    ctrl.handleKey = function handleKey(rangeType) {
+                    ctrl.handleKey = function handleKey() {
                         return function (e) {
                             switch (e.keyCode) {
                                 case 9:
                                 case 13:
-                                    if (minCorrectness !== null && maxCorrectness !== null) {
-                                        ctrl.prepareInputFilter();
-                                    }
-                                    else {
-                                        initInputValues();
-                                    }
+                                    ctrl.prepareInputFilter();
                                     break;
                                 case 27:
                                     initInputValues();
                                     break;
                                 default:
-                                    minCorrectness = rangeType === 'min' ? ctrl.toNumber(ctrl.minMaxModel.minModel) : minCorrectness;
-                                    maxCorrectness = rangeType === 'max' ? ctrl.toNumber(ctrl.minMaxModel.maxModel) : maxCorrectness;
-
-                                    if (minCorrectness === null || maxCorrectness === null) {
+                                    if (ctrl.hasAtLeastOneInvalidValue()) {
                                         showMsgErr();
                                     }
                                     else {

@@ -14,8 +14,7 @@
 describe('Badge controller', function () {
     'use strict';
 
-    var createController, scope, filterType;
-    var obj = {value: 'toto'};
+    var createController, scope, filterType, obj;
     var fns = {
         change: function() {},
         close: function() {}
@@ -35,6 +34,8 @@ describe('Badge controller', function () {
         spyOn(fns, 'close').and.returnValue();
 
         scope = $rootScope.$new();
+
+        obj = {value: 'toto'};
 
         createController = function () {
             var ctrlFn = $controller('BadgeCtrl', {
@@ -58,6 +59,30 @@ describe('Badge controller', function () {
 
         //then
         expect(ctrl.sign).toEqual(' in ');
+    });
+
+    it('should not set the sign character to "in" when there is no min', function () {
+        //given
+        filterType = 'inside_range';
+        obj.value = '≤ 10';
+
+        //when
+        var ctrl = createController();
+
+        //then
+        expect(ctrl.sign).toBeUndefined();
+    });
+
+    it('should not set the sign character to "in" when there is no max', function () {
+        //given
+        filterType = 'inside_range';
+        obj.value = '≥ 10';
+
+        //when
+        var ctrl = createController();
+
+        //then
+        expect(ctrl.sign).toBeUndefined();
     });
 
     it('should set the sign caracter to : ":"', function () {

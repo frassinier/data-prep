@@ -165,6 +165,66 @@ describe('Range slider directive', function () {
             expect(element.find('text.the-minimum-label').eq(0).text()).toBe('01/01/2000');
             expect(element.find('text.the-maximum-label').eq(0).text()).toBe('01/01/2001');
         }));
+
+        it('should not display the min label if min is empty', inject(function ($timeout) {
+            //given
+            scope.rangeLimits = {
+                min: '',
+                max: '10'
+            };
+            createElement();
+            $timeout.flush(100);
+            flushAllD3Transitions();
+
+            //then
+            expect(element.find('text.the-minimum-label').eq(0).text()).toBe('');
+            expect(element.find('text.the-maximum-label').eq(0).text()).toBe('10');
+        }));
+
+        it('should not display the min label if min is null', inject(function ($timeout) {
+            //given 
+            scope.rangeLimits = {
+                min: null,
+                max: '10'
+            };
+            createElement();
+            $timeout.flush(100);
+            flushAllD3Transitions();
+
+            //then
+            expect(element.find('text.the-minimum-label').eq(0).text()).toBe('');
+            expect(element.find('text.the-maximum-label').eq(0).text()).toBe('10');
+        }));
+
+        it('should not display the max label if max is empty', inject(function ($timeout) {
+            //given
+            scope.rangeLimits = {
+                min: '10',
+                max: ''
+            };
+            createElement();
+            $timeout.flush(100);
+            flushAllD3Transitions();
+
+            //then
+            expect(element.find('text.the-minimum-label').eq(0).text()).toBe('10');
+            expect(element.find('text.the-maximum-label').eq(0).text()).toBe('');
+        }));
+
+        it('should not display the max label if max is null', inject(function ($timeout) {
+            //given
+            scope.rangeLimits = {
+                min: '10',
+                max: null
+            };
+            createElement();
+            $timeout.flush(100);
+            flushAllD3Transitions();
+
+            //then
+            expect(element.find('text.the-minimum-label').eq(0).text()).toBe('10');
+            expect(element.find('text.the-maximum-label').eq(0).text()).toBe('');
+        }));
     });
 
     describe('inputs', function() {
@@ -186,6 +246,29 @@ describe('Range slider directive', function () {
             //then
             expect(element.find('input').eq(0)[0].value).toBe('-50000');
             expect(element.find('input').eq(1)[0].value).toBe('20000');
+        }));
+
+        it('should init inputs with the provided empty filter values', inject(function ($timeout) {
+            //given
+            scope.rangeLimits = {
+                min: 0,
+                max: 20,
+                minBrush: 20,
+                maxBrush: 20,
+                minFilterVal: 25,
+                maxFilterVal: null
+            };
+            createElement();
+            $timeout.flush(100);
+            flushAllD3Transitions();
+
+            //when
+            ctrl.showRangeInputs = true;
+            scope.$digest();
+
+            //then
+            expect(element.find('input').eq(0)[0].value).toBe('25');
+            expect(element.find('input').eq(1)[0].value).toBe('');
         }));
 
         it('should init inputs with the provided filter values', inject(function ($timeout) {
@@ -314,7 +397,7 @@ describe('Range slider directive', function () {
                     $timeout.flush();
 
                     //then
-                    expect(ctrl.minMaxModel.minModel).toEqual('5');
+                    expect(ctrl.minMaxModel.minModel).toEqual(5);
                     expect(minInput[0].value).toEqual('5');
                 }));
 
@@ -434,7 +517,7 @@ describe('Range slider directive', function () {
                     $timeout.flush();
 
                     //then
-                    expect(ctrl.minMaxModel.maxModel).toEqual('15');
+                    expect(ctrl.minMaxModel.maxModel).toEqual(15);
                     expect(maxInput[0].value).toEqual('15');
                 }));
 
@@ -557,10 +640,10 @@ describe('Range slider directive', function () {
                     $timeout.flush();
 
                     //then
-                    expect(ctrl.minMaxModel.minModel).toEqual('5');
+                    expect(ctrl.minMaxModel.minModel).toEqual(5);
                     expect(minInput[0].value).toEqual('5');
 
-                    expect(ctrl.minMaxModel.maxModel).toEqual('15');
+                    expect(ctrl.minMaxModel.maxModel).toEqual(15);
                     expect(maxInput[0].value).toEqual('15');
                 }));
 
@@ -698,9 +781,9 @@ describe('Range slider directive', function () {
                 expect(element.find('.error').eq(1).hasClass('ng-hide')).toBe(false);
 
                 //when
-                var enterKeyUp = new angular.element.Event('keyup');
-                enterKeyUp.keyCode = 9;
-                minInput.trigger(enterKeyUp);
+                var tabKeyUp = new angular.element.Event('keyup');
+                tabKeyUp.keyCode = 9;
+                minInput.trigger(tabKeyUp);
                 scope.$digest();
                 $timeout.flush();
 
@@ -708,6 +791,31 @@ describe('Range slider directive', function () {
                 expect(element.find('.error').eq(0).hasClass('ng-hide')).toBe(true);
                 expect(element.find('.error').eq(1).hasClass('ng-hide')).toBe(true);
                 expect(minInput[0].value).toBe('5');
+            }));
+
+            it('should not show error message when value was empty', inject(function ($timeout) {
+                //given
+                createElement();
+                $timeout.flush(100);
+                flushAllD3Transitions();
+
+                ctrl.showRangeInputs = true;
+                ctrl.minMaxModel = {
+                    minModel: '',
+                    maxModel: '10'
+                };
+                scope.$digest();
+
+                //when
+                var minInput = element.find('input').eq(0);
+                var keyUp = new angular.element.Event('keyup');
+                minInput.trigger(keyUp);
+                scope.$digest();
+
+                //then
+                expect(element.find('.error').eq(0).hasClass('ng-hide')).toBe(true);
+                expect(element.find('.error').eq(1).hasClass('ng-hide')).toBe(true);
+                expect(minInput[0].value).toBe('');
             }));
         });
     });

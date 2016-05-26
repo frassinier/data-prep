@@ -65,15 +65,31 @@ export default function ColumnProfileCtrl($translate, $timeout, state, Statistic
             selectedColumn = state.playground.grid.selectedColumn,
             isDateRange = selectedColumn.type === 'date';
 
+        let
+            min,
+            max;
+
         if (!interval.label) {
-            const
-                min = isDateRange ? DateService.getFormattedDateFromTime(interval.min, interval.datePattern) : d3.format(',')(interval.min),
+            if (interval.min !== null && !isNaN(interval.min)) {
+                min = isDateRange ? DateService.getFormattedDateFromTime(interval.min, interval.datePattern) : d3.format(',')(interval.min);
+            }
+            if (interval.max !== null && !isNaN(interval.max)) {
                 max = isDateRange ? DateService.getFormattedDateFromTime(interval.max, interval.datePattern) : d3.format(',')(interval.max);
-            if(min === max){
-                interval.label = '[' + min + ']';
+            }
+
+            if (interval.min === null || isNaN(interval.min)) {
+                interval.label = `≤ ${max}`;
+            }
+            else if (interval.max === null || isNaN(interval.max)) {
+                interval.label = `≥ ${min}`;
             }
             else {
-                interval.label = interval.isMaxReached ? '[' + min + ' .. ' + max + ']' : '[' + min + ' .. ' + max + '[';
+                if (min === max) {
+                    interval.label = `[${min}]`;
+                }
+                else {
+                    interval.label = interval.isMaxReached ? `[${min} .. ${max}]` : `[${min} .. ${max}[`;
+                }
             }
         }
         var removeFilterFn = StatisticsService.getRangeFilterRemoveFn();

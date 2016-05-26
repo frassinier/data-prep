@@ -163,6 +163,72 @@ describe('ColumnProfile controller', () => {
                 removeFilterFn);
         }));
 
+        it('should add a number "range" filter with only min value', inject((StatisticsService, FilterService) => {
+            //given
+            const ctrl = createController();
+            const interval = {
+                min: 15,
+                max: null,
+                isMaxReached: false
+            };
+
+            stateMock.playground.grid.selectedColumn = {
+                id: '0001',
+                name: 'firstname',
+                type: 'integer'
+            };
+
+            //when
+            ctrl.addRangeFilter(interval);
+
+            //then
+            expect(StatisticsService.getRangeFilterRemoveFn).toHaveBeenCalled();
+            expect(FilterService.addFilterAndDigest).toHaveBeenCalledWith(
+                'inside_range',
+                '0001',
+                'firstname',
+                {
+                    interval: [15, null],
+                    label: '≥ 15',
+                    type: 'integer',
+                    isMaxReached: false
+                },
+                removeFilterFn);
+        }));
+
+        it('should add a number "range" filter with only max value', inject((StatisticsService, FilterService) => {
+            //given
+            const ctrl = createController();
+            const interval = {
+                min: null,
+                max: 15,
+                isMaxReached: true
+            };
+
+            stateMock.playground.grid.selectedColumn = {
+                id: '0001',
+                name: 'firstname',
+                type: 'integer'
+            };
+
+            //when
+            ctrl.addRangeFilter(interval);
+
+            //then
+            expect(StatisticsService.getRangeFilterRemoveFn).toHaveBeenCalled();
+            expect(FilterService.addFilterAndDigest).toHaveBeenCalledWith(
+                'inside_range',
+                '0001',
+                'firstname',
+                {
+                    interval: [null, 15],
+                    label: '≤ 15',
+                    type: 'integer',
+                    isMaxReached: true
+                },
+                removeFilterFn);
+        }));
+
         it('should add a date "range" filter', inject((StatisticsService, FilterService) => {
             //given
             const ctrl = createController();

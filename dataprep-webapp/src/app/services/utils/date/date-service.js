@@ -51,6 +51,8 @@ export default function DateService() {
             }
 
             var time = parsedMoment.toDate().getTime();
+            if (minTimestamp === null) return (time <= maxTimestamp);
+            if (maxTimestamp === null) return (time >= minTimestamp);
             return time === minTimestamp || (time > minTimestamp && time < maxTimestamp);
         };
     }
@@ -62,9 +64,12 @@ export default function DateService() {
      * @description Get formatted date from time
      * @param {number} time Date time
      * @param {string} pattern date pattern to use
-     * @returns {string} Formatted date using pattern
+     * @returns {string|null} Formatted date using pattern
      */
     function getFormattedDateFromTime(time, format = DEFAULT_MOMENT_DATE_FORMAT) {
+        if (!time) {
+            return null;
+        }
         const date = new Date(time);
         return moment(date).format(format);
     }
@@ -76,9 +81,12 @@ export default function DateService() {
      * @description Get time from formatted Date
      * @param {string} formattedDate Formatted date
      * @param {string} format Date pattern to parse
-     * @returns {number} Parsed date time
+     * @returns {number|null} Parsed date time
      */
     function getTimeFromFormattedDate(formattedDate, format = DEFAULT_MOMENT_DATE_FORMAT) {
+        if (!formattedDate) {
+            return null;
+        }
         const date = moment(formattedDate, format).toDate();
         return date.getTime();
     }

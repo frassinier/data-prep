@@ -1523,6 +1523,52 @@ describe('Statistics service', function () {
                 });
             }));
 
+            it('should update the brush limits to the [minimum, maximum] when interval has no max', inject(function (StatisticsService, StateService) {
+                //given
+                stateMock.playground.filter.gridFilters = [{
+                    colId: '0001',
+                    type: 'inside_range',
+                    args: { interval: [-15, null] }
+                }];
+
+                //when
+                StatisticsService.processClassicChart();
+
+                //then
+                expect(StateService.setStatisticsRangeLimits).toHaveBeenCalledWith({
+                    min: 0,
+                    max: 11,
+                    minBrush: 0,
+                    maxBrush: 11,
+                    minFilterVal: -15,
+                    maxFilterVal: null,
+                    type: 'integer'
+                });
+            }));
+
+            it('should update the brush limits to the [minimum, maximum] when interval has no min', inject(function (StatisticsService, StateService) {
+                //given
+                stateMock.playground.filter.gridFilters = [{
+                    colId: '0001',
+                    type: 'inside_range',
+                    args: { interval: [null, 20] }
+                }];
+
+                //when
+                StatisticsService.processClassicChart();
+
+                //then
+                expect(StateService.setStatisticsRangeLimits).toHaveBeenCalledWith({
+                    min: 0,
+                    max: 11,
+                    minBrush: 0,
+                    maxBrush: 11,
+                    minFilterVal: null,
+                    maxFilterVal: 20,
+                    type: 'integer'
+                });
+            }));
+
             it('should update the brush limits to the maximum', inject(function (StatisticsService, StateService) {
                 //given
                 stateMock.playground.filter.gridFilters = [{

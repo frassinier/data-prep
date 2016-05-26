@@ -17,6 +17,7 @@ describe('RangeSlider controller', function () {
     var createController, scope;
 
     beforeEach(angular.mock.module('talend.widget'));
+    beforeEach(angular.mock.module('data-prep.services.utils'));
 
     beforeEach(inject(function ($rootScope, $controller) {
         scope = $rootScope.$new();
@@ -56,10 +57,10 @@ describe('RangeSlider controller', function () {
         };
 
         //when
-        var result = ctrl.areMinMaxNumbers();
+        var result = ctrl.hasAtLeastOneInvalidValue();
 
         //then
-        expect(result).toBe(false);
+        expect(result).toBe(true);
     }));
 
     it('should check if both of the entered min and max are numbers when entered value is valid', inject(function () {
@@ -72,10 +73,70 @@ describe('RangeSlider controller', function () {
         };
 
         //when
-        var result = ctrl.areMinMaxNumbers();
+        var result = ctrl.hasAtLeastOneInvalidValue();
 
         //then
-        expect(result).toBe(true);
+        expect(result).toBe(false);
+    }));
+
+    it('should check if both of the entered min and max are numbers when there is no value', inject(function () {
+        //given
+        var ctrl = createController();
+
+        ctrl.minMaxModel = {
+            minModel: null,
+            maxModel: null
+        };
+
+        //when
+        var result = ctrl.hasAtLeastOneInvalidValue();
+
+        //then
+        expect(result).toBe(false);
+    }));
+
+    it('should check if the entered min date and empty max date are valid', inject(function () {
+        //given
+        var ctrl = createController();
+
+        ctrl.rangeLimits = {
+            min: '01/01/2000',
+            max: '01/01/2010',
+            type: 'date'
+        };
+
+        ctrl.minMaxModel = {
+            minModel: '01/01/2000',
+            maxModel: null
+        };
+
+        //when
+        var result = ctrl.hasAtLeastOneInvalidValue();
+
+        //then
+        expect(result).toBe(false);
+    }));
+
+    it('should check if the entered empty min date and max date are valid', inject(function () {
+        //given
+        var ctrl = createController();
+
+        ctrl.rangeLimits = {
+            min: '01/01/2000',
+            max: '01/01/2010',
+            type: 'date'
+        };
+
+        ctrl.minMaxModel = {
+            minModel: null,
+            maxModel: '01/01/2010'
+        };
+
+        //when
+        var result = ctrl.hasAtLeastOneInvalidValue();
+
+        //then
+        expect(result).toBe(false);
     }));
 
 
@@ -159,6 +220,38 @@ describe('RangeSlider controller', function () {
     });
 
     describe('range value adaptation', function () {
+
+        it('should reset entered min if it is null', inject(function () {
+            //given
+            const
+                ctrl = createController(),
+                enteredMin = null,
+                enteredMax = 20,
+                minimum = 2,
+                maximum = 100;
+
+            //when
+            const result = ctrl.adaptRangeValues(enteredMin, enteredMax, minimum, maximum);
+
+            //then
+            expect(result).toEqual({min: 2, max: 20});
+        }));
+
+        it('should reset entered max if it is null', inject(function () {
+            //given
+            const
+                ctrl = createController(),
+                enteredMin = 50,
+                enteredMax = null,
+                minimum = 2,
+                maximum = 100;
+
+            //when
+            const result = ctrl.adaptRangeValues(enteredMin, enteredMax, minimum, maximum);
+
+            //then
+            expect(result).toEqual({min: 50, max: 100});
+        }));
 
         it('should switch entered min and max to respect min < max', inject(function () {
             //given

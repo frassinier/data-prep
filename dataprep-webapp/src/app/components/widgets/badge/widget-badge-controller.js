@@ -38,7 +38,10 @@ export default function TalendBadgeCtrl($scope, $translate) {
             vm.sign = ' = ';
             break;
         case 'inside_range':
-            vm.sign = ' in ';
+            const value = vm.obj && vm.obj.value;
+            if (!(_.startsWith(value, '≥') || _.startsWith(value, '≤'))) {
+                vm.sign = ' in ';
+            }
             break;
         default:
             vm.sign = $translate.instant('COLON');
