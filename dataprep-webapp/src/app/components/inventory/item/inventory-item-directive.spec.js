@@ -86,7 +86,7 @@ describe('InventoryItem directive', () => {
             'DATASET_DETAILS': 'owned by {{author}}, created {{created | TDPMoment}}, contains {{records}} lines',
             "PREPARATION_DETAILS": "owned by {{author}}, created {{creationDate | TDPMoment}}, contains {{steps.length -1}} step(s)",
             "FOLDER_DETAILS": "owned by {{author}}, created {{creationDate | TDPMoment}}, contains {{datasets.length}} dataset(s)",
-            'COPY_CLONE_ACTION': 'Copy or Clone {{type}} \"{{name}}\"',
+            'COPY_MOVE_ACTION': 'Copy or Move {{type}} \"{{name}}\"',
             'DELETE_ACTION': 'Delete {{type}} \"{{name}}\"',
             'CERTIFY_ACTION': 'Certify {{type}} \"{{name}}\"',
             'FAVORITE_ACTION': 'Add {{type}} \"{{name}}\" in your favorites'

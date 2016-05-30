@@ -103,7 +103,7 @@
         <a ng-if="inventoryItemCtrl.copy"
            data-icon="B"
            class="btn-icon"
-           translate-once-title="COPY_CLONE_ACTION"
+           translate-once-title="{{inventoryItemCtrl.type === 'preparation' ? 'COPY_MOVE_ACTION' : 'COPY_TO_ACTION'}}"
            translate-values="{type: inventoryItemCtrl.type, name: inventoryItemCtrl.item.name}"
            ng-click="inventoryItemCtrl.copy(inventoryItemCtrl.item)"></a>
 

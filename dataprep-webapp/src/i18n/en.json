@@ -266,7 +266,7 @@
   "CERTIFY_ACTION": "Certify {{type}} \"{{name}}\"",
   "FAVORITE_ACTION": "Add {{type}} \"{{name}}\" in your favorites",
   "DELETE_ACTION": "Delete {{type}} \"{{name}}\"",
-  "COPY_CLONE_ACTION": "Copy or Clone {{type}} \"{{name}}\"",
+  "COPY_MOVE_ACTION": "Copy or Move {{type}} \"{{name}}\"",
   "COPY_TO_ACTION": "Copy {{type}} \"{{name}}\"",
   "COPY_ACTION": "Copy",
   "MOVE_HERE_ACTION": "Move",
