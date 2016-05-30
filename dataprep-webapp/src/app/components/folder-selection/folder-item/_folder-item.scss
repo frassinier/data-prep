@@ -12,6 +12,7 @@
     cursor: pointer;
     .folder-name {
       text-transform: uppercase;
+      padding-left: 10px;
     }
   }
 
@@ -24,5 +25,10 @@
   .dropdown-caret-right {
     cursor: pointer;
     color: grey;
+    font-size: 1.2em;
+    &:before{
+      padding: 0px 5px 0px 10px;
+      font-size: 1em;
+    }
   }
 }
