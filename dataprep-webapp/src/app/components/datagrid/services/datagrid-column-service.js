@@ -42,7 +42,7 @@ export default function DatagridColumnService($rootScope, $compile, $log, $trans
 
     var gridHeaderPreviewTemplate =
         '<div class="grid-header <%= diffClass %>">' +
-        '   <div class="grid-header-title dropdown-button ng-binding"><%= name %></div>' +
+        '   <div class="grid-header-title dropdown-button ng-binding"><%= name || `&nbsp;` %></div>' +
         '       <div class="grid-header-type ng-binding"><%= simpleType %></div>' +
         '   </div>' +
         '<div class="quality-bar"><div class="record-unknown"></div></div>';
