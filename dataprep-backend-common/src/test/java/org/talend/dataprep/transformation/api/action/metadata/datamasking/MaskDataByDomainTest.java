@@ -19,6 +19,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.talend.dataprep.transformation.api.action.metadata.ActionMetadataTestUtils.getColumn;
+import static org.talend.dataprep.transformation.api.action.metadata.ActionMetadataTestUtils.setStatistics;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -63,6 +64,30 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
     @Test
     public void testCategory() throws Exception {
         assertThat(action.getCategory(), is(ActionCategory.DATA_MASKING.getDisplayName()));
+    }
+
+    @Test
+    public void testShouldMaskDatetime() throws IOException {
+
+        // given
+        final Map<String, String> values = new HashMap<>();
+        values.put("0000", "2015-11-15");
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMeta = row.getRowMetadata();
+        ColumnMetadata colMeta = rowMeta.getById("0000");
+        colMeta.setType(Type.DATE.getName());
+        setStatistics(row, "0000", MaskDataByDomainTest.class.getResourceAsStream("statistics_datetime.json"));
+
+        final Map<String, String> expectedValues = new HashMap<>();
+        expectedValues.put("0000", "2015-10-15");
+
+        // when
+        ActionTestWorkbench.test(row, factory.create(action, parameters));
+
+        // then
+        final String resultValue = row.values().get("0000").toString();
+        assertTrue("The result [" + resultValue + "] should be a masked date but actually not.",
+                resultValue.matches("^2015\\-[0-1][0-9]\\-[0-3][0-9]$"));
     }
 
     @Test

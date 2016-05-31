@@ -13,6 +13,11 @@
 
 package org.talend.dataprep.transformation.api.action.metadata.datamasking;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +25,7 @@ import org.springframework.stereotype.Component;
 import org.talend.dataprep.api.dataset.ColumnMetadata;
 import org.talend.dataprep.api.dataset.DataSetRow;
 import org.talend.dataprep.api.dataset.RowMetadata;
+import org.talend.dataprep.api.dataset.statistics.PatternFrequency;
 import org.talend.dataprep.api.type.Type;
 import org.talend.dataprep.transformation.api.action.context.ActionContext;
 import org.talend.dataprep.transformation.api.action.context.ActionContext.ActionStatus;
@@ -27,9 +33,6 @@ import org.talend.dataprep.transformation.api.action.metadata.category.ActionCat
 import org.talend.dataprep.transformation.api.action.metadata.common.ActionMetadata;
 import org.talend.dataprep.transformation.api.action.metadata.common.ColumnAction;
 import org.talend.dataquality.datamasking.semantic.ValueDataMasker;
-
-import java.util.Collections;
-import java.util.Set;
 
 /**
  * Mask sensitive data according to the semantic category.
@@ -100,7 +103,15 @@ public class MaskDataByDomain extends ActionMetadata implements ColumnAction {
             final String type = column.getType();
             LOGGER.trace(">>> type: " + type + " metadata: " + column);
             try {
-                actionContext.get(MASKER, (p) -> new ValueDataMasker(domain, type));
+                if (Type.DATE.getName().equals(type)) {
+                    final List<PatternFrequency> patternFreqList = column.getStatistics().getPatternFrequencies();
+                    final List<String> datatimePatternList = patternFreqList.stream().map(pf -> pf.getPattern())
+                            .collect(Collectors.toList());
+                    actionContext.get(MASKER, (p) -> new ValueDataMasker(domain, type, datatimePatternList));
+
+                } else {
+                    actionContext.get(MASKER, (p) -> new ValueDataMasker(domain, type));
+                }
             } catch (Exception e) {
                 LOGGER.error(e.getMessage(), e);
                 actionContext.setActionStatus(ActionStatus.CANCELED);
