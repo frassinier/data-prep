@@ -19,6 +19,7 @@ import static org.talend.dataprep.command.Defaults.emptyString;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.InputStreamEntity;
@@ -48,8 +49,10 @@ public class CreateOrUpdateDataSet extends GenericCommand<String> {
         super(GenericCommand.DATASET_GROUP);
         execute(() -> {
             try {
-                URIBuilder uriBuilder = new URIBuilder(datasetServiceUrl + "/datasets/" + id + "/raw/") //
-                    .addParameter( "name", name );
+                URIBuilder uriBuilder = new URIBuilder(datasetServiceUrl + "/datasets/" + id + "/raw/");
+                if (!StringUtils.isEmpty(name)) {
+                    uriBuilder.addParameter("name", name);
+                }
                 final HttpPut put = new HttpPut(uriBuilder.build()); // $NON-NLS-1$ //$NON-NLS-2$
                 put.setEntity(new InputStreamEntity(dataSetContent));
                 return put;

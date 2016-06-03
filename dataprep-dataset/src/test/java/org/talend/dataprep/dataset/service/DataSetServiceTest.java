@@ -719,6 +719,36 @@ public class DataSetServiceTest extends DataSetBaseTest {
     }
 
     @Test
+    public void test_TDP_2052() throws Exception {
+        //given
+        final String dataSetId = "123456";
+        given().body(IOUtils.toString(this.getClass().getResourceAsStream(TAGADA_CSV)))
+                .when()
+                .put("/datasets/{id}/raw?name=original", dataSetId)
+                .then()
+                .statusCode(OK.value());
+
+        String datasets = when().get("/datasets").asString();
+        List<DataSetMetadata> datasetsMetadata = mapper.readValue(datasets, new TypeReference<ArrayList<DataSetMetadata>>() {});
+        final DataSetMetadata original = datasetsMetadata.get(0);
+
+        //when
+        given().body(IOUtils.toString(this.getClass().getResourceAsStream(TAGADA2_CSV)))
+                .when()
+                .put("/datasets/{id}/raw?name=", dataSetId)
+                .then()
+                .statusCode(OK.value());
+
+        //then
+        datasets = when().get("/datasets").asString();
+        datasetsMetadata = mapper.readValue(datasets, new TypeReference<ArrayList<DataSetMetadata>>() {});
+        final DataSetMetadata copy = datasetsMetadata.get(0);
+
+        assertThat(copy.getId(), equalTo(original.getId()));
+        assertThat(copy.getName(), equalTo(original.getName()));
+    }
+
+    @Test
     public void updateMetadataContentWithWrongDatasetId() throws Exception {
         assertThat(dataSetMetadataRepository.get("3d72677c-e2c9-4a34-8c58-959a56ec8643"), nullValue());
         given().contentType(JSON) //

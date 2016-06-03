@@ -78,6 +78,26 @@ public class DataSetAPITest extends ApiServiceTestBase {
     }
 
     @Test
+    public void test_TDP_2052() throws Exception {
+        // given a created dataset
+        final String datasetOriginalName = "testDataset";
+        final String dataSetId = createDataset("dataset/dataset.csv", datasetOriginalName, "text/csv");
+
+        // when it's updated
+        given().body(IOUtils.toString(PreparationAPITest.class.getResourceAsStream("t-shirt_100.csv")))
+                .queryParam("Content-Type", "text/csv").when().put("/api/datasets/" + dataSetId).asString();
+
+        // then, the content is updated
+        String dataSetContent = when().get("/api/datasets/" + dataSetId + "?metadata=true").asString();
+        final String expectedContent = IOUtils.toString(this.getClass().getResourceAsStream("t-shirt_100.csv.expected.json"));
+        assertThat(dataSetContent, sameJSONAs(expectedContent).allowingExtraUnexpectedFields());
+
+        final String jsonUpdatedMetadata = when().get("/api/datasets/{id}/metadata", dataSetId).asString();
+        final DataSetMetadata updatedMetadata = mapper.readValue(jsonUpdatedMetadata, DataSetMetadata.class);
+        assertEquals(datasetOriginalName, updatedMetadata.getName());
+    }
+
+    @Test
     public void testDataSetUpdateMetadata() throws Exception {
         // given
         final String dataSetId = createDataset("dataset/dataset.csv", "tagada", "text/csv");
