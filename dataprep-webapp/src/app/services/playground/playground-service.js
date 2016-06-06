@@ -259,7 +259,7 @@ export default function PlaygroundService($state, $rootScope, $q, $translate, $t
     function performCreateOrUpdatePreparation(name) {
         const promise = state.playground.preparation ?
             PreparationService.setName(state.playground.preparation.id, name) :
-            PreparationService.create(state.playground.dataset.id, name);
+            PreparationService.create(state.playground.dataset.id, name, state.inventory.homeFolderId);
 
         return promise
             .then((preparation) => {

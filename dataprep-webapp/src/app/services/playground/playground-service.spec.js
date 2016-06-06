@@ -565,6 +565,7 @@ describe('Playground Service', () => {
                     name: 'my dataset name'
                 };
                 stateMock.playground.preparation = null;
+                stateMock.inventory = {homeFolderId: 'Lw=='};
                 const action = 'uppercase';
                 const parameters = {
                     param1: 'param1Value',
@@ -583,7 +584,7 @@ describe('Playground Service', () => {
 
                 // then
                 expect(createdPreparation.draft).toBe(true);
-                expect(PreparationService.create).toHaveBeenCalledWith('76a415cf854d8654', 'my dataset name Preparation');
+                expect(PreparationService.create).toHaveBeenCalledWith('76a415cf854d8654', 'my dataset name Preparation', 'Lw==');
             }));
 
             it('should append step to the new created preparation', inject(($rootScope, PlaygroundService, PreparationService) => {
