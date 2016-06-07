@@ -14,17 +14,17 @@
 package org.talend.dataprep.transformation.api.action.metadata.datamasking;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 import static org.talend.dataprep.transformation.api.action.metadata.ActionMetadataTestUtils.getColumn;
 import static org.talend.dataprep.transformation.api.action.metadata.ActionMetadataTestUtils.setStatistics;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -37,6 +37,8 @@ import org.talend.dataprep.transformation.api.action.ActionTestWorkbench;
 import org.talend.dataprep.transformation.api.action.metadata.AbstractMetadataBaseTest;
 import org.talend.dataprep.transformation.api.action.metadata.ActionMetadataTestUtils;
 import org.talend.dataprep.transformation.api.action.metadata.category.ActionCategory;
+import org.talend.dataprep.transformation.api.action.metadata.common.ImplicitParameters;
+import org.talend.dataprep.transformation.api.action.metadata.line.MakeLineHeader;
 import org.talend.dataprep.transformation.api.action.metadata.text.LowerCase;
 import org.talend.dataquality.datamasking.semantic.MaskableCategoryEnum;
 
@@ -71,15 +73,12 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
 
         // given
         final Map<String, String> values = new HashMap<>();
-        values.put("0000", "2015-11-15");
+        values.put("0000", "2015-09-15");
         final DataSetRow row = new DataSetRow(values);
         final RowMetadata rowMeta = row.getRowMetadata();
         ColumnMetadata colMeta = rowMeta.getById("0000");
         colMeta.setType(Type.DATE.getName());
         setStatistics(row, "0000", MaskDataByDomainTest.class.getResourceAsStream("statistics_datetime.json"));
-
-        final Map<String, String> expectedValues = new HashMap<>();
-        expectedValues.put("0000", "2015-10-15");
 
         // when
         ActionTestWorkbench.test(row, factory.create(action, parameters));
@@ -123,6 +122,63 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
 
         // when
         ActionTestWorkbench.test(row, actionRegistry, factory.create(action, parameters));
+
+        // then
+        int realValueAsInteger = Integer.parseInt((String) row.values().get("0000"));
+        LOGGER.info("Row value: {}", realValueAsInteger);
+        assertTrue(realValueAsInteger >= 10 && realValueAsInteger <= 14);
+    }
+
+    @Test
+    public void testShouldMaskDecimal_well_typed() {
+        // given
+        final Map<String, String> values = new HashMap<>();
+        values.put("0000", "12.5");
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMeta = row.getRowMetadata();
+        ColumnMetadata colMeta = rowMeta.getById("0000");
+        colMeta.setType(Type.FLOAT.getName());
+
+        // when
+        ActionTestWorkbench.test(row, factory.create(action, parameters));
+
+        // then
+        float realValueAsFloat = Float.parseFloat((String) row.values().get("0000"));
+        LOGGER.info("Row value: {}", realValueAsFloat);
+        assertTrue(realValueAsFloat >= 10 && realValueAsFloat <= 14);
+    }
+
+    @Test
+    public void testShouldMaskDecimal_wrongly_typed() {
+        // given
+        final Map<String, String> values = new HashMap<>();
+        values.put("0000", "12.5");
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMeta = row.getRowMetadata();
+        ColumnMetadata colMeta = rowMeta.getById("0000");
+        colMeta.setType(Type.INTEGER.getName());
+
+        // when
+        ActionTestWorkbench.test(row, factory.create(action, parameters));
+
+        // then
+        float realValueAsFloat = Float.parseFloat((String) row.values().get("0000"));
+        LOGGER.info("Row value: {}", realValueAsFloat);
+        assertTrue(realValueAsFloat >= 10 && realValueAsFloat <= 14);
+    }
+
+    @Test
+    public void testShouldMaskInteger_wrongly_typed() {
+        // given
+        final Map<String, String> values = new HashMap<>();
+        values.put("0000", "12");
+        final DataSetRow row = new DataSetRow(values);
+        final RowMetadata rowMeta = row.getRowMetadata();
+        ColumnMetadata colMeta = rowMeta.getById("0000");
+        colMeta.setType(Type.FLOAT.getName());
+
+        // when
+        ActionTestWorkbench.test(row, factory.create(action, parameters));
 
         // then
         int realValueAsInteger = Integer.parseInt((String) row.values().get("0000"));
@@ -192,6 +248,42 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
 
         // then
         assertEquals(expectedValues, row.values());
+    }
+
+    @Test
+    public void should_skip_unvalid_row_and_keep_on() {
+        // given
+        long rowId = 120;
+
+        // row 1
+        Map<String, String> rowContent = new HashMap<>();
+        rowContent.put("0000", "null");
+        rowContent.put("0001", "David");
+        final DataSetRow row1 = new DataSetRow(rowContent);
+        row1.setTdpId(rowId++);
+
+        // row 2
+        rowContent = new HashMap<>();
+        rowContent.put("0000", "12");
+        rowContent.put("0001", "John");
+        final DataSetRow row2 = new DataSetRow(rowContent);
+        row2.setTdpId(rowId++);
+
+        final RowMetadata rowMeta = row1.getRowMetadata();
+        ColumnMetadata colMeta = rowMeta.getById("0000");
+        colMeta.setType(Type.INTEGER.getName());
+
+        //when
+        ActionTestWorkbench.test(Arrays.asList(row1, row2), factory.create(action, parameters));
+
+        // then
+        // assert that line #1 is left unchanged
+        assertEquals("null", row1.values().get("0000"));
+        // assert that line #2 is masked
+        int realValueAsInteger = Integer.parseInt((String) row2.values().get("0000"));
+        LOGGER.info("Row value: {}", realValueAsInteger);
+      //  assertNotEquals(12, realValueAsInteger);
+        assertTrue(realValueAsInteger >= 10 && realValueAsInteger <= 14);
     }
 
     @Test

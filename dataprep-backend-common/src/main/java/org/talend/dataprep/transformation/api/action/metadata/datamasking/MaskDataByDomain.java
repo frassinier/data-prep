@@ -13,7 +13,7 @@
 
 package org.talend.dataprep.transformation.api.action.metadata.datamasking;
 
-import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -84,8 +84,12 @@ public class MaskDataByDomain extends ActionMetadata implements ColumnAction {
         final String columnId = context.getColumnId();
         final String value = row.get(columnId);
         if (StringUtils.isNotBlank(value)) {
-            final ValueDataMasker masker = context.get(MASKER);
-            row.set(columnId, masker.maskValue(value));
+            try {
+                final ValueDataMasker masker = context.get(MASKER);
+                row.set(columnId, masker.maskValue(value));
+            } catch (Exception e) {
+                // Nothing to do, we let the original value as is
+            }
         }
     }
 
@@ -121,7 +125,7 @@ public class MaskDataByDomain extends ActionMetadata implements ColumnAction {
 
     @Override
     public Set<Behavior> getBehavior() {
-        return Collections.singleton(Behavior.VALUES_COLUMN);
+        return EnumSet.of(Behavior.VALUES_COLUMN);
     }
 
 }
