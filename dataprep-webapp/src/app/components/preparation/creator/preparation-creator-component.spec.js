@@ -93,15 +93,6 @@ describe('Datasets filters component', () => {
                 //then
                 expect(element.find('#filtered-datasets-search').attr('disabled')).toBe('disabled');
             });
-
-            //it('should load datasets after entering name', inject(($q, DatasetService) => {
-            //    //when
-            //    createElement();
-            //    controller.enteredName = 'name';
-            //    scope.$digest();
-            //
-            //    expect(DatasetService.loadFilteredDatasets).toHaveBeenCalledWith('qsdqsds');
-            //}));
         });
 
         describe('left Panel', () => {

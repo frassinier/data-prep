@@ -50,19 +50,6 @@
         }
     }
 
-        .add-preparation {
-            margin: 10px 3px 5px 10px;
-            float: left;
-            background: #b6be00;
-            color: #FFFFFF;
-            cursor: pointer;
-            height: 36px;
-            padding: 5px 8px;
-            text-transform: uppercase;
-            border-radius: 2px;
-        }
-    }
-
     .inventory-sort {
         @include display(flex);
         @include align-items(center);

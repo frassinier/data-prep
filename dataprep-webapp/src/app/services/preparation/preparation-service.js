@@ -91,7 +91,7 @@ export default function PreparationService($q, $state, $stateParams, state, Stat
      * @returns {promise} The POST promise
      */
     function create(datasetId, name, destinationFolder) {
-        StateService.setPreviousRoute('nav.index.preparations', {folderPath: $stateParams.folderPath});
+        StateService.setPreviousRoute('nav.index.preparations', {folderId: $stateParams.folderId});
         return PreparationListService.create(datasetId, name, destinationFolder)
             .then((preparation) => {
                 //get all dataset aggregations per columns from localStorage and save them for the new preparation

@@ -11,6 +11,18 @@
 
  ============================================================================*/
 
+/**
+ * @ngdoc component
+ * @name data-prep.preparation-creator:preparationCreator
+ * @description This component renders add preparation modal content
+ * @usage
+ *      <preparation-creator
+ *      <preparation-creator
+ *          show-add-prep-modal="$ctrl.showAddPrepModal">
+ *       </preparation-creator>
+ * @param {Boolean} showAddPrepModal show/hide the whole modal
+ * */
+
 import PreparationCreatorCtrl from './preparation-creator-controller';
 
 export default {

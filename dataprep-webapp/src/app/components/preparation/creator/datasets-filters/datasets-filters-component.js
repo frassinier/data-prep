@@ -11,6 +11,19 @@
 
  ============================================================================*/
 
+/**
+ * @ngdoc component
+ * @name data-prep.datasets-filters:datasetsFilters
+ * @description This component renders datasets filters list in the left panel
+ * @usage
+ *      <datasets-filters
+ *          on-filter-select="$ctrl.loadDatasets(filter)">
+ *          importing="$ctrl.whileImport">
+ *       </datasets-filters>
+ * @param {function} onFilterSelect callback
+ * @param {Boolean} importing while import set to true
+ * */
+
 import DatasetsFiltersCtrl from './datasets-filters-controller';
 
 export default {

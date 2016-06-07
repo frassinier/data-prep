@@ -108,13 +108,13 @@ describe('Preparation Service', () => {
                 //given
                 const datasetId = '2430e5df845ab6034c85';
                 const name = 'my preparation';
-                $stateParams.folderPath = '';
+                $stateParams.folderId = '';
 
                 //when
                 PreparationService.create(datasetId, name, 'destinationFolder');
 
                 //then
-                expect(StateService.setPreviousRoute).toHaveBeenCalledWith('nav.index.preparations', {folderPath: $stateParams.folderPath});
+                expect(StateService.setPreviousRoute).toHaveBeenCalledWith('nav.index.preparations', {folderId: $stateParams.folderId});
             }));
 
             it('should create a new preparation', inject(($rootScope, PreparationService, PreparationListService) => {

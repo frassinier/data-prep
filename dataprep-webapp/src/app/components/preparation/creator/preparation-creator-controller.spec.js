@@ -15,11 +15,18 @@ describe('Preparation Creator Controller', () => {
 
     let createController, scope, ctrl, stateMock;
 
-    let urlQueries = {
+    const urlQueries = {
         RECENT_DATASETS: '/api/datasets?sort=MODIF&limit=true&name=',
         FAVORITE_DATASETS: '/api/datasets?favorite=true&name=',
         CERTIFIED_DATASETS: '/api/datasets?certified=true&name=',
         ALL_DATASETS: '/api/datasets?name='
+    };
+
+    const FILTERS_TYPES = {
+        'RECENT': 'RECENT_DATASETS',
+        'FAVORITE': 'FAVORITE_DATASETS',
+        'CERTIFIED': 'CERTIFIED_DATASETS',
+        'ALL': 'ALL_DATASETS',
     };
 
     beforeEach(angular.mock.module('data-prep.preparation-creator', ($provide) => {
@@ -81,7 +88,7 @@ describe('Preparation Creator Controller', () => {
             ctrl = createController();
 
             //when
-            ctrl.loadDatasets('RECENT_DATASETS');
+            ctrl.loadDatasets(FILTERS_TYPES.RECENT);
 
             //then
             expect(DatasetService.loadFilteredDatasets).toHaveBeenCalledWith(urlQueries.RECENT_DATASETS);
@@ -92,7 +99,7 @@ describe('Preparation Creator Controller', () => {
             ctrl = createController();
 
             //when
-            ctrl.loadDatasets('FAVORITE_DATASETS');
+            ctrl.loadDatasets(FILTERS_TYPES.FAVORITE);
 
             //then
             expect(DatasetService.loadFilteredDatasets).toHaveBeenCalledWith(urlQueries.FAVORITE_DATASETS);
@@ -103,7 +110,7 @@ describe('Preparation Creator Controller', () => {
             ctrl = createController();
 
             //when
-            ctrl.loadDatasets('CERTIFIED_DATASETS');
+            ctrl.loadDatasets(FILTERS_TYPES.CERTIFIED);
 
             //then
             expect(DatasetService.loadFilteredDatasets).toHaveBeenCalledWith(urlQueries.CERTIFIED_DATASETS);
@@ -114,7 +121,7 @@ describe('Preparation Creator Controller', () => {
             ctrl = createController();
 
             //when
-            ctrl.loadDatasets('ALL_DATASETS');
+            ctrl.loadDatasets(FILTERS_TYPES.ALL);
 
             //then
             expect(DatasetService.loadFilteredDatasets).toHaveBeenCalledWith(urlQueries.ALL_DATASETS);
@@ -127,7 +134,7 @@ describe('Preparation Creator Controller', () => {
             expect(ctrl.isFetchingDatasets).toBe(false);
 
             //when
-            ctrl.loadDatasets('ALL_DATASETS');
+            ctrl.loadDatasets(FILTERS_TYPES.ALL);
             expect(ctrl.isFetchingDatasets).toBe(true);
             scope.$digest();
 
@@ -146,7 +153,7 @@ describe('Preparation Creator Controller', () => {
             expect(ctrl.isFetchingDatasets).toBe(false);
 
             //when
-            ctrl.loadDatasets('ALL_DATASETS');
+            ctrl.loadDatasets(FILTERS_TYPES.ALL);
             expect(ctrl.isFetchingDatasets).toBe(true);
             scope.$digest();
 
@@ -536,7 +543,7 @@ describe('Preparation Creator Controller', () => {
             ctrl.alreadyExistingName = false;
 
             //when
-            let enabledForm = ctrl.anyMissingEntries();
+            const enabledForm = ctrl.anyMissingEntries();
 
             //then
             expect(enabledForm).toBeFalsy();
@@ -550,7 +557,7 @@ describe('Preparation Creator Controller', () => {
             ctrl.alreadyExistingName = false;
 
             //when
-            let enabledForm = ctrl.anyMissingEntries();
+            const enabledForm = ctrl.anyMissingEntries();
 
             //then
             expect(enabledForm).toBeFalsy();
@@ -564,7 +571,7 @@ describe('Preparation Creator Controller', () => {
             ctrl.alreadyExistingName = true;
 
             //when
-            let enabledForm = ctrl.anyMissingEntries();
+            const enabledForm = ctrl.anyMissingEntries();
 
             //then
             expect(enabledForm).toBeFalsy();
@@ -578,7 +585,7 @@ describe('Preparation Creator Controller', () => {
             ctrl.whileImport = true;
 
             //when
-            let title = ctrl.getImportTitle();
+            const title = ctrl.getImportTitle();
 
             //then
             expect(title).toBe('IMPORT_IN_PROGRESS');
@@ -590,7 +597,7 @@ describe('Preparation Creator Controller', () => {
             ctrl.alreadyExistingName = true;
 
             //when
-            let title = ctrl.getImportTitle();
+            const title = ctrl.getImportTitle();
 
             //then
             expect(title).toBe('TRY_CHANGING_NAME');
@@ -602,7 +609,7 @@ describe('Preparation Creator Controller', () => {
             ctrl.alreadyExistingName = false;
 
             //when
-            let title = ctrl.getImportTitle();
+            const title = ctrl.getImportTitle();
 
             //then
             expect(title).toBe('IMPORT_FILE_DESCRIPTION');

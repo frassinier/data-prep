@@ -41,7 +41,7 @@ class PreparationCreatorCtrl {
      * @name loadDatasets
      * @methodOf data-prep.preparation-creator.controller:PreparationCreatorCtrl
      * @description loads the filtered datasets
-     * @params {filterValue} the chosen filter value
+     * @params {String} filterValue the chosen filter value
      */
     loadDatasets(filterValue) {
         this.lastFilterValue = filterValue;
@@ -64,10 +64,9 @@ class PreparationCreatorCtrl {
         this.isFetchingDatasets = true;
         this.datasetService.loadFilteredDatasets(this.url)
             .then((filteredDatasets) => {
-                this.isFetchingDatasets = false;
                 this.filteredDatasets = filteredDatasets;
             })
-            .catch(() => {
+            .finally(() => {
                 this.isFetchingDatasets = false;
             });
     }
@@ -79,8 +78,8 @@ class PreparationCreatorCtrl {
      * @description imports the chosen dataset
      */
     import() {
-        let file = this.datasetFile[0];
-        let datasetName = this.datasetFile[0].name;
+        const file = this.datasetFile[0];
+        const datasetName = file.name;
 
         // remove file extension and ask final name
         this.datasetName = datasetName.replace(/\.[^/.]+$/, '');
@@ -112,7 +111,7 @@ class PreparationCreatorCtrl {
             name: name
         };
 
-        let dataset = this.datasetService.createDatasetInfo(file, name);
+        const dataset = this.datasetService.createDatasetInfo(file, name);
         this.uploadingDatasets.push(dataset);
         this.datasetService.create(params, 'text/plain', file)
             .progress((event) => {
@@ -136,7 +135,6 @@ class PreparationCreatorCtrl {
             });
     }
 
-    //TODO this should be in PreparationService like datasetService.getUniqueName
     /**
      * @ngdoc method
      * @name _getUniquePrepName
@@ -145,10 +143,10 @@ class PreparationCreatorCtrl {
      * @params {Number} index the index to increment
      */
     _getUniquePrepName(index = 0) {
-        let suffix = index === 0 ? ' Preparation' : ' Preparation (' + index + ')';
+        const suffix = index === 0 ? ' Preparation' : ' Preparation (' + index + ')';
 
         this.enteredName = this.baseDataset.name + suffix;
-        let existingName = _.find(this.state.inventory.folder.content.preparations, {name: this.enteredName});
+        const existingName = _.some(this.state.inventory.folder.content.preparations, {name: this.enteredName});
         if (existingName) {
             this._getUniquePrepName(index + 1);
         }
@@ -171,7 +169,7 @@ class PreparationCreatorCtrl {
 
     /**
      * @ngdoc method
-     * @name _createDataset
+     * @name checkExistingPrepName
      * @methodOf data-prep.preparation-creator.controller:PreparationCreatorCtrl
      * @description creates a dataset and manages the progress bar
      * @params {String} from the caller
@@ -180,13 +178,12 @@ class PreparationCreatorCtrl {
         if (from === 'user') {
             this.userHasTypedName = true;
         }
-        let existingName = _.find(this.state.inventory.folder.content.preparations, {name: this.enteredName});
-        this.alreadyExistingName = existingName ? true : false;
+        this.alreadyExistingName = _.some(this.state.inventory.folder.content.preparations, {name: this.enteredName});
     }
 
     /**
      * @ngdoc method
-     * @name _getUniquePrepName
+     * @name applyNameFilter
      * @methodOf data-prep.preparation-creator.controller:PreparationCreatorCtrl
      * @description generates a unique preparation name
      */
@@ -238,7 +235,7 @@ class PreparationCreatorCtrl {
 
     /**
      * @ngdoc method
-     * @name importFile
+     * @name getImportTitle
      * @methodOf data-prep.preparation-creator.controller:PreparationCreatorCtrl
      * @description creates the tooltip content
      * @returns {String} the tooltip content
@@ -251,9 +248,7 @@ class PreparationCreatorCtrl {
         if (this.alreadyExistingName) {
             return 'TRY_CHANGING_NAME';
         }
-        else {
-            return 'IMPORT_FILE_DESCRIPTION';
-        }
+        return 'IMPORT_FILE_DESCRIPTION';
     }
 }
 export default PreparationCreatorCtrl;
