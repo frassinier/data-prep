@@ -26,12 +26,13 @@
 
             <div ng-switch-when="true"
                    ng-repeat="option in choiceParamCtrl.parameter.configuration.values track by option.value">
-                <input type="radio"
-                       ng-value="option.value"
-                       ng-model="choiceParamCtrl.parameter.value">
-                {{::option.label}}
+                <label>
+                    <input type="radio"
+                           ng-value="option.value"
+                           ng-model="choiceParamCtrl.parameter.value">
+                    <span>{{::option.label}}</span>
+                </label>
             </div>
-
         </div>
     </div>
 </div>
