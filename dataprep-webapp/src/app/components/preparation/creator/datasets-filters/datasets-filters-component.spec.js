@@ -20,7 +20,7 @@ describe('Datasets filters component', () => {
         $translateProvider.translations('en', {
             'RECENT_DATASETS':'Recent Datasets',
             'RECENT_DATASETS_DESCRIPTION':'10 Last modified datasets',
-            'FAVORITE_DATASETS':'Favorites Datasets',
+            'FAVORITE_DATASETS':'Favorite Datasets',
             'FAVORITE_DATASETS_DESCRIPTION':'',
             'CERTIFIED_DATASETS':'Certified Datasets',
             'CERTIFIED_DATASETS_DESCRIPTION':'',
@@ -89,7 +89,7 @@ describe('Datasets filters component', () => {
 
             //then
             expect(element.find('.dataset-filter-title').eq(0).text().trim()).toBe('Recent Datasets');
-            expect(element.find('.dataset-filter-title').eq(1).text().trim()).toBe('Favorites Datasets');
+            expect(element.find('.dataset-filter-title').eq(1).text().trim()).toBe('Favorite Datasets');
             expect(element.find('.dataset-filter-title').eq(2).text().trim()).toBe('Certified Datasets');
             expect(element.find('.dataset-filter-title').eq(3).text().trim()).toBe('All Datasets');
         });
