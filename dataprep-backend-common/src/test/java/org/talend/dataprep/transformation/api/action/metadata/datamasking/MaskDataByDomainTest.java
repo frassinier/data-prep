@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.core.Is;
 import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -37,15 +35,12 @@ import org.talend.dataprep.transformation.api.action.ActionTestWorkbench;
 import org.talend.dataprep.transformation.api.action.metadata.AbstractMetadataBaseTest;
 import org.talend.dataprep.transformation.api.action.metadata.ActionMetadataTestUtils;
 import org.talend.dataprep.transformation.api.action.metadata.category.ActionCategory;
-import org.talend.dataprep.transformation.api.action.metadata.common.ImplicitParameters;
-import org.talend.dataprep.transformation.api.action.metadata.line.MakeLineHeader;
-import org.talend.dataprep.transformation.api.action.metadata.text.LowerCase;
 import org.talend.dataquality.datamasking.semantic.MaskableCategoryEnum;
 
 /**
- * Test class for LowerCase action. Creates one consumer, and test it.
+ * Test class for MaskDataByDomain action.
  *
- * @see LowerCase
+ * @see MaskDataByDomain
  */
 public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
 
@@ -81,7 +76,7 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
         setStatistics(row, "0000", MaskDataByDomainTest.class.getResourceAsStream("statistics_datetime.json"));
 
         // when
-        ActionTestWorkbench.test(row, factory.create(action, parameters));
+        ActionTestWorkbench.test(row, actionRegistry, factory.create(action, parameters));
 
         // then
         final String resultValue = row.values().get("0000").toString();
@@ -140,7 +135,7 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
         colMeta.setType(Type.FLOAT.getName());
 
         // when
-        ActionTestWorkbench.test(row, factory.create(action, parameters));
+        ActionTestWorkbench.test(row, actionRegistry, factory.create(action, parameters));
 
         // then
         float realValueAsFloat = Float.parseFloat((String) row.values().get("0000"));
@@ -159,7 +154,7 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
         colMeta.setType(Type.INTEGER.getName());
 
         // when
-        ActionTestWorkbench.test(row, factory.create(action, parameters));
+        ActionTestWorkbench.test(row, actionRegistry, factory.create(action, parameters));
 
         // then
         float realValueAsFloat = Float.parseFloat((String) row.values().get("0000"));
@@ -178,7 +173,7 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
         colMeta.setType(Type.FLOAT.getName());
 
         // when
-        ActionTestWorkbench.test(row, factory.create(action, parameters));
+        ActionTestWorkbench.test(row, actionRegistry, factory.create(action, parameters));
 
         // then
         int realValueAsInteger = Integer.parseInt((String) row.values().get("0000"));
@@ -274,7 +269,7 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
         colMeta.setType(Type.INTEGER.getName());
 
         //when
-        ActionTestWorkbench.test(Arrays.asList(row1, row2), factory.create(action, parameters));
+        ActionTestWorkbench.test(Arrays.asList(row1, row2), actionRegistry, factory.create(action, parameters));
 
         // then
         // assert that line #1 is left unchanged
