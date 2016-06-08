@@ -246,42 +246,6 @@ public class MaskDataByDomainTest extends AbstractMetadataBaseTest {
     }
 
     @Test
-    public void should_skip_unvalid_row_and_keep_on() {
-        // given
-        long rowId = 120;
-
-        // row 1
-        Map<String, String> rowContent = new HashMap<>();
-        rowContent.put("0000", "null");
-        rowContent.put("0001", "David");
-        final DataSetRow row1 = new DataSetRow(rowContent);
-        row1.setTdpId(rowId++);
-
-        // row 2
-        rowContent = new HashMap<>();
-        rowContent.put("0000", "12");
-        rowContent.put("0001", "John");
-        final DataSetRow row2 = new DataSetRow(rowContent);
-        row2.setTdpId(rowId++);
-
-        final RowMetadata rowMeta = row1.getRowMetadata();
-        ColumnMetadata colMeta = rowMeta.getById("0000");
-        colMeta.setType(Type.INTEGER.getName());
-
-        //when
-        ActionTestWorkbench.test(Arrays.asList(row1, row2), actionRegistry, factory.create(action, parameters));
-
-        // then
-        // assert that line #1 is left unchanged
-        assertEquals("null", row1.values().get("0000"));
-        // assert that line #2 is masked
-        int realValueAsInteger = Integer.parseInt((String) row2.values().get("0000"));
-        LOGGER.info("Row value: {}", realValueAsInteger);
-      //  assertNotEquals(12, realValueAsInteger);
-        assertTrue(realValueAsInteger >= 10 && realValueAsInteger <= 14);
-    }
-
-    @Test
     public void should_accept_column() {
         assertTrue(action.acceptColumn(getColumn(Type.STRING)));
     }
