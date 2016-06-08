@@ -90,6 +90,12 @@
                 on-file-change="$ctrl.update($ctrl.item)">
         </talend-file-selector>
 
+        <a ng-if="!$ctrl.item.draft && $ctrl.edit && $ctrl.item.type === 'application/vnd.remote-ds.job'"
+           data-icon="M"
+           class="btn-icon"
+           translate-once-title="EDIT_LIVE_DATASET_PROPERTIES_ACTION"
+           ng-click="$ctrl.edit($ctrl.item)"></a>
+
         <div ng-if="!$ctrl.item.draft &&
                     (($ctrl.update && $ctrl.item.type !== 'application/vnd.remote-ds.job') || ($ctrl.relatedInventories)) &&
                     ($ctrl.copy || $ctrl.remove)"

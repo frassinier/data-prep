@@ -30,6 +30,7 @@ export default class DatasetListCtrl {
     constructor(state, StateService,                                // app state
                 DatasetService, PreparationService,                 // inventory
                 UploadWorkflowService, UpdateWorkflowService,       // inventory workflow
+                ImportRestService,                                  // import
                 TalendConfirmService, MessageService) {             // utils
         'ngInject';
 
@@ -39,6 +40,7 @@ export default class DatasetListCtrl {
         this.PreparationService = PreparationService;
         this.UploadWorkflowService = UploadWorkflowService;
         this.UpdateWorkflowService = UpdateWorkflowService;
+        this.ImportRestService = ImportRestService;
         this.TalendConfirmService = TalendConfirmService;
         this.MessageService = MessageService;
 
@@ -49,6 +51,11 @@ export default class DatasetListCtrl {
         this.rename = this.rename.bind(this);
         this.isItemShared= this.isItemShared.bind(this);
         this.clone = this.clone.bind(this);
+        this.editLocation = this.editLocation.bind(this);
+        this.submit = this.submit.bind(this);
+
+        this.showModal = false;
+        this.isFetchingParameters = false;
 
         this.renamingList = [];
     }
@@ -164,5 +171,56 @@ export default class DatasetListCtrl {
     clone(dataset) {
         return this.DatasetService.clone(dataset)
             .then(() => this.MessageService.success('COPY_SUCCESS_TITLE', 'COPY_SUCCESS'));
+    }
+
+    /**
+     * @ngdoc method
+     * @name editLocation
+     * @methodOf data-prep.dataset-list.controller:DatasetListCtrl
+     * @description Edit live dataset location properties
+     * @param {object} Live dataset metadata to edit
+     */
+    editLocation(dataset) {
+        this.currentMetadata = dataset;
+        if(!this.currentMetadata.location) return;
+        this.showModal = true;
+        this.isFetchingParameters = true;
+        this.ImportRestService
+            .importRemoteJobParameters()
+            .then((response) => {
+                const currentLocation = this.currentMetadata.location;
+                if (currentLocation) {
+                    this.liveDatasetFormParameters = response.data;
+                    this.liveDatasetFormParameters.map(parameter => {
+                        const parameterName = parameter.name;
+                        parameter.value = currentLocation[parameterName];
+                    });
+                }
+            })
+            .finally(() => {
+                this.isFetchingParameters = false;
+            });
+    }
+
+    /**
+     * @ngdoc method
+     * @name submit
+     * @methodOf data-prep.dataset-list.controller:DatasetListCtrl
+     * @description Submit edited location parameters of current dataset
+     */
+    submit() {
+        const
+            metadata = this.currentMetadata,
+            parameters = this.liveDatasetFormParameters;
+        this.DatasetService
+            .updateLocation(metadata, parameters)
+            .then(() => this.MessageService.success(
+                'LIVE_DATASET_EDIT_SUCCESS_TITLE',
+                'LIVE_DATASET_EDIT_SUCCESS'
+            ))
+            .finally(() => {
+                this.currentMetadata = null;
+                this.liveDatasetFormParameters = [];
+            });
     }
 }

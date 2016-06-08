@@ -94,6 +94,8 @@ describe('InventoryItem directive', () => {
         'preparations': [{name:'US States prepa'}, {name:'US States prepa 2'}]
     };
 
+    const EDIT_LIVE_DATASET_PROPERTIES_ACTION = 'Edit the live dataset properties';
+
     beforeEach(angular.mock.module('data-prep.inventory-item'));
 
     beforeEach(angular.mock.module('htmlTemplates'));
@@ -107,7 +109,8 @@ describe('InventoryItem directive', () => {
             'COPY_TO_ACTION': 'Copy {{type}} \"{{name}}\"',
             'DELETE_ACTION': 'Delete {{type}} \"{{name}}\"',
             'CERTIFY_ACTION': 'Certify {{type}} \"{{name}}\"',
-            'FAVORITE_ACTION': 'Add {{type}} \"{{name}}\" in your favorites'
+            'FAVORITE_ACTION': 'Add {{type}} \"{{name}}\" in your favorites',
+            'EDIT_LIVE_DATASET_PROPERTIES_ACTION' : EDIT_LIVE_DATASET_PROPERTIES_ACTION
         });
         $translateProvider.preferredLanguage('en');
     }));
@@ -185,6 +188,7 @@ describe('InventoryItem directive', () => {
             scope.openDataset = () =>{};
             scope.openRelatedInventory = () =>{};
             scope.copy = () =>{};
+            scope.edit = () =>{};
             scope.processCertif = () =>{};
             scope.rename = () =>{};
             scope.isItemShared = () =>{};
@@ -205,6 +209,7 @@ describe('InventoryItem directive', () => {
                     'open="open" ' +
                     'process-certification="processCertif" ' +
                     'copy="copy" ' +
+                    'edit="edit"' +
                     'rename="rename" ' +
                     'is-item-shared="isItemShared" ' +
                     'remove="remove" ' +
@@ -326,6 +331,30 @@ describe('InventoryItem directive', () => {
 
                 // then
                 expect(element.find('.divider').length).toBe(2);
+            });
+
+            it('should display edit icon for job dataset', () => {
+                //given
+                scope.dataset = job_dataset;
+
+                //when
+                createElement();
+
+                //then
+                const icon = element.find('a').eq(0).attr('data-icon');
+                expect(icon).toBe('M');
+            });
+
+            it('should display edit icon tooltip only for job dataset', () => {
+                //given
+                scope.dataset = job_dataset;
+
+                //when
+                createElement();
+
+                //then
+                const title = element.find('a').eq(0).attr('title');
+                expect(title).toBe(EDIT_LIVE_DATASET_PROPERTIES_ACTION);
             });
 
             it('should display copy icon', () => {
@@ -716,7 +745,7 @@ describe('InventoryItem directive', () => {
             scope.rename = () => {};
             scope.open = () => {};
             scope.remove = () => {};
-            
+
             createElement = () => {
                 element = angular.element(`
                     <inventory-item 
@@ -773,11 +802,11 @@ describe('InventoryItem directive', () => {
             expect(element.find('.inventory-description').eq(0).text()).toBe('This is a recipe');
         });
     });
-    
+
     describe('insertion points', () => {
         beforeEach(inject(($rootScope, $compile) => {
             scope = $rootScope.$new();
-            
+
             createElement = () => {
                 element = angular.element('<inventory-item item="folder" type="folder"></inventory-item>');
                 $compile(element)(scope);

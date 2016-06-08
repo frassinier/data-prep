@@ -467,6 +467,83 @@ describe('Dataset Service', () => {
         }));
     });
 
+    describe('update', () => {
+
+        describe('updateLocation', () => {
+
+            let metadata, parameters;
+
+            beforeEach(() => {
+                metadata = {
+                    id: '12345',
+                    location: {
+                        name: 'b'
+                    }
+                },
+                parameters = [
+                        {
+                            'name': 'name',
+                            'type': 'string',
+                            'implicit': false,
+                            'canBeBlank': false,
+                            'format': '',
+                            'description': 'Name',
+                            'label': 'Enter the dataset name:',
+                            'default': '',
+                            'value': 'a'
+                        },
+                        {
+                            'name': 'jobId',
+                            'type': 'select',
+                            'implicit': false,
+                            'canBeBlank': false,
+                            'format': '',
+                            'configuration': {
+                                'values': [
+                                    {
+                                        'value': '1',
+                                        'label': 'TestInput'
+                                    }
+                                ],
+                                'multiple': false
+                            },
+                            'description': 'Talend Job',
+                            'label': 'Select the Talend Job:',
+                            'default': '',
+                            'value': '1'
+                        }
+                    ];
+            });
+
+            it('should edit dataset location parameters', inject(($q, DatasetService, DatasetRestService) => {
+                //given
+                spyOn(DatasetRestService, 'updateMetadata').and.returnValue($q.when({}));
+
+                // when
+                DatasetService.updateLocation(metadata, parameters);
+
+                // then
+                expect(DatasetRestService.updateMetadata).toHaveBeenCalledWith(metadata);
+                expect(metadata.location.name).toBe('a');
+                expect(metadata.location.jobId).toBe('1');
+            }));
+
+            it('should set back old parameters on edit failure', inject(($rootScope, $q, DatasetService, DatasetRestService) => {
+                //given
+                spyOn(DatasetRestService, 'updateMetadata').and.returnValue($q.reject());
+
+                //when
+                DatasetService.updateLocation(metadata, parameters);
+                $rootScope.$digest();
+
+                //then
+                expect(DatasetRestService.updateMetadata).toHaveBeenCalledWith(metadata);
+                expect(metadata.location.name).toBe('b');
+                expect(metadata.location.jobId).toBeUndefined();
+            }));
+        });
+    });
+
     describe('utils', () => {
         describe('createDatasetInfo', () => {
             it('should adapt info to dataset object for upload', inject((DatasetService) => {

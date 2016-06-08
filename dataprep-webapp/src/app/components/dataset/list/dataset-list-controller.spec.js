@@ -21,6 +21,7 @@ describe('Dataset list controller', () => {
         { id: 'cf98d83dcb9437', name: 'Customers (1K lines)' }
     ];
 
+    beforeEach(angular.mock.module('data-prep.services.import'));
     beforeEach(angular.mock.module('data-prep.dataset-list', ($provide) => {
         stateMock = {
             inventory: { datasets: datasets }
@@ -300,6 +301,50 @@ describe('Dataset list controller', () => {
         }));
     });
 
+    describe('editLocation', () => {
+        beforeEach(inject(($q, ImportRestService) => {
+            spyOn(ImportRestService, 'importRemoteJobParameters').and.returnValue($q.when());
+        }));
+
+        it('should call importRemoteJobParameters function', inject((ImportRestService) => {
+            //given
+            const dataset = {
+                id: '13a82cf7a16b87',
+                location: {
+                    isDynamic: true,
+                    type: 'JobLocation',
+                    parameters: null
+                }
+            };
+            const ctrl = createController();
+            expect(ImportRestService.importRemoteJobParameters).not.toHaveBeenCalled();
+
+            //when
+            ctrl.editLocation(dataset);
+
+            //then
+            expect(ImportRestService.importRemoteJobParameters).toHaveBeenCalled();
+        }));
+    });
+    
+    describe('submit', () => {
+        beforeEach(inject(($q, DatasetService) => {
+            spyOn(DatasetService, 'updateLocation').and.returnValue($q.when());
+        }));
+
+        it('should call updateLocation function', inject((DatasetService) => {
+            //given
+            const ctrl = createController();
+            expect(DatasetService.updateLocation).not.toHaveBeenCalled();
+
+            //when
+            ctrl.submit();
+
+            //then
+            expect(DatasetService.updateLocation).toHaveBeenCalled();
+        }));
+    });
+
     describe('share', () => {
         it('should be a shared dataset', inject(() => {
             //given
@@ -338,4 +383,56 @@ describe('Dataset list controller', () => {
         }));
 
     });
+
+    describe('edit', () => {
+        beforeEach(inject(($q, ImportRestService) => {
+            spyOn(ImportRestService, 'importRemoteJobParameters').and.returnValue($q.when());
+        }));
+
+        it('should call importRemoteJobParameters function', inject((ImportRestService) => {
+            //given
+            const dataset = {
+                id: '13a82cf7a16b87',
+                location: {
+                    isDynamic: true,
+                    type: 'JobLocation',
+                    parameters: null
+                }
+            };
+            const ctrl = createController();
+            expect(ImportRestService.importRemoteJobParameters).not.toHaveBeenCalled();
+
+            //when
+            ctrl.editLocation(dataset);
+
+            //then
+            expect(ImportRestService.importRemoteJobParameters).toHaveBeenCalled();
+        }));
+    });
+
+    describe('submit', () => {
+        beforeEach(inject(($q, DatasetService) => {
+            spyOn(DatasetService, 'updateLocation').and.returnValue($q.when());
+        }));
+
+        it('should call updateLocation function', inject((DatasetService) => {
+            //given
+            const dataset = {
+                    id: '13a82cf7a16b87',
+                    location: {
+                        isDynamic: true,
+                        type: 'JobLocation',
+                        parameters: null
+                    }
+                };
+            const ctrl = createController();
+            expect(DatasetService.updateLocation).not.toHaveBeenCalled();
+
+            //when
+            ctrl.submit();
+
+            //then
+            expect(DatasetService.updateLocation).toHaveBeenCalled();
+        }));
+    })
 });

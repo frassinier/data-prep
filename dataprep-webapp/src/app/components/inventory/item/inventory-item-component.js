@@ -37,6 +37,7 @@
  * </inventory-item>
  *
  * @param {function}    copy copy or remove an inventory item
+ * @param {function}    edit edit an inventory item
  * @param {string}      details of the inventory item to be translated (author, lines number)
  * @param {array}       fileModel the file which will replace the current item
  * @param {object}      item the inventory item
@@ -57,6 +58,7 @@ const InventoryItemcomponent = {
     controller: 'InventoryItemCtrl',
     bindings: {
         copy: '=',
+        edit: '=',
         details: '@',
         fileModel: '=',
         item: '=',

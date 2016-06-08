@@ -55,6 +55,7 @@ export default function DatasetService($q, state, StateService, DatasetListServi
         rename: rename,
         setDatasetSheet: setDatasetSheet,
         updateParameters: updateParameters,
+        updateLocation: updateLocation,
         refreshSupportedEncodings: refreshSupportedEncodings,
 
         //compatible preparation list
@@ -63,7 +64,8 @@ export default function DatasetService($q, state, StateService, DatasetListServi
         //utils
         getUniqueName: getUniqueName,
         createDatasetInfo: createDatasetInfo,
-        checkNameAvailability: checkNameAvailability
+        checkNameAvailability: checkNameAvailability,
+        getLocationParamIteration: getParamIteration
     };
 
     //--------------------------------------------------------------------------------------------------------------
@@ -298,6 +300,34 @@ export default function DatasetService($q, state, StateService, DatasetListServi
 
     /**
      * @ngdoc method
+     * @name getParamIteration
+     * @methodOf data-prep.services.dataset.service:DatasetService
+     * @description function for recursively gather params
+     * @param {object} paramsAccu The parameters values accumulator
+     * @param {array} parameters The parameters array
+     * @returns {object} The parameters
+     */
+    function getParamIteration(paramsAccu, parameters) {
+        if (parameters) {
+            _.forEach(parameters, (paramItem) => {
+                paramsAccu[paramItem.name] = typeof (paramItem.value) !== 'undefined' ? paramItem.value : paramItem.default;
+
+                // deal with select inline parameters
+                if (paramItem.type === 'select') {
+                    let selectedValue = _.find(paramItem.configuration.values, {value: paramItem.value});
+                    getParamIteration(paramsAccu, selectedValue.parameters);
+                }
+            });
+        }
+        return paramsAccu;
+    }
+
+    function _setLocationParameters(location, parameters) {
+        getParamIteration(location, parameters);
+    }
+
+    /**
+     * @ngdoc method
      * @name updateParameters
      * @methodOf data-prep.services.dataset.service:DatasetService
      * @param {object} metadata The dataset metadata
@@ -316,6 +346,27 @@ export default function DatasetService($q, state, StateService, DatasetListServi
             })
             .catch((error) => {
                 _setParameters(metadata, originalParameters);
+                return $q.reject(error);
+            });
+    }
+
+    /**
+     * @ngdoc method
+     * @name updateLocation
+     * @methodOf data-prep.services.dataset.service:DatasetService
+     * @param {object} metadata The dataset metadata
+     * @param {object} parameters The new location parameters
+     * @returns {Promise} The process Promise
+     */
+    function updateLocation(metadata, parameters) {
+        const
+            newLocation = angular.copy(metadata.location),
+            oldLocation = angular.copy(metadata.location);
+        _setLocationParameters(newLocation, parameters);
+        metadata.location = newLocation;
+        return DatasetRestService.updateMetadata(metadata)
+            .catch((error) => {
+                metadata.location = oldLocation;
                 return $q.reject(error);
             });
     }

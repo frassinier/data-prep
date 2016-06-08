@@ -11,6 +11,8 @@
 
  ============================================================================*/
 
+const LOCATION_TYPE_REMOTE_JOB = 'job';
+
 /**
  * @ngdoc service
  * @name data-prep.services.import.service:ImportRestService
@@ -43,5 +45,16 @@ export default class ImportRestService {
      */
     importParameters(locationType) {
         return this.$http.get(this.url + '/imports/'+ locationType + '/parameters' );
+    }
+
+    /**
+     * @ngdoc method
+     * @name importRemoteJobParameters
+     * @methodOf data-prep.services.import.service:ImportRestService
+     * @description Fetch the available remote job import parameters
+     * @returns {Promise}  The GET call promise
+     */
+    importRemoteJobParameters() {
+        return this.importParameters(LOCATION_TYPE_REMOTE_JOB);
     }
 }

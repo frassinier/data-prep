@@ -104,30 +104,6 @@ export default function ImportCtrl($document,
 
     /**
      * @ngdoc method
-     * @name getParamIteration
-     * @methodOf data-prep.import.controller:ImportCtrl
-     * @description [PRIVATE] Inner function for recursively gather params
-     * @param {object} paramsAccu The parameters values accumulator
-     * @param {array} parameters The parameters array
-     * @returns {object} The parameters
-     */
-    function getParamIteration(paramsAccu, parameters) {
-        if (parameters) {
-            _.forEach(parameters, (paramItem) => {
-                paramsAccu[paramItem.name] = typeof (paramItem.value) !== 'undefined' ? paramItem.value : paramItem.default;
-
-                // deal with select inline parameters
-                if (paramItem.type === 'select') {
-                    let selectedValue = _.find(paramItem.configuration.values, {value: paramItem.value});
-                    getParamIteration(paramsAccu, selectedValue.parameters);
-                }
-            });
-        }
-        return paramsAccu;
-    }
-
-    /**
-     * @ngdoc method
      * @name createDataset
      * @description Create dataset using import parameters
      * @param {object} file The file imported from local
@@ -136,7 +112,7 @@ export default function ImportCtrl($document,
      */
     function createDataset(file, name, importType) {
 
-        const params = getParamIteration({}, importType.parameters);
+        const params = DatasetService.getLocationParamIteration({}, importType.parameters);
         params.type = importType.locationType;
         params.name = name;
 
