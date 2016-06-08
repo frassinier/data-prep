@@ -37,19 +37,26 @@ public class AnalyzerServiceTest {
 
     @Test
     public void buildAllAnalysis() throws Exception {
-        // When
+        // Given
         final AnalyzerService.Analysis[] allAnalysis = AnalyzerService.Analysis.values();
         final ColumnMetadata column = new ColumnMetadata();
         column.setType(Type.INTEGER.getName());
-        final Analyzer<Analyzers.Result> analyzer = service.build(column, allAnalysis);
-        assertNotNull(analyzer);
-        analyzer.analyze("");
+        try (Analyzer<Analyzers.Result> analyzer = service.build(column, allAnalysis)) {
+            assertNotNull(analyzer);
+            // When
+            analyzer.analyze("");
 
-        // Then
-        assertEquals(1, analyzer.getResult().size());
-        final Analyzers.Result result = analyzer.getResult().get(0);
-        for (AnalyzerService.Analysis analysis : allAnalysis) {
-            assertTrue(result.exist(analysis.getResultClass()));
+            // Then
+            assertEquals(1, analyzer.getResult().size());
+            final Analyzers.Result result = analyzer.getResult().get(0);
+            for (AnalyzerService.Analysis analysis : allAnalysis) {
+                if (analysis == AnalyzerService.Analysis.TYPE) {
+                    // Type analysis is automatically disabled when Quality analysis is requested.
+                    assertFalse(result.exist(analysis.getResultClass()));
+                } else {
+                    assertTrue(result.exist(analysis.getResultClass()));
+                }
+            }
         }
     }
 }

@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import javax.annotation.PostConstruct;
 
@@ -268,8 +269,19 @@ public class AnalyzerService implements DisposableBean {
                     analyzers.add(new SummaryAnalyzer(types));
                     break;
                 case TYPE:
-                    final List<String> mostUsedDatePatterns = getMostUsedDatePatterns(columns);
-                    analyzers.add(new DataTypeAnalyzer(mostUsedDatePatterns));
+                    boolean shouldUseTypeAnalysis = true;
+                    for (Analysis analysis : settings) {
+                        if (analysis == Analysis.QUALITY) {
+                            shouldUseTypeAnalysis = false;
+                            break;
+                        }
+                    }
+                    if (shouldUseTypeAnalysis) {
+                        final List<String> mostUsedDatePatterns = getMostUsedDatePatterns(columns);
+                        analyzers.add(new DataTypeAnalyzer(mostUsedDatePatterns));
+                    } else {
+                        LOGGER.warn("Disabled {} analysis (conflicts with {}).", setting, Analysis.QUALITY);
+                    }
                     break;
                 case FREQUENCY:
                     analyzers.add(new DataTypeFrequencyAnalyzer());
@@ -290,53 +302,12 @@ public class AnalyzerService implements DisposableBean {
 
     public Analyzer<Analyzers.Result> full(final List<ColumnMetadata> columns) {
         // Configure quality & semantic analysis (if column metadata information is present in stream).
-        return build(columns, Analysis.QUALITY, Analysis.TYPE, Analysis.CARDINALITY, Analysis.FREQUENCY, Analysis.PATTERNS,
+        return build(columns, Analysis.QUALITY, Analysis.CARDINALITY, Analysis.FREQUENCY, Analysis.PATTERNS,
                 Analysis.LENGTH, Analysis.SEMANTIC, Analysis.QUANTILES, Analysis.SUMMARY, Analysis.HISTOGRAM);
     }
 
-    /**
-     * <p>
-     * Return analyzers for a "baseline" analysis of a dataset.
-     * </p>
-     * <ul>
-     * <li>Value Quality (invalid, valid, empty)</li>
-     * <li>Data Type</li>
-     * <li>Cardinality (distinct & duplicates)</li>
-     * <li>Frequency</li>
-     * <li>Pattern frequency</li>
-     * <li>Semantic</li>
-     * </ul>
-     *
-     * @param columns the columns to analyze.
-     * @return Return analyzers for a "baseline" analysis of a dataset.
-     */
-    public Analyzer<Analyzers.Result> baselineAnalysis(final List<ColumnMetadata> columns) {
-        // Configure value quality analysis
-        return build(columns, Analysis.QUALITY, Analysis.CARDINALITY, Analysis.TYPE, Analysis.FREQUENCY, Analysis.PATTERNS,
-                Analysis.SEMANTIC);
-    }
-
-    /**
-     * <p>
-     * Return analyzers for an "advanced" analysis of a dataset.
-     * </p>
-     * <ul>
-     * <li>Text length</li>
-     * <li>Quantile</li>
-     * <li>Summary (min, max, mean, variance)</li>
-     * <li>Number Histogram</li>
-     * <li>Date Histogram</li>
-     * </ul>
-     *
-     * @param columns the columns to analyze.
-     * @return Return analyzers for a "advanced" analysis of a dataset.
-     */
-    public Analyzer<Analyzers.Result> advancedAnalysis(final List<ColumnMetadata> columns) {
-        return build(columns, Analysis.LENGTH, Analysis.QUANTILES, Analysis.SUMMARY, Analysis.HISTOGRAM);
-    }
-
     public Analyzer<Analyzers.Result> qualityAnalysis(List<ColumnMetadata> columns) {
-        return build(columns, Analysis.QUALITY, Analysis.SUMMARY, Analysis.SEMANTIC, Analysis.TYPE);
+        return build(columns, Analysis.QUALITY, Analysis.SUMMARY, Analysis.SEMANTIC);
     }
 
     /**
@@ -344,7 +315,6 @@ public class AnalyzerService implements DisposableBean {
      * Analyse the... Schema !
      * </p>
      * <ul>
-     * <li>ValueQuality</li>
      * <li>Semantic</li>
      * <li>DataType</li>
      * </ul>
@@ -353,7 +323,7 @@ public class AnalyzerService implements DisposableBean {
      * @return the analyzers to perform for the schema.
      */
     public Analyzer<Analyzers.Result> schemaAnalysis(List<ColumnMetadata> columns) {
-        return build(columns, Analysis.QUALITY, Analysis.SEMANTIC, Analysis.TYPE);
+        return build(columns, Analysis.SEMANTIC, Analysis.TYPE);
     }
 
     /**

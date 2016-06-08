@@ -147,7 +147,7 @@ public class QualityAnalysis implements SynchronousDataSetAnalyzer {
             records.map(row -> row.toArray(DataSetRow.SKIP_TDP_ID)).forEach(analyzer::analyze);
             // Determine content size
             final List<Analyzers.Result> result = analyzer.getResult();
-            adapter.adaptForSampling(columns, result);
+            adapter.adapt(columns, result);
             // Remember the number of records
             if (!result.isEmpty()) {
                 final long recordCount = result.get(0).get(ValueQualityStatistics.class).getCount();

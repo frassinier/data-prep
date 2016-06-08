@@ -96,9 +96,8 @@ public class BackgroundAnalysis {
             } else {
                 // base analysis
                 try (final Stream<DataSetRow> stream = store.stream(metadata)) {
-                    try (Analyzer<Analyzers.Result> analyzer = analyzerService.baselineAnalysis(columns)) {
+                    try (Analyzer<Analyzers.Result> analyzer = analyzerService.schemaAnalysis(columns)) {
                         computeStatistics(analyzer, columns, stream);
-                        updateNbRecords(metadata, analyzer.getResult());
                         LOGGER.debug("Base statistics analysis done for{}", dataSetId);
                         // Save base analysis
                         saveAnalyzerResults(dataSetId, analyzer);
@@ -109,14 +108,15 @@ public class BackgroundAnalysis {
                 }
                 // advanced analysis
                 try (final Stream<DataSetRow> stream = store.stream(metadata)) {
-                    try (Analyzer<Analyzers.Result> analyzer = analyzerService.advancedAnalysis(columns)) {
+                    try (Analyzer<Analyzers.Result> analyzer = analyzerService.full(columns)) {
                         computeStatistics(analyzer, columns, stream);
+                        updateNbRecords(metadata, analyzer.getResult());
                         LOGGER.debug("Advanced statistics analysis done for{}", dataSetId);
                         // Save advanced analysis
                         saveAnalyzerResults(dataSetId, analyzer);
                     }
                 } catch (Exception e) {
-                    LOGGER.warn("Advances statistics analysis, dataset {} generates an error", dataSetId, e);
+                    LOGGER.warn("Advanced statistics analysis, dataset {} generates an error", dataSetId, e);
                     throw new TDPException(UNABLE_TO_ANALYZE_DATASET_QUALITY, e);
                 }
                 // Tag data set quality: now analyzed

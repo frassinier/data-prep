@@ -282,6 +282,7 @@ public class Pipeline implements Node, RuntimeNode {
             }
             // Analyze (delayed)
             if (analysis.needDelayedAnalysis && needGlobalStatistics) {
+                current.to(new ReservoirNode(inlineAnalyzer, analysis.filter , adapter));
                 current.to(new ReservoirNode(delayedAnalyzer, analysis.filter , adapter));
             }
             // Output
