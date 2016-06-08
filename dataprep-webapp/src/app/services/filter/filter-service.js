@@ -228,7 +228,7 @@ export default function FilterService($timeout, state, StateService, FilterAdapt
         var minTimestamp = values[0];
         var maxTimestamp = values[1];
         var patterns = _.chain(state.playground.grid.selectedColumn.statistics.patternFrequencyTable)
-            .pluck('pattern')
+            .map('pattern')
             .map(TextFormatService.convertJavaDateFormatToMomentDateFormat)
             .value();
 

@@ -1,15 +1,15 @@
 /*  ============================================================================
 
-  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+ Copyright (C) 2006-2016 Talend Inc. - www.talend.com
 
-  This source code is available under agreement available at
-  https://github.com/Talend/data-prep/blob/master/LICENSE
+ This source code is available under agreement available at
+ https://github.com/Talend/data-prep/blob/master/LICENSE
 
-  You should have received a copy of the agreement
-  along with this program; if not, write to Talend SA
-  9 rue Pages 92150 Suresnes, France
+ You should have received a copy of the agreement
+ along with this program; if not, write to Talend SA
+ 9 rue Pages 92150 Suresnes, France
 
-  ============================================================================*/
+ ============================================================================*/
 
 /**
  * @ngdoc controller
@@ -18,6 +18,14 @@
  */
 export default function RangeSliderCtrl() {
     var vm = this;
+
+    /**
+     * @ngdoc method
+     * @name formatDate
+     * @propertyOf talend.widget.controller:RangeSliderCtrl
+     * @description format date with D3
+     */
+    vm.formatDate = d3.time.format('%m/%d/%Y');
 
     /**
      * @ngdoc method
@@ -51,6 +59,19 @@ export default function RangeSliderCtrl() {
 
     /**
      * @ngdoc method
+     * @name areMinMaxDates
+     * @propertyOf talend.widget.controller:RangeSliderCtrl
+     * @description checks if both of the entered values are dates
+     * @returns {boolean}
+     */
+    vm.areMinMaxDates = function areMinMaxDates() {
+        const isMinDate = vm.toDate(vm.minMaxModel.minModel);
+        const isMaxDate = vm.toDate(vm.minMaxModel.maxModel);
+        return !(isMinDate === null || isMaxDate === null);
+    };
+
+    /**
+     * @ngdoc method
      * @name toNumber
      * @propertyOf talend.widget.controller:RangeSliderCtrl
      * @description converts the entered string to a number returns null if not a valid number
@@ -62,6 +83,30 @@ export default function RangeSliderCtrl() {
             return Number(value);
         }
         return null;
+    };
+
+    /**
+     * @ngdoc method
+     * @name toDate
+     * @propertyOf talend.widget.controller:RangeSliderCtrl
+     * @description converts a timeStamp as String to a date object
+     * @param {String} dateString to transform
+     * @returns {*} Valid date or null
+     */
+    vm.toDate = function toDate(dateString) {
+        return isNaN(new Date(dateString).getTime()) ? null : new Date(dateString);
+    };
+
+    /**
+     * @ngdoc method
+     * @name setDateTimeToMidnight
+     * @propertyOf talend.widget.controller:RangeSliderCtrl
+     * @description given a timestamp, it sets it to midnight, the same day
+     * @param {Number} timeStamp to set
+     * @returns {number} date timestamp
+     */
+    vm.setDateTimeToMidnight = function setDateTimeToMidnight(timeStamp) {
+        return new Date(vm.formatDate(new Date(timeStamp))).getTime();
     };
 
     /**

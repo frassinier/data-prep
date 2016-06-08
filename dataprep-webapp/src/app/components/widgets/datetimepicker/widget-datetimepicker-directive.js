@@ -20,31 +20,28 @@
  <talend-datetime-picker
          ng-model="ctrl.value"
          datetimepicker-on-select="ctrl.onSelect"
-         datetimepicker-min="min"
-         datetimepicker-max="max"
          range-item-type="from|to"
          is-date-time
  ></talend-datetimepicker>
  * @param {string}   value Disable the ENTER key support
- * @param {number}   datetimepickerMin Min where datetimepicker is enabled
- * @param {number}   datetimepickerMax Max where datetimepicker is enabled
  * @param {function} datetimepickerOnSelect Event handler when date is picked
+ * @param {function} onBlur Event handler when input is on blur
  * @param {string}   rangeItemType If datetimepicker composes a range, need to provide "from" or "to" value
  */
 export default function TalendDatetimePicker($filter) {
 
     return {
         restrict: 'E',
-        template: '<input class="datetimepicker" type="text" ng-model="ctrl.value" />',
+        template: '<input class="datetimepicker" type="text" ng-blur="ctrl.onBlur()" ng-model="ctrl.value" />',
         scope: {
             value: '=ngModel',
-            datetimepickerMin: '=',
-            datetimepickerMax: '=',
             datetimepickerOnSelect: '&',
+            onBlur: '&ngBlur',
             rangeItemType: '@'
         },
         bindToController: true,
-        controller: () => {},
+        controller: () => {
+        },
         controllerAs: 'ctrl',
         link: function (scope, iElement, iAttrs, ctrl) {
             Date.parseDate = function (input, format) {
@@ -54,35 +51,37 @@ export default function TalendDatetimePicker($filter) {
                 return moment(this).format(format);
             };
 
-            let
-                format = iAttrs.format ? iAttrs.format : 'DD/MM/YYYY HH:mm:ss',
-                formatTime = iAttrs.formatTime ? iAttrs.formatTime : 'HH:mm:ss',
-                formatDate = iAttrs.formatDate ? iAttrs.formatDate : 'DD/MM/YYYY',
+            let format = iAttrs.format ? iAttrs.format : 'MM/DD/YYYY';
+            let formatTime = iAttrs.formatTime ? iAttrs.formatTime : 'HH:mm:ss';
+            let formatDate = iAttrs.formatDate ? iAttrs.formatDate : 'MM/DD/YYYY';
+            let options = {};
 
-                input = iElement.find('.datetimepicker'),
-                options = {};
-            if (ctrl.datetimepickerMin) options.minDate = new Date(ctrl.datetimepickerMin).dateFormat(formatDate);
-            if (ctrl.datetimepickerMax) options.maxDate = new Date(ctrl.datetimepickerMax).dateFormat(formatDate);
-            if (ctrl.datetimepickerOnSelect) options.onSelectDate = (date) => {
-                ctrl.value = date;
-                ctrl.datetimepickerOnSelect()(date.getTime(), ctrl.rangeItemType);
-            };
+            if (ctrl.datetimepickerOnSelect) {
+                options.onSelectDate = (date) => {
+                    ctrl.value = date;
+                    ctrl.datetimepickerOnSelect({
+                        timeStamp: date.getTime(),
+                        rangeType: ctrl.rangeItemType
+                    });
+                };
+            }
 
-            if(!_.has(iAttrs, 'isDateTime')) {
+            if (!_.has(iAttrs, 'isDateTime')) {
                 options.timepicker = false;
             }
 
-            input.datetimepicker(
-                _.extend(
-                    options,
-                    {
-                        format: format,
-                        formatTime: formatTime,
-                        formatDate: formatDate,
-                        allowBlank: true
-                    }
-                )
-            );
+            let input = iElement.find('.datetimepicker');
+            input.datetimepicker({
+                ...options,
+                ...{
+                    lang: 'en',
+                    format: format,
+                    formatDate: formatDate,
+                    formatTime: formatTime,
+                    allowBlank: false
+                }
+            });
+
             input.bind('keydown', (event) => {
                 // hide calendar on 'ESC' keydown
                 if (event.keyCode === 27) {
@@ -91,11 +90,13 @@ export default function TalendDatetimePicker($filter) {
                 }
             });
 
-            if(ctrl.rangeItemType) {
+            if (ctrl.rangeItemType) {
                 // Only date time values need to be filtered
                 scope.$watch(
                     () => ctrl.value,
-                    (newValue) => ctrl.value = $filter('date')(newValue, 'dd/MM/yyyy')
+                    (newValue) => {
+                        ctrl.value = $filter('date')(newValue, 'MM/dd/yyyy')
+                    }
                 );
             }
         }

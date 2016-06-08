@@ -14,69 +14,59 @@
 'use strict';
 
 describe('Datetimepicker directive', function () {
-    var scope, element, html;
+    var scope, element, html, createElement, controller;
 
     beforeEach(angular.mock.module('talend.widget'));
-    beforeEach(angular.mock.module('htmlTemplates'));
     beforeEach(angular.mock.module('data-prep.services.utils'));
-
-    var showCalendarInput = function (elm) {
-        elm = elm || element;
-        var picker = elm.find('.datetimepicker').eq(0);
-        picker.mousedown();
-    };
 
     beforeEach(function () {
         jasmine.clock().install();
     });
+
+
+    beforeEach(inject(function($rootScope, $compile) {
+        scope = $rootScope.$new();
+        scope.minModel = 1465895872052;
+        scope.onMouseBlur = () => {};
+        createElement = function() {
+            element = angular.element(`<html><body><div>
+                            <talend-datetime-picker ng-model="minModel"
+                                format="m/d/Y"
+                                on-mouse-blur="onMouseBlur()">
+                            </talend-datetime-picker>
+                            </div></body></html>`);
+            $compile(element)(scope);
+            scope.$digest();
+
+            controller = element.find('talend-datetime-picker').controller('talendDatetimePicker');
+        };
+    }));
+
     afterEach(function () {
         jasmine.clock().uninstall();
-
         scope.$destroy();
         element.remove();
     });
 
-    describe('datetimepicker widget', function () {
+    it('should render input element', function () {
+        //when
+        createElement();
 
-        beforeEach(inject(function ($rootScope, $compile) {
+        //then
+        expect(element.find('.datetimepicker').length).toBe(1);
+    });
 
-            scope = $rootScope.$new();
+    it('should trigger onBlur callback', function () {
+        //given
+        createElement();
+        spyOn(controller, 'onBlur').and.returnValue();
+        scope.$digest();
 
-            scope.param =
-            {
-                'name': 'param1',
-                'label': 'Param 1',
-                'type': 'date',
-                'value': '02/01/2012 10:00:12'
-            };
+        //when
+        element.find('.datetimepicker').eq(0).blur();
+        scope.$digest();
 
-
-            html = '<html><body><div>' +
-                '<talend-datetime-picker ' +
-                ' ng-model="param.value" ' +
-                ' format="DD/MM/YYYY hh:mm:ss" ' +
-                ' format-time="hh:mm:ss" ' +
-                ' format-date="DD/MM/YYY" />' +
-                '</div></body></html>';
-
-            element = $compile(html)(scope);
-            scope.$digest();
-
-        }));
-
-        it('should show datetimepicker on click', function () {
-
-            var picker = element.find('.datetimepicker');
-            expect(picker.length).toBe(1);
-
-            //when
-            showCalendarInput();
-
-            jasmine.clock().tick(500);
-            // FIXME for some reason it doesn't work :-(
-            //then
-            //expect(picker.hasClass('xdsoft_datetimepicker')).toBe(true);
-        });
-
+        //then
+        expect(controller.onBlur).toHaveBeenCalled();
     });
 });

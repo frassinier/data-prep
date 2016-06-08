@@ -14,7 +14,8 @@
   },
   "ecmaFeatures": {
     "modules": true,
-    "restParams": true
+    "restParams": true,
+    "experimentalObjectRestSpread": true
   },
   "globals": {
     "$": true,

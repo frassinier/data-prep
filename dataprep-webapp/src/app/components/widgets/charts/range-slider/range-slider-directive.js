@@ -1,15 +1,15 @@
 /*  ============================================================================
 
-  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+ Copyright (C) 2006-2016 Talend Inc. - www.talend.com
 
-  This source code is available under agreement available at
-  https://github.com/Talend/data-prep/blob/master/LICENSE
+ This source code is available under agreement available at
+ https://github.com/Talend/data-prep/blob/master/LICENSE
 
-  You should have received a copy of the agreement
-  along with this program; if not, write to Talend SA
-  9 rue Pages 92150 Suresnes, France
+ You should have received a copy of the agreement
+ along with this program; if not, write to Talend SA
+ 9 rue Pages 92150 Suresnes, France
 
-  ============================================================================*/
+ ============================================================================*/
 
 /**
  * @ngdoc directive
@@ -31,7 +31,7 @@
  * @param {function} onBrushEnd The callback on slider move
  * */
 
-export default function RangeSlider($timeout, DateService) {
+export default function RangeSlider($timeout) {
     'ngInject';
 
     return {
@@ -70,8 +70,19 @@ export default function RangeSlider($timeout, DateService) {
              * @description Render the slider and attach the actions listeners
              **/
             function renderRangerSlider() {
-
                 var rangeLimits = ctrl.rangeLimits;
+                ctrl.isDateType = rangeLimits.type === 'date';
+
+                //convert all timestamps to midnight
+                if (ctrl.isDateType) {
+                    rangeLimits.min = ctrl.setDateTimeToMidnight(rangeLimits.min);
+                    rangeLimits.max = ctrl.setDateTimeToMidnight(rangeLimits.max);
+                    if (typeof rangeLimits.minBrush !== 'undefined') rangeLimits.minBrush = ctrl.setDateTimeToMidnight(rangeLimits.minBrush);
+                    if (typeof rangeLimits.maxBrush !== 'undefined') rangeLimits.maxBrush = ctrl.setDateTimeToMidnight(rangeLimits.maxBrush);
+                    if (typeof rangeLimits.minFilterVal !== 'undefined') rangeLimits.minFilterVal = ctrl.setDateTimeToMidnight(rangeLimits.minFilterVal);
+                    if (typeof rangeLimits.maxFilterVal !== 'undefined') rangeLimits.maxFilterVal = ctrl.setDateTimeToMidnight(rangeLimits.maxFilterVal);
+                }
+
                 var minBrush = typeof rangeLimits.minBrush !== 'undefined' ? rangeLimits.minBrush : rangeLimits.min;
                 var maxBrush = typeof rangeLimits.maxBrush !== 'undefined' ? rangeLimits.maxBrush : rangeLimits.max;
                 var minFilter = typeof rangeLimits.minFilterVal !== 'undefined' ? rangeLimits.minFilterVal : rangeLimits.min;
@@ -84,8 +95,8 @@ export default function RangeSlider($timeout, DateService) {
                 };
 
                 ctrl.minMaxModel = {
-                    minModel: '' + lastValues.input.min,
-                    maxModel: '' + lastValues.input.max
+                    minModel: ctrl.isDateType ? lastValues.input.min : '' + lastValues.input.min,
+                    maxModel: ctrl.isDateType ? lastValues.input.max : '' + lastValues.input.max
                 };
 
                 lastValues.brush = {
@@ -94,8 +105,6 @@ export default function RangeSlider($timeout, DateService) {
                 };
 
                 var centerValue = (minBrush + maxBrush) / 2;
-
-                ctrl.isDateType = rangeLimits.type === 'date';
 
                 //--------------------------------------------------------------------------------------------------
                 //----------------------------------------------CONTAINER-------------------------------------------
@@ -132,8 +141,8 @@ export default function RangeSlider($timeout, DateService) {
 
                 function prepareBrushFilter(initialBrushValues) {
                     var brushValues = ctrl.brush.extent();
-                    lastValues.brush.min = +brushValues[0].toFixed(nbDecimals);
-                    lastValues.brush.max = +brushValues[1].toFixed(nbDecimals);
+                    lastValues.brush.min = ctrl.isDateType ? ctrl.setDateTimeToMidnight(brushValues[0]) : +brushValues[0].toFixed(nbDecimals);
+                    lastValues.brush.max = ctrl.isDateType ? ctrl.setDateTimeToMidnight(brushValues[1]) : +brushValues[1].toFixed(nbDecimals);
 
                     //The case where the user clicks on an existing brush
                     // but DOES NOT drag n drop it
@@ -162,26 +171,27 @@ export default function RangeSlider($timeout, DateService) {
                 }
 
                 ctrl.prepareInputFilter = function prepareInputFilter(dateAsTime, type) {
-                    if (!ctrl.areMinMaxNumbers() && !ctrl.isDateType) {
+                    if ((!ctrl.areMinMaxNumbers() && !ctrl.isDateType) || (!ctrl.areMinMaxDates() && ctrl.isDateType)) {
                         initInputValues();
                     }
                     else {
                         if (ctrl.isDateType) {
                             if (type === 'from') {
-                                ctrl.minMaxModel.minModel = dateAsTime;
-                            } else {
-                                ctrl.minMaxModel.minModel = DateService.getTimeFromFormattedDate(ctrl.minMaxModel.minModel);
+                                ctrl.minMaxModel.minModel = ctrl.setDateTimeToMidnight(dateAsTime);
+                                ctrl.minMaxModel.maxModel = ctrl.setDateTimeToMidnight(ctrl.minMaxModel.maxModel);
                             }
                             if (type === 'to') {
-                                ctrl.minMaxModel.maxModel = dateAsTime;
-                            } else {
-                                ctrl.minMaxModel.maxModel = DateService.getTimeFromFormattedDate(ctrl.minMaxModel.maxModel);
+                                ctrl.minMaxModel.maxModel = ctrl.setDateTimeToMidnight(dateAsTime);
+                                ctrl.minMaxModel.minModel = ctrl.setDateTimeToMidnight(ctrl.minMaxModel.minModel);
+                            }
+                            if (angular.isUndefined(type)) {
+                                ctrl.minMaxModel.minModel = angular.isUndefined(dateAsTime) ? ctrl.setDateTimeToMidnight(ctrl.minMaxModel.minModel) : dateAsTime;//because new Date(0) ==> 01/01/1970
+                                ctrl.minMaxModel.maxModel = angular.isUndefined(dateAsTime) ? ctrl.setDateTimeToMidnight(ctrl.minMaxModel.maxModel) : dateAsTime;
                             }
                         }
 
-                        const
-                            enteredMin = +ctrl.minMaxModel.minModel,
-                            enteredMax = +ctrl.minMaxModel.maxModel;
+                        const enteredMin = +ctrl.minMaxModel.minModel;
+                        const enteredMax = +ctrl.minMaxModel.maxModel;
 
                         //2 Cases:
                         //- ONBLUR: the user selects the input then he selects sth else
@@ -214,7 +224,13 @@ export default function RangeSlider($timeout, DateService) {
                 //--------------------------------------------------------------------------------------------------
                 function initBrush() {
                     //create axis + brush
-                    var axisTicksNumber = rangeLimits.max >= 1e10 || rangeLimits.min <= 1e-10 ? 1 : 3;
+                    let axisTicksNumber;
+                    if (ctrl.isDateType) {
+                        axisTicksNumber = 3;
+                    }
+                    else {
+                        axisTicksNumber = rangeLimits.max >= 1e10 || rangeLimits.min <= 1e-10 ? 1 : 3;
+                    }
                     svg.append('g')
                         .attr('class', 'x axis')
                         .attr('transform', 'translate(0,' + (margin.top + 20) + ')')
@@ -223,7 +239,7 @@ export default function RangeSlider($timeout, DateService) {
                             .orient('top')
                             .ticks(axisTicksNumber)
                             .tickFormat(function (d) {
-                                return d3.format(',')(d);
+                                return ctrl.isDateType ? d3.time.format('%b %Y')(new Date(d)) : d3.format(',')(d);
                             }))
                         .selectAll('text').attr('y', -13);
 
@@ -234,7 +250,7 @@ export default function RangeSlider($timeout, DateService) {
                         .attr('text-anchor', 'start')
                         .attr('fill', 'grey')
                         .text(function () {
-                            return ctrl.isDateType ? DateService.getFormattedDateFromTime(rangeLimits.min) : d3.format(',')(rangeLimits.min);
+                            return ctrl.isDateType ? ctrl.formatDate(new Date(rangeLimits.min)) : d3.format(',')(rangeLimits.min);
                         });
 
                     svg.append('g').append('text')
@@ -244,7 +260,7 @@ export default function RangeSlider($timeout, DateService) {
                         .attr('text-anchor', 'end')
                         .attr('fill', 'grey')
                         .text(function () {
-                            return ctrl.isDateType ? DateService.getFormattedDateFromTime(rangeLimits.max) : d3.format(',')(rangeLimits.max);
+                            return ctrl.isDateType ? ctrl.formatDate(new Date(rangeLimits.max)) : d3.format(',')(rangeLimits.max);
                         });
 
                     ctrl.brush = d3.svg.brush()
@@ -284,20 +300,39 @@ export default function RangeSlider($timeout, DateService) {
 
                         .on('brushstart', function brushstart() {
                             //Will memorize the ancient extent
-                            initialBrushValues = ctrl.brush.extent();
+                            const startExtent = ctrl.brush.extent();
+                            if(ctrl.isDateType){
+                                initialBrushValues = [
+                                    ctrl.setDateTimeToMidnight(startExtent[0]),
+                                    ctrl.setDateTimeToMidnight(startExtent[1])
+                                ];
+                            }
+                            else {
+                                initialBrushValues = startExtent;
+                            }
                         })
 
                         //It will update the min and max inputs, and create a brush on a single value when the user clicks on the slider without making a drag( the created brush will be empty )
                         .on('brush', function brushmove() {
-                            var brushValues = ctrl.brush.extent();
+                            let brushValues;
+                            if(ctrl.isDateType){
+                                brushValues = [
+                                    ctrl.setDateTimeToMidnight(ctrl.brush.extent()[0]),
+                                    ctrl.setDateTimeToMidnight(ctrl.brush.extent()[1])
+                                ];
+                            }
+                            else {
+                                brushValues = ctrl.brush.extent();
+                            }
+
                             if (initialBrushValues[0] !== brushValues[0]) {
                                 $timeout(function () {
-                                    ctrl.minMaxModel.minModel = ctrl.isDateType ? DateService.getFormattedDateFromTime(brushValues[0]): brushValues[0].toFixed(nbDecimals);
+                                    ctrl.minMaxModel.minModel = ctrl.isDateType ? ctrl.setDateTimeToMidnight(brushValues[0]) : brushValues[0].toFixed(nbDecimals);
                                 });
                             }
                             if (initialBrushValues[1] !== brushValues[1]) {
                                 $timeout(function () {
-                                    ctrl.minMaxModel.maxModel = ctrl.isDateType ? DateService.getFormattedDateFromTime(brushValues[1]) : brushValues[1].toFixed(nbDecimals);
+                                    ctrl.minMaxModel.maxModel = ctrl.isDateType ? ctrl.setDateTimeToMidnight(brushValues[1]) : brushValues[1].toFixed(nbDecimals);
                                 });
                             }
                         })
@@ -328,11 +363,9 @@ export default function RangeSlider($timeout, DateService) {
                 function initInputValues() {
                     hideMsgErr();
                     $timeout(function () {
-                        ctrl.minMaxModel.minModel = '' + lastValues.input.min;
-                        ctrl.minMaxModel.maxModel = '' + lastValues.input.max;
+                        ctrl.minMaxModel.minModel = ctrl.isDateType ? lastValues.input.min : '' + lastValues.input.min;
+                        ctrl.minMaxModel.maxModel = ctrl.isDateType ? lastValues.input.max : '' + lastValues.input.max;
                     });
-
-                    //filterToApply = [lastValues.input.min, lastValues.input.max];
                 }
 
                 function initRangeInputsListeners() {
@@ -354,8 +387,14 @@ export default function RangeSlider($timeout, DateService) {
                                     initInputValues();
                                     break;
                                 default:
-                                    minCorrectness = rangeType === 'min' ? ctrl.toNumber(ctrl.minMaxModel.minModel) : minCorrectness;
-                                    maxCorrectness = rangeType === 'max' ? ctrl.toNumber(ctrl.minMaxModel.maxModel) : maxCorrectness;
+                                    if (ctrl.isDateType) {
+                                        minCorrectness = rangeType === 'min' ? ctrl.toDate(ctrl.minMaxModel.minModel) : minCorrectness;
+                                        maxCorrectness = rangeType === 'max' ? ctrl.toDate(ctrl.minMaxModel.maxModel) : maxCorrectness;
+                                    }
+                                    else {
+                                        minCorrectness = rangeType === 'min' ? ctrl.toNumber(ctrl.minMaxModel.minModel) : minCorrectness;
+                                        maxCorrectness = rangeType === 'max' ? ctrl.toNumber(ctrl.minMaxModel.maxModel) : maxCorrectness;
+                                    }
 
                                     if (minCorrectness === null || maxCorrectness === null) {
                                         showMsgErr();
@@ -383,6 +422,16 @@ export default function RangeSlider($timeout, DateService) {
 
 
             function shouldRerender(newRangeLimits, oldRangeLimits) {
+                if (newRangeLimits.type === 'date') {
+                    newRangeLimits.min = ctrl.setDateTimeToMidnight(newRangeLimits.min);
+                    newRangeLimits.max = ctrl.setDateTimeToMidnight(newRangeLimits.max);
+                    if (newRangeLimits.minBrush) {
+                        newRangeLimits.minBrush = ctrl.setDateTimeToMidnight(newRangeLimits.minBrush);
+                    }
+                    if (newRangeLimits.maxBrush) {
+                        newRangeLimits.maxBrush = ctrl.setDateTimeToMidnight(newRangeLimits.maxBrush);
+                    }
+                }
                 return !ctrl.brush ||
                     oldRangeLimits.min !== newRangeLimits.min ||
                     oldRangeLimits.max !== newRangeLimits.max ||

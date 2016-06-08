@@ -122,6 +122,11 @@ export default function VerticalBarchart($timeout) {
                 return data[scope.secondaryValueField];
             }
 
+            function getBottomMargin (){
+                const labelLength = getRangeLabel(scope.primaryData[0]).length;
+                return labelLength * 7;// the longer the label is, the more space we need
+            }
+
             //------------------------------------------------------------------------------------------------------
             //------------------------------------------- Chart utils ----------------------------------------------
             //------------------------------------------------------------------------------------------------------
@@ -131,7 +136,7 @@ export default function VerticalBarchart($timeout) {
                 margin = {
                     top: 20,
                     right: 20,
-                    bottom: scope.showXAxis ? 100 : 10,
+                    bottom: scope.showXAxis ? getBottomMargin() : 10,
                     left: 15
                 };
                 containerWidth = +attrs.width;

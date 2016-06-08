@@ -20,7 +20,7 @@
  * @requires data-prep.statistics.service:StatisticsTooltipService
  * @requires data-prep.services.filter.service:FilterService
  */
-export default function ColumnProfileCtrl($translate, $timeout, state, StatisticsService, StatisticsTooltipService, FilterService, DateService) {
+export default function ColumnProfileCtrl($translate, $timeout, state, StatisticsService, StatisticsTooltipService, FilterService) {
     'ngInject';
 
     var vm = this;
@@ -61,14 +61,14 @@ export default function ColumnProfileCtrl($translate, $timeout, state, Statistic
      * @param {object} interval The interval [min, max] to filter
      */
     vm.addRangeFilter = function addRangeFilter(interval) {
-        const
-            selectedColumn = state.playground.grid.selectedColumn,
-            isDateRange = selectedColumn.type === 'date';
+        const selectedColumn = state.playground.grid.selectedColumn;
+        const isDateRange = selectedColumn.type === 'date';
 
         if (!interval.label) {
-            const
-                min = isDateRange ? DateService.getFormattedDateFromTime(interval.min, interval.datePattern) : d3.format(',')(interval.min),
-                max = isDateRange ? DateService.getFormattedDateFromTime(interval.max, interval.datePattern) : d3.format(',')(interval.max);
+            const formatDate = d3.time.format('%m/%d/%Y');
+            const formatNumber = d3.format(',');
+            const min = isDateRange ? formatDate(new Date(interval.min)) : formatNumber(interval.min);
+            const max = isDateRange ? formatDate(new Date(interval.max)) : formatNumber(interval.max);
             if(min === max){
                 interval.label = '[' + min + ']';
             }

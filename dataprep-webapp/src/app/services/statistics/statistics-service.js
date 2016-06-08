@@ -255,8 +255,8 @@ export default function StatisticsService($log, $filter, state, StateService,
             rangeLimits.minFilterVal = filterMin;
             rangeLimits.maxFilterVal = filterMax;
 
-            rangeLimits.minBrush = getValueWithinRange(filterMin, statistics.min, statistics.max);
-            rangeLimits.maxBrush = getValueWithinRange(filterMax, statistics.min, statistics.max);
+            rangeLimits.minBrush = getValueWithinRange(filterMin, rangeLimits.min, rangeLimits.max);
+            rangeLimits.maxBrush = getValueWithinRange(filterMax, rangeLimits.min, rangeLimits.max);
 
             StateService.setStatisticsHistogramActiveLimits([rangeLimits.minBrush, rangeLimits.maxBrush]);
         }

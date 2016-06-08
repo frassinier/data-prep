@@ -28,7 +28,7 @@ describe('verticalBarchart directive', function () {
 
     beforeEach(inject(function ($rootScope, $compile) {
         statsData = [
-            {'data': {min: 0, max: 5}, 'occurrences': 9},
+            {'data': {min: 0, max: 5, label: '[0 .. 5['}, 'occurrences': 9},
             {'data': {min: 5, max: 10}, 'occurrences': 8},
             {'data': {min: 10, max: 15}, 'occurrences': 6},
             {'data': {min: 15, max: 20}, 'occurrences': 5}
@@ -77,6 +77,39 @@ describe('verticalBarchart directive', function () {
     });
 
     describe('render', function() {
+
+        it('should render svg container with adapted bottom margin: with X-axis', inject(function ($timeout) {
+            //given
+            createElement();
+
+            //when
+            scope.primaryData = statsData;
+            scope.secondaryData = secondaryStatsData;
+            scope.keyField = 'data';
+            scope.showXAxis = true;
+            scope.$digest();
+            $timeout.flush(100);
+
+            //then
+            expect(+element.find('.vertical-barchart-cls').attr('height')).toBe(400 + statsData[0].data.label.length * 7);
+        }));
+
+        it('should render svg container with adapted bottom margin: without X-axis', inject(function ($timeout) {
+            //given
+            createElement();
+
+            //when
+            scope.primaryData = statsData;
+            scope.secondaryData = secondaryStatsData;
+            scope.keyField = 'data';
+            scope.showXAxis = false;
+            scope.$digest();
+            $timeout.flush(100);
+
+            //then
+            expect(+element.find('.vertical-barchart-cls').attr('height')).toBe(400 + 10);
+        }));
+
         it('should render y axis after a 100ms delay', inject(function ($timeout) {
             //given
             createElement();
@@ -150,6 +183,7 @@ describe('verticalBarchart directive', function () {
             //when
             scope.primaryData = statsData;
             scope.secondaryData = secondaryStatsData;
+            scope.keyField = 'data';
             scope.showXAxis = true;
             scope.$digest();
             $timeout.flush(100);
