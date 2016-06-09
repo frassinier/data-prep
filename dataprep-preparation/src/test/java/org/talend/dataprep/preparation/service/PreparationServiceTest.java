@@ -302,6 +302,8 @@ public class PreparationServiceTest extends BasePreparationTest {
         final Folder toFolder = folderRepository.addFolder(home.getId(), "to");
 
         final String originalId = createPreparationWithAPI("{\"name\": \"test_name\", \"dataSetId\": \"1234\"}", fromFolder.getId());
+        // Change the author, to make it different from system user.
+        repository.get(originalId, Preparation.class).setAuthor("tagada");
 
         // when
         final Response response = given() //
@@ -319,6 +321,9 @@ public class PreparationServiceTest extends BasePreparationTest {
         final FolderEntry copy = iterator.next();
         assertEquals(copy.getContentId(), copyId);
         assertEquals("the new preparation", repository.get(copyId, Preparation.class).getName());
+
+        // Assert that the author is the system user, and not the original author of the prep:
+        assertEquals(System.getProperty("user.name"), repository.get(copyId, Preparation.class).getAuthor());
     }
 
     @Test

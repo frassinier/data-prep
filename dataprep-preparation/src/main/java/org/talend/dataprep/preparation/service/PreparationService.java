@@ -354,6 +354,7 @@ public class PreparationService {
         final long now = System.currentTimeMillis();
         copy.setCreationDate(now);
         copy.setLastModificationDate(now);
+        copy.setAuthor(security.getUserId());
         preparationRepository.add(copy);
         String newId = copy.getId();
 
