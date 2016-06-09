@@ -95,8 +95,7 @@
                     resolve: {
                         inventory: ($stateParams, FolderService) => {
                             'ngInject';
-                            const folderId = $stateParams.folderId || undefined;
-                            return FolderService.init(folderId);
+                            return FolderService.init($stateParams.folderId);
                         },
                     },
                 })

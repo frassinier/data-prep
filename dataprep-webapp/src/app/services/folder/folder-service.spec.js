@@ -267,6 +267,17 @@ describe('Folder services', () => {
             // then
             expect(StateService.setBreadcrumb).toHaveBeenCalledWith(folderMetadata.hierarchy.concat(folderMetadata.folder));
         }));
+
+        it('should get folder metadata with homeFolderId', inject((FolderService, FolderRestService) => {
+            // given
+            stateMock.inventory.homeFolderId = 'L215L3BlcnNvbmFsL2ZvbGRlcg==';
+
+            // when
+            FolderService.refresh();
+
+            // then
+            expect(FolderRestService.getById).toHaveBeenCalledWith('L215L3BlcnNvbmFsL2ZvbGRlcg==');
+        }));
     });
 
     describe('refreshBreadcrumbChildren', () => {

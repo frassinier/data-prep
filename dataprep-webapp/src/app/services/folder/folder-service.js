@@ -30,6 +30,8 @@ export default function FolderService($q, state, StateService, FolderRestService
         children: children,
         create: create,
         rename: rename,
+        refreshPreparationsSort: refreshPreparationsSort,
+        refreshPreparationsOrder: refreshPreparationsOrder,
         remove: FolderRestService.remove,
         tree: FolderRestService.tree,
     };
@@ -42,8 +44,8 @@ export default function FolderService($q, state, StateService, FolderRestService
      * @description Init the sort parameters and folder content
      */
     function init(id) {
-        _refreshPreparationsSort();
-        _refreshPreparationsOrder();
+        refreshPreparationsSort();
+        refreshPreparationsOrder();
         return refresh(id);
     }
 
@@ -54,12 +56,14 @@ export default function FolderService($q, state, StateService, FolderRestService
      * @param {string} id The folder to init
      * @returns {Promise} The GET promise
      */
-    function refresh(id = state.inventory.homeFolderId) {
+    function refresh(id) {
+        const folderId = id || state.inventory.homeFolderId;
+
         const sort = state.inventory.preparationsSort.id;
         const order = state.inventory.preparationsOrder.id;
 
-        const breadcrumbPromise = FolderRestService.getById(id);
-        const contentPromise = FolderRestService.getContent(id, sort, order);
+        const breadcrumbPromise = FolderRestService.getById(folderId);
+        const contentPromise = FolderRestService.getContent(folderId, sort, order);
         return $q.all([breadcrumbPromise, contentPromise])
             .then(([breadcrumb, content]) => {
                 const currentFolder = breadcrumb.folder;
@@ -89,7 +93,7 @@ export default function FolderService($q, state, StateService, FolderRestService
      * @name _refreshPreparationsSort
      * @description Refresh the actual sort parameter
      * */
-    function _refreshPreparationsSort() {
+    function refreshPreparationsSort() {
         const savedSort = StorageService.getPreparationsSort();
         if (savedSort) {
             StateService.setPreparationsSort(_.find(state.inventory.sortList, {id: savedSort}));
@@ -102,7 +106,7 @@ export default function FolderService($q, state, StateService, FolderRestService
      * @name _refreshPreparationsOrder
      * @description Refresh the actual order parameter
      */
-    function _refreshPreparationsOrder() {
+    function refreshPreparationsOrder() {
         const savedSortOrder = StorageService.getPreparationsOrder();
         if (savedSortOrder) {
             StateService.setPreparationsOrder(_.find(state.inventory.orderList, {id: savedSortOrder}));
