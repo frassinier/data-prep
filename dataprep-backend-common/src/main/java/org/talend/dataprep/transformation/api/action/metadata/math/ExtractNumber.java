@@ -16,9 +16,12 @@ import java.math.BigDecimal;
 import java.text.CharacterIterator;
 import java.text.DecimalFormat;
 import java.text.StringCharacterIterator;
-import java.util.*;
-
-import javax.annotation.PostConstruct;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -70,7 +73,7 @@ public class ExtractNumber extends ActionMetadata implements ColumnAction {
     private static final List<Character> SEPARATORS = Arrays.asList('.', ',');
 
     /** K: the prefix, V: the value. */
-    private Map<String, MetricPrefix> metricPrefixes = new HashMap<>(13);
+    private static Map<String, MetricPrefix> METRICPREFIXES = new ConcurrentHashMap<>(13);
 
     /**
      * Initialize the supported metrics.
@@ -91,20 +94,19 @@ public class ExtractNumber extends ActionMetadata implements ColumnAction {
      *     <li>pico p 0.000000000001</li>
      * </ul>
      */
-    @PostConstruct
-    public void initialize() {
-        metricPrefixes.put("T", new MetricPrefix(new BigDecimal("1000000000000"), "tera"));
-        metricPrefixes.put("G", new MetricPrefix(new BigDecimal("1000000000"), "giga"));
-        metricPrefixes.put("M", new MetricPrefix(new BigDecimal("1000000"), "mega"));
-        metricPrefixes.put("k", new MetricPrefix(new BigDecimal("1000"), "kilo"));
-        metricPrefixes.put("h", new MetricPrefix(new BigDecimal("100"), "hecto"));
-        metricPrefixes.put("da", new MetricPrefix(new BigDecimal("10"), "deca"));
-        metricPrefixes.put("d", new MetricPrefix(new BigDecimal("0.1"), "deci"));
-        metricPrefixes.put("c", new MetricPrefix(new BigDecimal("0.01"), "centi"));
-        metricPrefixes.put("m", new MetricPrefix(new BigDecimal("0.001"), "milli"));
-        metricPrefixes.put("μ", new MetricPrefix(new BigDecimal("0.000001"), "micro"));
-        metricPrefixes.put("n", new MetricPrefix(new BigDecimal("0.000000001"), "nano"));
-        metricPrefixes.put("p", new MetricPrefix(new BigDecimal("0.000000000001"), "pico"));
+    static {
+        METRICPREFIXES.put( "T", new MetricPrefix( new BigDecimal( "1000000000000"), "tera"));
+        METRICPREFIXES.put( "G", new MetricPrefix( new BigDecimal( "1000000000"), "giga"));
+        METRICPREFIXES.put( "M", new MetricPrefix( new BigDecimal( "1000000"), "mega"));
+        METRICPREFIXES.put( "k", new MetricPrefix( new BigDecimal( "1000"), "kilo"));
+        METRICPREFIXES.put( "h", new MetricPrefix( new BigDecimal( "100"), "hecto"));
+        METRICPREFIXES.put( "da", new MetricPrefix( new BigDecimal( "10"), "deca"));
+        METRICPREFIXES.put( "d", new MetricPrefix( new BigDecimal( "0.1"), "deci"));
+        METRICPREFIXES.put( "c", new MetricPrefix( new BigDecimal( "0.01"), "centi"));
+        METRICPREFIXES.put( "m", new MetricPrefix( new BigDecimal( "0.001"), "milli"));
+        METRICPREFIXES.put( "μ", new MetricPrefix( new BigDecimal( "0.000001"), "micro"));
+        METRICPREFIXES.put( "n", new MetricPrefix( new BigDecimal( "0.000000001"), "nano"));
+        METRICPREFIXES.put( "p", new MetricPrefix( new BigDecimal( "0.000000000001"), "pico"));
     }
 
     /**
@@ -171,15 +173,20 @@ public class ExtractNumber extends ActionMetadata implements ColumnAction {
         return Collections.singleton(Behavior.METADATA_CREATE_COLUMNS);
     }
 
+    private static String extractNumber(String value){
+        return extractNumber( value, DEFAULT_RESULT );
+    }
+
     /**
      * @param value the value to parse.
+     * @param defaultValue the value to return when no number can be extracted
      * @return the number extracted out of the given value.
      */
-    private String extractNumber(String value) {
+    protected static String extractNumber(String value, String defaultValue) {
 
         // easy case
         if (StringUtils.isEmpty(value)) {
-            return DEFAULT_RESULT;
+            return defaultValue;
         }
 
         // Test if the input value is a valid number before removing any characters:
@@ -207,13 +214,13 @@ public class ExtractNumber extends ActionMetadata implements ColumnAction {
             } else {
                 // we take the first metric prefix found before and after a number found
                 if (metricPrefixBefore == null) {
-                    MetricPrefix found = metricPrefixes.get(String.valueOf(c));
+                    MetricPrefix found = METRICPREFIXES.get( String.valueOf( c));
                     if (found != null && !numberFound) {
                         metricPrefixBefore = found;
                     }
                 }
                 if (metricPrefixAfter == null) {
-                    MetricPrefix found = metricPrefixes.get(String.valueOf(c));
+                    MetricPrefix found = METRICPREFIXES.get( String.valueOf( c));
                     if (found != null && numberFound) {
                         metricPrefixAfter = found;
                     }
@@ -226,7 +233,7 @@ public class ExtractNumber extends ActionMetadata implements ColumnAction {
         try {
             bigDecimal = BigDecimalParser.toBigDecimal(reducedValue.toString());
         } catch (NumberFormatException e) {
-            return DEFAULT_RESULT;
+            return defaultValue;
         }
 
         if (metricPrefixBefore != null || metricPrefixAfter != null) {

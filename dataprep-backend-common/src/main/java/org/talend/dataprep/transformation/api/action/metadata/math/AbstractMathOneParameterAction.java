@@ -19,6 +19,8 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.talend.daikon.exception.ExceptionContext;
 import org.talend.dataprep.api.dataset.DataSetRow;
 import org.talend.dataprep.exception.TDPException;
@@ -34,6 +36,13 @@ import org.talend.dataprep.transformation.api.action.metadata.common.OtherColumn
  * Abstract Action for basic math action with one parameter (constant or an other column)
  */
 public abstract class AbstractMathOneParameterAction extends AbstractMathAction implements ColumnAction {
+
+    // olamy I would prefer to know which class is currently used but not sure checkstyle like that :P
+    //private Logger logger = LoggerFactory.getLogger( getClass() );
+
+    private static final Logger LOGGER = LoggerFactory.getLogger( AbstractMathOneParameterAction.class );
+
+    private static final String DEFAULT_VALUE_NAN = Integer.toString( Integer.MAX_VALUE );
 
     @Override
     public List<Parameter> getParameters() {
@@ -79,8 +88,24 @@ public abstract class AbstractMathOneParameterAction extends AbstractMathAction 
 
         String result = ERROR_RESULT;
 
-        if (NumberUtils.isNumber( colValue ) && NumberUtils.isNumber( parameterValue )){
-            result = calculateResult( colValue, parameterValue );
+        try {
+            if (NumberUtils.isNumber(colValue) && NumberUtils.isNumber(parameterValue)) {
+                result = calculateResult(colValue, parameterValue);
+            } else {
+                if (!NumberUtils.isNumber(parameterValue)) {
+                    parameterValue = ExtractNumber.extractNumber(parameterValue, DEFAULT_VALUE_NAN);
+                }
+                if (!NumberUtils.isNumber(colValue)) {
+                    colValue = ExtractNumber.extractNumber(colValue, DEFAULT_VALUE_NAN);
+                }
+                if (!StringUtils.equals(DEFAULT_VALUE_NAN, parameterValue) //
+                        && !StringUtils.equals(DEFAULT_VALUE_NAN, colValue)) {
+                    result = calculateResult(colValue, parameterValue);
+                }
+            }
+        } catch (Exception e) {
+            // ignore
+            LOGGER.debug(e.getMessage(), e);
         }
 
         String newColumnId = context.column("result");

@@ -146,6 +146,38 @@ public class MaxTest extends AbstractMetadataBaseTest {
         assertEquals(StringUtils.EMPTY, row.get("0003"));
     }
 
+    @Test
+    public void max_currency_values_with_constant() {
+        // given
+        DataSetRow row = getRow("$61,667", "3", "Done !");
+
+        parameters.put(OtherColumnParameters.MODE_PARAMETER, OtherColumnParameters.CONSTANT_MODE);
+        parameters.put(OtherColumnParameters.CONSTANT_VALUE, "2");
+
+        // when
+        ActionTestWorkbench.test(row, actionRegistry, factory.create(action, parameters));
+
+        // then
+        assertColumnWithResultCreated(row);
+        assertEquals("61667.0", row.get("0003"));
+    }
+
+    @Test
+    public void max_currency_value_with_other_column() {
+        // given
+        DataSetRow row = getRow("5", "8$", "Done !");
+
+        parameters.put(OtherColumnParameters.MODE_PARAMETER, OtherColumnParameters.OTHER_COLUMN_MODE);
+        parameters.put(OtherColumnParameters.SELECTED_COLUMN_PARAMETER, "0001");
+
+        // when
+        ActionTestWorkbench.test(row, actionRegistry, factory.create(action, parameters));
+
+        // then
+        assertColumnWithResultCreated(row);
+        assertEquals("8.0", row.get("0003"));
+    }
+
     private void assertColumnWithResultCreated(DataSetRow row) {
         ColumnMetadata expected = ColumnMetadata.Builder.column().id(3).name("0000_max").type(Type.STRING).build();
         ColumnMetadata actual = row.getRowMetadata().getById("0003");
