@@ -34,6 +34,13 @@ describe('InventoryItem directive', () => {
         }
     };
 
+    const job_created_dataset = {
+        'id': '12ce6c32-bf80-41c8-92e5-66d70f22ec1f',
+        'name': 'US States',
+        'type': 'text/csv',
+        'tag': 'components'
+    };
+
     const csv_dataset = {
         'id': '12ce6c32-bf80-41c8-92e5-66d70f22ec1f',
         'name': 'US States',
@@ -167,8 +174,19 @@ describe('InventoryItem directive', () => {
             // then
             const icon = element.find('.inventory-icon').eq(0);
             const iconSrc = icon.find('img')[0].src;
+            expect(strEndsWith(iconSrc, '/assets/images/inventory/live_dataset_file.png')).toBe(true);
+        });
+
+        it('should select JOB icon for components tag', () => {
+            // when
+            createElement(job_created_dataset);
+
+            // then
+            const icon = element.find('.inventory-icon').eq(0);
+            const iconSrc = icon.find('img')[0].src;
             expect(strEndsWith(iconSrc, '/assets/images/inventory/job_file.png')).toBe(true);
         });
+
 
         it('should not display update for job dattaset', () => {
                 // when

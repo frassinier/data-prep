@@ -16,9 +16,7 @@ package org.talend.dataprep.api.dataset;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 import static org.talend.dataprep.api.dataset.DataSetGovernance.Certification.CERTIFIED;
 import static org.talend.dataprep.api.type.Type.INTEGER;
 import static org.talend.dataprep.api.type.Type.STRING;
@@ -214,6 +212,18 @@ public class DataSetMetadataBuilderTest {
         final DataSetMetadata metadata = builder.metadata().id("1234")
                 .schemaParserResult(Schema.Builder.parserResult().sheetName("sheetName").build()).build();
         assertEquals("sheetName", metadata.getSchemaParserResult().getSheetName());
+    }
+
+    @Test
+    public void testTag() throws Exception {
+        final DataSetMetadata metadata = builder.metadata().id("1234").tag("myTag").build();
+        assertEquals("myTag", metadata.getTag());
+    }
+
+    @Test
+    public void testEmptyTag() throws Exception {
+        final DataSetMetadata metadata = builder.metadata().id("1234").tag("").build();
+        assertNull(metadata.getTag());
     }
 
     private DataSetMetadata createCompleteMetadata() {

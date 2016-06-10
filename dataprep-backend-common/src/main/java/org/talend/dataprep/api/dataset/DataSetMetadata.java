@@ -134,6 +134,8 @@ public class DataSetMetadata implements Serializable, SharedResource {
     @Transient // no saved in the database but computed when needed
     private Set<String> roles = new HashSet<>();
 
+    private String tag;
+
 
     /**
      * Default empty constructor.
@@ -408,6 +410,14 @@ public class DataSetMetadata implements Serializable, SharedResource {
         this.roles = roles;
     }
 
+    public String getTag() {
+        return tag;
+    }
+
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
+
     /**
      * Returns true if this data set metadata is compatible with <tt>rowMetadata</tt> (they have same columns names and
      * same types and in the same order) and false otherwise.
@@ -488,5 +498,4 @@ public class DataSetMetadata implements Serializable, SharedResource {
         return Objects.hash(id, rowMetadata, lifecycle, content, governance, location, name, author, creationDate,lastModificationDate, sheetName,
                 draft, schemaParserResult, favorite, sharedDataSet, owner, roles, appVersion);
     }
-
 }

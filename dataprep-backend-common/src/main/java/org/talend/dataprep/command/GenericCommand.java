@@ -23,6 +23,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -202,8 +203,10 @@ public class GenericCommand<T> extends HystrixCommand<T> {
         return (req, res) -> {
             LOGGER.trace("request on error {} -> {}", req.toString(), res.getStatusLine());
             final int statusCode = res.getStatusLine().getStatusCode();
+            String content = StringUtils.EMPTY;
             try {
-                JsonErrorCode code = objectMapper.readerFor(JsonErrorCode.class).readValue(res.getEntity().getContent());
+                content = IOUtils.toString(res.getEntity().getContent());
+                JsonErrorCode code = objectMapper.readerFor(JsonErrorCode.class).readValue(content);
                 code.setHttpStatus(statusCode);
                 final TDPException cause = new TDPException(code);
                 throw onError.apply(cause);
@@ -229,6 +232,7 @@ public class GenericCommand<T> extends HystrixCommand<T> {
                 });
                 throw onError.apply(exception);
             } catch (IOException e) {
+                LOGGER.error("Unexpected error message: {}", content);
                 throw new TDPException(CommonErrorCodes.UNEXPECTED_EXCEPTION, e);
             } finally {
                 req.releaseConnection();

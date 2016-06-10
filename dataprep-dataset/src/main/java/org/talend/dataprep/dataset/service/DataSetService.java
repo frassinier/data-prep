@@ -261,7 +261,7 @@ public class DataSetService extends BaseDataSetService {
         try (Stream<DataSetMetadata> stream = stream(iterator, false)) {
             // @formatter:off
             final Comparator<DataSetMetadata> comparator = getDataSetMetadataComparator(sort, order);
-            return stream.filter(metadata -> !metadata.getLifecycle().importing())
+            return stream.filter(metadata -> !metadata.getLifecycle().importing()) // NOSONAR
                     .map(metadata -> {
                         if (userData != null) {
                             metadata.setFavorite(userData.getFavoritesDatasets().contains(metadata.getId()));
@@ -334,6 +334,7 @@ public class DataSetService extends BaseDataSetService {
     @VolumeMetered
     public String create(
             @ApiParam(value = "User readable name of the data set (e.g. 'Finance Report 2015', 'Test Data Set').") @RequestParam(defaultValue = "") String name,
+            @ApiParam(value = "An optional tag to be added in data set metadata once created.") @RequestParam(defaultValue = "") String tag,
             @RequestHeader(CONTENT_TYPE) String contentType,
             @ApiParam(value = "content") InputStream content) throws IOException {
         //@formatter:on
@@ -361,6 +362,7 @@ public class DataSetService extends BaseDataSetService {
                     .author(security.getUserId()) //
                     .location(location) //
                     .created(System.currentTimeMillis()) //
+                    .tag(tag) //
                     .build();
 
             dataSetMetadata.getLifecycle().importing(true); // Indicate data set is being imported

@@ -21,6 +21,17 @@ export default function InventoryItemCtrl() {
 
     /**
      * @ngdoc method
+     * @name itemType
+     * @methodOf data-prep.inventory-item:InventoryItemCtrl
+     * @params item the inventory item
+     * @description return the item type (MIME type) or the tag (if present).
+     */
+    vm.itemType = function itemType (item) {
+        return item.tag || item.type;
+    };
+
+    /**
+     * @ngdoc method
      * @name openRelatedInventoryItem
      * @methodOf data-prep.inventory-item:InventoryItemCtrl
      * @params {Object} relatedInventory the related inventory item

@@ -15,6 +15,7 @@ package org.talend.dataprep.api.dataset;
 
 import java.util.*;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.talend.dataprep.api.dataset.location.LocalStoreLocation;
@@ -174,6 +175,7 @@ public class DataSetMetadataBuilder {
     private Owner owner;
     /** @see org.talend.dataprep.api.dataset.DataSetMetadata#roles */
     private Set<String> roles = new HashSet<>();
+    private String tag;
 
 
     /**
@@ -407,6 +409,11 @@ public class DataSetMetadataBuilder {
         return this;
     }
 
+    public DataSetMetadataBuilder tag(String tag) {
+        this.tag = tag;
+        return this;
+    }
+
     /**
      * @return the dataset metadata.
      */
@@ -432,6 +439,9 @@ public class DataSetMetadataBuilder {
         }
         RowMetadata row = new RowMetadata(columns);
         DataSetMetadata metadata = new DataSetMetadata(id, name, author, createdDate, lastModificationDate, row, appVersion);
+        if(!StringUtils.isEmpty(tag)) {
+            metadata.setTag(tag);
+        }
         metadata.setSheetName(this.sheetName);
         metadata.setDraft(this.draft);
         metadata.setFavorite(this.isFavorite);
@@ -467,5 +477,4 @@ public class DataSetMetadataBuilder {
         metadataLifecycle.inProgress(inProgress);
         return metadata;
     }
-
 }
