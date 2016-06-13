@@ -36,18 +36,23 @@
     @include display(flex);
     @include flex-direction(row);
     min-height: 40vh;
-    max-height: 45vh;
 
     .filters-left-panel {
         width: 250px;
         border: 1px solid $light-gray;
         flex-basis: 250px;
+        max-height: 45vh;
+        overflow-y: auto;
+
         @include display(flex);
         @include flex-direction(column);
         @include justify-content(space-between);
     }
 
     .inventory-list {
+        max-height: 45vh;
+        overflow-y: auto;
+
         border: 1px solid $light-gray;
         @include flex-grow(1);
 
@@ -64,6 +69,9 @@
             cursor:pointer;
             &:hover {
                 background-color: tint($pale-blue, 70%);
+            }
+            .inventory-text .inventory-title {
+                @include ellipsis(450px);
             }
         }
 
