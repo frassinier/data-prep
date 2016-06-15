@@ -1,4 +1,4 @@
-FROM talend-registry:5000/talend/miningnix:1.8
+FROM registry.talend.com:5000/talend/miningnix:1.8
 
 RUN apk --update add bash
 
