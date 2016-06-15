@@ -32,46 +32,25 @@ import java.io.InputStream;
 import java.time.Instant;
 import java.util.*;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.restassured.response.Response;
 import org.apache.commons.io.IOUtils;
 import org.assertj.core.api.Assertions;
 import org.hamcrest.CoreMatchers;
 import org.junit.Assert;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.talend.dataprep.api.dataset.*;
 import org.talend.dataprep.api.dataset.DataSetGovernance.Certification;
 import org.talend.dataprep.api.dataset.location.SemanticDomain;
 import org.talend.dataprep.api.dataset.statistics.Statistics;
-import org.talend.dataprep.api.service.info.VersionService;
 import org.talend.dataprep.api.type.Type;
 import org.talend.dataprep.api.user.UserData;
 import org.talend.dataprep.dataset.DataSetBaseTest;
 import org.talend.dataprep.lock.DistributedLock;
 import org.talend.dataprep.schema.csv.CSVFormatFamily;
-import org.talend.dataprep.security.Security;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-
-import static com.jayway.restassured.RestAssured.given;
-import static com.jayway.restassured.RestAssured.when;
-import static com.jayway.restassured.http.ContentType.JSON;
-import static com.jayway.restassured.path.json.JsonPath.from;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static org.hamcrest.Matchers.*;
-import static org.hamcrest.core.IsEqual.equalTo;
-import static org.junit.Assert.*;
-import static org.springframework.http.HttpStatus.OK;
-import static org.talend.dataprep.test.SameJSONFile.sameJSONAsFile;
-import static uk.co.datumedge.hamcrest.json.SameJSONAs.sameJSONAs;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.jayway.restassured.response.Response;
 
 public class DataSetServiceTest extends DataSetBaseTest {
 
@@ -1488,6 +1467,24 @@ public class DataSetServiceTest extends DataSetBaseTest {
             .body("name", hasSize(4));
 
         // @formatter:on
+    }
+
+    @Test
+    public void should_have_grants_to_certify_dataset() throws Exception {
+        // create data sets
+        final String dataSetId = createCSVDataSet(this.getClass().getResourceAsStream("../tagada3.csv"), "dataset1");
+
+        // @formatter:off
+        given()
+            .pathParam("id", dataSetId)
+        .when()
+            .put("/datasets/{id}/processcertification")
+        .then()
+            .statusCode(200);
+        // @formatter:on
+
+        final DataSetMetadata dataSetMetadata = dataSetMetadataRepository.get(dataSetId);
+        assertEquals(Certification.PENDING, dataSetMetadata.getGovernance().getCertificationStep());
     }
 
     @Test

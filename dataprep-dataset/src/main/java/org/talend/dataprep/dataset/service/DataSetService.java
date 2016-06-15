@@ -66,6 +66,8 @@ import org.talend.dataprep.dataset.store.metadata.DataSetMetadataRepository;
 import org.talend.dataprep.exception.TDPException;
 import org.talend.dataprep.exception.error.DataSetErrorCodes;
 import org.talend.dataprep.exception.json.JsonErrorCodeDescription;
+import org.talend.dataprep.grants.AccessGrantChecker;
+import org.talend.dataprep.grants.CommonRestrictedActions;
 import org.talend.dataprep.http.HttpResponseContext;
 import org.talend.dataprep.lock.DistributedLock;
 import org.talend.dataprep.log.Markers;
@@ -104,6 +106,24 @@ public class DataSetService extends BaseDataSetService {
         DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC")); //$NON-NLS-1$
     }
 
+    /**
+     * Quality analyzer needed to compute quality on dataset.
+     */
+    @Autowired
+    protected QualityAnalysis qualityAnalyzer;
+
+    /**
+     * Dataset metadata repository.
+     */
+    @Autowired
+    protected DataSetMetadataRepository dataSetMetadataRepository;
+
+    /**
+     * Dataset content store.
+     */
+    @Autowired
+    protected ContentStoreRouter contentStore;
+
     @Autowired
     ApplicationEventPublisher publisher;
 
@@ -126,29 +146,10 @@ public class DataSetService extends BaseDataSetService {
     private FormatAnalysis formatAnalyzer;
 
     /**
-     * Quality analyzer needed to compute quality on dataset.
-     */
-    @Autowired
-    protected QualityAnalysis qualityAnalyzer;
-
-    /**
      * JMS template used to call asynchronous analysers.
      */
     @Autowired
     private JmsTemplate jmsTemplate;
-
-    /**
-     * Dataset metadata repository.
-     */
-    @Autowired
-    protected DataSetMetadataRepository dataSetMetadataRepository;
-
-    /**
-     * Dataset content store.
-     */
-    @Autowired
-    protected ContentStoreRouter contentStore;
-
     /**
      * User repository.
      */
@@ -193,6 +194,9 @@ public class DataSetService extends BaseDataSetService {
 
     @Autowired
     private VersionService versionService;
+
+    @Autowired
+    private AccessGrantChecker accessGrantChecker;
 
     @Value("#{'${dataset.imports}'.split(',')}")
     private Set<String> enabledImports;
@@ -569,6 +573,9 @@ public class DataSetService extends BaseDataSetService {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Ask certification for dataset #{}", dataSetId);
         }
+
+        // Check if the user has sufficient grants to perform the action
+        accessGrantChecker.allowed(CommonRestrictedActions.CERTIFICATION);
 
         DistributedLock datasetLock = dataSetMetadataRepository.createDatasetMetadataLock(dataSetId);
         datasetLock.lock();
