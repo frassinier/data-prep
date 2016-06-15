@@ -483,16 +483,40 @@
         "configuration": {
           "values": [
             {
-              "value": "MM.dd.yyyy"
+              "value": "yyyy-MM-dd"
             },
             {
-              "value": "MMM.dd.yyyy"
+              "value": "M/d/yy"
             },
             {
-              "value": "MMMM dd yyyy"
+              "value": "dd/MM/yy"
             },
             {
-              "value": "MM.dd.yyyy HH:mm:ss"
+              "value": "dd.MM.yy"
+            },
+            {
+              "value": "dd/MM/yy"
+            },
+            {
+              "value": "yy/MM/dd"
+            },
+            {
+              "value": "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            },
+            {
+              "value": "M/d/yy h:mm a"
+            },
+            {
+              "value": "dd/MM/yy HH:mm"
+            },
+            {
+              "value": "dd.MM.yy HH:mm"
+            },
+            {
+              "value": "dd/MM/yy HH:mm"
+            },
+            {
+              "value": "yy/MM/dd H:mm"
             },
             {
               "value": "custom",
@@ -513,7 +537,7 @@
         },
         "description": "Choose the date format to use in the list or make your own",
         "label": "New Format",
-        "default": "MM.dd.yyyy"
+        "default": "yyyy-MM-dd"
       }
     ],
     "parametersForDatePattern": [
@@ -525,16 +549,40 @@
         "configuration": {
           "values": [
             {
-              "value": "MM.dd.yyyy"
+              "value": "yyyy-MM-dd"
             },
             {
-              "value": "MMM.dd.yyyy"
+              "value": "M/d/yy"
             },
             {
-              "value": "MMMM dd yyyy"
+              "value": "dd/MM/yy"
             },
             {
-              "value": "MM.dd.yyyy HH:mm:ss"
+              "value": "dd.MM.yy"
+            },
+            {
+              "value": "dd/MM/yy"
+            },
+            {
+              "value": "yy/MM/dd"
+            },
+            {
+              "value": "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            },
+            {
+              "value": "M/d/yy h:mm a"
+            },
+            {
+              "value": "dd/MM/yy HH:mm"
+            },
+            {
+              "value": "dd.MM.yy HH:mm"
+            },
+            {
+              "value": "dd/MM/yy HH:mm"
+            },
+            {
+              "value": "yy/MM/dd H:mm"
             },
             {
               "value": "custom",
@@ -555,7 +603,7 @@
         },
         "description": "Choose the date format to use in the list or make your own",
         "label": "New Format",
-        "default": "MM.dd.yyyy"
+        "default": "yyyy-MM-dd"
       }
     ],
     "category": "dates",
@@ -735,16 +783,40 @@
         "configuration": {
           "values": [
             {
-              "value": "MM.dd.yyyy"
+              "value": "yyyy-MM-dd"
             },
             {
-              "value": "MMM.dd.yyyy"
+              "value": "M/d/yy"
             },
             {
-              "value": "MMMM dd yyyy"
+              "value": "dd/MM/yy"
             },
             {
-              "value": "MM.dd.yyyy HH:mm:ss"
+              "value": "dd.MM.yy"
+            },
+            {
+              "value": "dd/MM/yy"
+            },
+            {
+              "value": "yy/MM/dd"
+            },
+            {
+              "value": "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            },
+            {
+              "value": "M/d/yy h:mm a"
+            },
+            {
+              "value": "dd/MM/yy HH:mm"
+            },
+            {
+              "value": "dd.MM.yy HH:mm"
+            },
+            {
+              "value": "dd/MM/yy HH:mm"
+            },
+            {
+              "value": "yy/MM/dd H:mm"
             },
             {
               "value": "custom",
@@ -765,7 +837,7 @@
         },
         "description": "Choose the date format to use in the list or make your own",
         "label": "New Format",
-        "default": "MM.dd.yyyy"
+        "default": "yyyy-MM-dd"
       }
     ],
     "parametersForDatePattern": [
@@ -777,16 +849,40 @@
         "configuration": {
           "values": [
             {
-              "value": "MM.dd.yyyy"
+              "value": "yyyy-MM-dd"
             },
             {
-              "value": "MMM.dd.yyyy"
+              "value": "M/d/yy"
             },
             {
-              "value": "MMMM dd yyyy"
+              "value": "dd/MM/yy"
             },
             {
-              "value": "MM.dd.yyyy HH:mm:ss"
+              "value": "dd.MM.yy"
+            },
+            {
+              "value": "dd/MM/yy"
+            },
+            {
+              "value": "yy/MM/dd"
+            },
+            {
+              "value": "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            },
+            {
+              "value": "M/d/yy h:mm a"
+            },
+            {
+              "value": "dd/MM/yy HH:mm"
+            },
+            {
+              "value": "dd.MM.yy HH:mm"
+            },
+            {
+              "value": "dd/MM/yy HH:mm"
+            },
+            {
+              "value": "yy/MM/dd H:mm"
             },
             {
               "value": "custom",
@@ -807,7 +903,7 @@
         },
         "description": "Choose the date format to use in the list or make your own",
         "label": "New Format",
-        "default": "MM.dd.yyyy"
+        "default": "yyyy-MM-dd"
       }
     ],
     "dynamic": false,

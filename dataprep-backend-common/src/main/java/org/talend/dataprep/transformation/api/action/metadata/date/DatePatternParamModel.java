@@ -58,18 +58,35 @@ public interface DatePatternParamModel {
         Enumeration<String> keys = patterns.getKeys();
 
         List<SelectParameter.Item> items = new ArrayList<>();
+        SelectParameter.Item defaultItem = null;
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
             String value = patterns.getString(key);
-            items.add(SelectParameter.Item.Builder.builder().value(value).build());
+            SelectParameter.Item item = SelectParameter.Item.Builder.builder().value(value).label(key + " (" + value + ")").build();
+            items.add(item);
+
+            if (key.equals("ISO")){
+                defaultItem = item;
+            }
         }
+        if (defaultItem == null) {
+            defaultItem = items.get(0);
+        }
+
+        items.sort(new Comparator<SelectParameter.Item>() {
+
+            @Override
+            public int compare(SelectParameter.Item item, SelectParameter.Item t1) {
+                return item.getLabel().compareTo(t1.getLabel());
+            }
+        });
 
         List<Parameter> parameters = new ArrayList<>();
         parameters.add(SelectParameter.Builder.builder() //
                 .name(NEW_PATTERN) //
                 .items(items) //
                 .item("custom", CUSTOM_PATTERN_PARAMETER) //
-                .defaultValue(items.get(0).getValue()) //
+                .defaultValue(defaultItem.getValue()) //
                 .build());
 
         return parameters;

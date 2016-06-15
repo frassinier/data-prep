@@ -167,6 +167,9 @@ public class SelectParameter extends Parameter implements Serializable {
         }
 
         public static class Builder {
+
+            private String label;
+            
             private String value;
 
             private List<Parameter> inlineParameters;
@@ -180,13 +183,22 @@ public class SelectParameter extends Parameter implements Serializable {
                 return this;
             }
 
+            public Builder label(String label) {
+                this.label = label;
+                return this;
+            }
+
             public Builder inlineParameters(List<Parameter> inlineParameters) {
                 this.inlineParameters = inlineParameters;
                 return this;
             }
 
             public Item build() {
-                return new Item( value, inlineParameters == null ? emptyList() : inlineParameters );
+                Item toReturn = new Item(value, inlineParameters == null ? emptyList() : inlineParameters);
+                if (label != null) {
+                    toReturn.setLabel(label);
+                }
+                return toReturn;
             }
         }
     }
