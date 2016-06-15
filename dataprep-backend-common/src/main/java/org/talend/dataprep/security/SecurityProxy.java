@@ -25,7 +25,13 @@ public interface SecurityProxy {
     void borrowIdentity(String securityToken);
 
     /**
+     * Let a thread use the technical user.
+     */
+    void asTechnicalUser();
+
+    /**
      * Release the borrowed identity.
      */
     void releaseIdentity();
+
 }

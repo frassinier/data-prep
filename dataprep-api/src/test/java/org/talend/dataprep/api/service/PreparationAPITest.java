@@ -93,14 +93,16 @@ public class PreparationAPITest extends ApiServiceTestBase {
     @Test
     public void testPreparationGet() throws Exception {
         // when
-        final String preparationId = createPreparationFromDataset("1234", "testPreparation");
+        final String datasetId = createDataset("dataset/dataset.csv", "great dataset", "text/csv");
+        final String preparationId = createPreparationFromDataset(datasetId, "1234");
 
         // then
         final JsonPath longFormat = given().get("/api/preparations/{id}/details", preparationId).jsonPath();
-        assertThat(longFormat.getString("dataSetId"), is("1234"));
+        assertThat(longFormat.getString("dataSetId"), is(datasetId));
         assertThat(longFormat.getString("author"), is(security.getUserId()));
         assertThat(longFormat.getString("id"), is(preparationId));
         assertThat(longFormat.getList("actions").size(), is(0));
+        assertThat(longFormat.getString("allowFullRun"), is("false"));
     }
 
     @Test

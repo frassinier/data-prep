@@ -974,7 +974,7 @@ public class PreparationService {
         if (lockedResourceRepository.lockOwned(lockedResource, userId)) {
             LOGGER.debug("Preparation {} locked for user {}.", preparationId, userId);
         } else {
-            LOGGER.debug("Unable to lock Preparation {} for user {}. Already locked by {}", preparationId, userId,
+            LOGGER.debug("Unable to lock Preparation {} for user {}. Already locked by user {}", preparationId, userId,
                     lockedResource.getUserId());
             // TODO: We must find a way to avoid printing stack trace when such a kind of non critical exceptions occurs
             throw new TDPException(CommonErrorCodes.CONFLICT_TO_LOCK_RESOURCE,

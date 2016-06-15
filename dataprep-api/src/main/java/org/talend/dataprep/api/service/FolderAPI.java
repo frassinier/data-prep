@@ -45,6 +45,7 @@ import org.talend.dataprep.exception.error.CommonErrorCodes;
 import org.talend.dataprep.http.HttpResponseContext;
 import org.talend.dataprep.metrics.Timed;
 import org.talend.dataprep.metrics.VolumeMetered;
+import org.talend.dataprep.security.SecurityProxy;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -58,6 +59,10 @@ public class FolderAPI extends APIService {
 
     @Autowired
     private DataSetMetadataBuilder metadataBuilder;
+
+    /** Security proxy let the current thread to borrow another identity for a while. */
+    @Autowired
+    private SecurityProxy securityProxy;
 
     @RequestMapping(value = "/api/folders", method = GET)
     @ApiOperation(value = "List children folders of the parameter if null list root children.", produces = APPLICATION_JSON_VALUE)
@@ -292,6 +297,7 @@ public class FolderAPI extends APIService {
         final DataSetGetMetadata getMetadata = getCommand(DataSetGetMetadata.class, preparation.getDataSetId());
         DataSetMetadata metadata;
         try {
+            securityProxy.asTechnicalUser(); // because dataset are not shared
             metadata = getMetadata.execute();
         }
         // this can happen, especially if the dataset is not shared, but it should not prevent the preparation
@@ -299,6 +305,8 @@ public class FolderAPI extends APIService {
         catch (Exception e) { // NOSONAR this can happen and does not need to be thrown or logged
             metadata = null;
             LOG.debug("error reading dataset metadata {} : {}", preparation.getId(), e.getMessage());
+        } finally {
+            securityProxy.releaseIdentity();
         }
 
         final EnrichedPreparation enrichedPreparation = new EnrichedPreparation(preparation, metadata);

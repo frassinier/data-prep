@@ -30,6 +30,14 @@ public class NoOpSecurityProxy implements SecurityProxy {
     }
 
     /**
+     * @see SecurityProxy#asTechnicalUser()
+     */
+    @Override
+    public void asTechnicalUser() {
+
+    }
+
+    /**
      * @see SecurityProxy#releaseIdentity()
      */
     @Override

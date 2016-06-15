@@ -237,13 +237,15 @@ public class PreparationAPI extends APIService {
 
         // You cannot use Preparation object mapper here: to serialize steps & actions, you'd need a version
         // repository not available at API level. Code below copies command result direct to response.
+        GenericCommand<InputStream> getDetails = getCommand(PreparationDetailsGet.class, preparationId);
+        final EnrichedPreparationDetails enrichPreparation = getCommand(EnrichedPreparationDetails.class, getDetails);
         try {
-            GenericCommand<InputStream> command = getCommand(PreparationDetailsGet.class, preparationId);
-            return CommandHelper.toStreaming(command);
+            return CommandHelper.toStreaming(enrichPreparation);
         } finally {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Retrieved preparation details (pool: {} )...", getConnectionStats());
             }
+            LOG.info("Preparation {} retrieved", preparationId);
         }
     }
 

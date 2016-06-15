@@ -88,19 +88,6 @@ public interface DataSetMetadataRepository {
     DataSetMetadata get(String id);
 
     /**
-     * Alias for @link {@link DataSetMetadataRepository#get(String)} but to be used only when getting the dataset content.
-     * This is really helpful when you want to have a different implementation of the
-     * {@link DataSetMetadataRepository#get(String)}.
-     *
-     * @param id the dataset id.
-     * @return The {@link DataSetMetadata} with given <code>id</code> or null if non found.
-     */
-    @Nullable
-    default DataSetMetadata getForContent(String id) {
-        return get(id);
-    }
-
-    /**
      * Removes the {@link DataSetMetadata data set} with given id.
      * 
      * @param id The id of the {@link DataSetMetadata data set} to delete.

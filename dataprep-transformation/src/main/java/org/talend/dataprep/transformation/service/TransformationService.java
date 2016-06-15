@@ -61,6 +61,7 @@ import org.talend.dataprep.format.export.ExportFormat;
 import org.talend.dataprep.metrics.Timed;
 import org.talend.dataprep.metrics.VolumeMetered;
 import org.talend.dataprep.security.PublicAPI;
+import org.talend.dataprep.security.SecurityProxy;
 import org.talend.dataprep.transformation.aggregation.AggregationService;
 import org.talend.dataprep.transformation.aggregation.api.AggregationParameters;
 import org.talend.dataprep.transformation.aggregation.api.AggregationResult;
@@ -117,6 +118,10 @@ public class TransformationService extends BaseTransformationService {
     /** Task executor for asynchronous processing. */
     @Resource(name = "serializer#json#executor")
     private TaskExecutor executor;
+
+    /** Security proxy enable a thread to borrow the identity of another user. */
+    @Autowired
+    private SecurityProxy securityProxy;
 
     @RequestMapping(value = "/apply", method = POST, consumes = APPLICATION_JSON_VALUE)
     @ApiOperation(value = "Run the transformation given the provided export parameters", notes = "This operation transforms the dataset or preparation using parameters in export parameters.")
@@ -359,8 +364,13 @@ public class TransformationService extends BaseTransformationService {
 
         // because of dataset records streaming, the dataset content must be within an auto closeable block
         final DataSetSampleGet dataSetGet = context.getBean(DataSetSampleGet.class, previewParameters.getDataSetId());
+
+        securityProxy.asTechnicalUser();
         try (InputStream dataSetContent = dataSetGet.execute(); //
                 JsonParser parser = mapper.getFactory().createParser(dataSetContent)) {
+
+            securityProxy.releaseIdentity();
+
             final DataSet dataSet = mapper.readerFor(DataSet.class).readValue(parser);
 
             // execute the... preview !
@@ -369,6 +379,8 @@ public class TransformationService extends BaseTransformationService {
 
         } catch (IOException e) {
             throw new TDPException(TransformationErrorCodes.UNABLE_TO_PERFORM_PREVIEW, e);
+        } finally {
+            securityProxy.releaseIdentity();
         }
     }
 
@@ -390,10 +402,14 @@ public class TransformationService extends BaseTransformationService {
             throw new TDPException(TransformationErrorCodes.UNABLE_TO_PERFORM_PREVIEW, e);
         }
 
-        // get the dataset content
+        // get the dataset content as the technical user because the dataset may not be shared
+        securityProxy.asTechnicalUser();
         final DataSetSampleGet dataSetGet = context.getBean(DataSetSampleGet.class, previewParameters.getDataSetId());
         try (InputStream content = dataSetGet.execute(); //
                 JsonParser parser = mapper.getFactory().createParser(content)) {
+
+            securityProxy.releaseIdentity();
+
             final DataSet dataSet = mapper.readerFor(DataSet.class).readValue(parser);
             dataSet.setRecords(dataSet.getRecords().limit(1));
 
@@ -419,6 +435,8 @@ public class TransformationService extends BaseTransformationService {
             return diff;
         } catch (IOException e) {
             throw new TDPException(CommonErrorCodes.UNABLE_TO_PARSE_JSON, e);
+        } finally {
+            securityProxy.releaseIdentity();
         }
     }
 

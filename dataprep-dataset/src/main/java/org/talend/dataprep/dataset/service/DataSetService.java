@@ -406,7 +406,7 @@ public class DataSetService extends BaseDataSetService {
         final Marker marker = Markers.dataset(dataSetId);
         LOG.debug(marker, "Get data set #{}", dataSetId);
         try {
-            DataSetMetadata dataSetMetadata = dataSetMetadataRepository.getForContent(dataSetId);
+            DataSetMetadata dataSetMetadata = dataSetMetadataRepository.get(dataSetId);
             assertDataSetMetadata(dataSetMetadata, dataSetId);
             // Build the result
             DataSet dataSet = new DataSet();
@@ -417,7 +417,7 @@ public class DataSetService extends BaseDataSetService {
             dataSet.setRecords(contentStore.stream(dataSetMetadata));
             return dataSet;
         } finally {
-            LOG.debug(marker, "Get done.");
+            LOG.info(marker, "Get dataset content done");
         }
     }
 
@@ -437,6 +437,9 @@ public class DataSetService extends BaseDataSetService {
             HttpResponseContext.status(HttpStatus.NO_CONTENT);
             return null;
         }
+
+        LOG.debug("get dataset metadata for {}", dataSetId);
+
         DataSetMetadata metadata = dataSetMetadataRepository.get(dataSetId);
         if (metadata == null) {
             throw new TDPException(DataSetErrorCodes.DATASET_DOES_NOT_EXIST, ExceptionContext.build().put("id", dataSetId));
@@ -448,6 +451,7 @@ public class DataSetService extends BaseDataSetService {
         DataSet dataSet = new DataSet();
         completeWithUserData(metadata);
         dataSet.setMetadata(metadata);
+        LOG.info("found dataset {} for #{}", dataSet.getMetadata().getName(), dataSetId);
         return dataSet;
     }
 

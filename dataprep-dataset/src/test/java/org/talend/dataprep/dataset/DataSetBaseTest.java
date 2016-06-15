@@ -43,6 +43,7 @@ import org.talend.dataprep.dataset.store.content.DataSetContentStore;
 import org.talend.dataprep.dataset.store.metadata.DataSetMetadataRepository;
 import org.talend.dataprep.schema.FormatFamily;
 import org.talend.dataprep.security.Security;
+import org.talend.dataprep.security.SecurityProxy;
 import org.talend.dataprep.user.store.UserDataRepository;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -109,11 +110,16 @@ public abstract class DataSetBaseTest {
     protected Security security;
 
     @Autowired
+    protected SecurityProxy securityProxy;
+
+    @Autowired
     protected VersionService versionService;
 
     protected void assertQueueMessages(String dataSetId) throws Exception {
         // Asserts on metadata status
-        DataSetMetadata metadata = dataSetMetadataRepository.getForContent(dataSetId);
+        securityProxy.asTechnicalUser();
+        DataSetMetadata metadata = dataSetMetadataRepository.get(dataSetId);
+        securityProxy.releaseIdentity();
         assertNotNull(metadata);
         DataSetLifecycle lifecycle = metadata.getLifecycle();
         assertThat(lifecycle.contentIndexed(), is(true));
