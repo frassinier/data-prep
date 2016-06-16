@@ -22,6 +22,7 @@ import org.talend.dataprep.transformation.api.action.context.ActionContext;
 import org.talend.dataprep.parameters.Parameter;
 import org.talend.dataprep.parameters.ParameterType;
 import org.talend.dataprep.parameters.SelectParameter;
+import org.talend.dataprep.util.MessagesBundleContext;
 
 /**
  * This interface is designed to be implemented by actions that have a date pattern as parameter.
@@ -62,7 +63,10 @@ public interface DatePatternParamModel {
         while (keys.hasMoreElements()) {
             String key = keys.nextElement();
             String value = patterns.getString(key);
-            SelectParameter.Item item = SelectParameter.Item.Builder.builder().value(value).label(key + " (" + value + ")").build();
+            SelectParameter.Item item = SelectParameter.Item.Builder.builder()
+                    .value(value)
+                    .label(MessagesBundleContext.get().getString("choice." + key, key + " (" + value + ")"))
+                    .build();
             items.add(item);
 
             if (key.equals("ISO")){
