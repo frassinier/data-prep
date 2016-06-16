@@ -11,6 +11,9 @@
 
   ============================================================================*/
 
-input[type="radio"]:hover{
-  cursor: pointer;
+.param-input {
+  label {
+    font-weight: normal;
+    cursor: pointer;
+  }
 }
