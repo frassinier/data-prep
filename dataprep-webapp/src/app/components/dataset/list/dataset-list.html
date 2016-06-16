@@ -27,42 +27,10 @@
             open-related-inventory="$ctrl.PreparationService.open"
             update="$ctrl.uploadUpdatedDatasetFile"
             copy="$ctrl.clone"
-            edit="$ctrl.editLocation"
             process-certification="$ctrl.processCertification"
             remove="$ctrl.remove"
             rename="$ctrl.rename"
             is-item-shared="$ctrl.isItemShared"
             toggle-favorite="$ctrl.DatasetService.toggleFavorite">
     </inventory-item>
-
-    <talend-modal fullscreen="false"
-                  state="$ctrl.showModal"
-                  close-button="true"
-                  disable-enter="true">
-        <div ng-show="!$ctrl.isFetchingParameters">
-            <div class="modal-title">Edit Talend Job dataset</div>
-            <br/>
-            <form name="$ctrl.liveDatasetForm" ng-submit="$ctrl.liveDatasetForm.$valid && $ctrl.submit()">
-
-                <transform-params parameters="$ctrl.liveDatasetFormParameters"></transform-params>
-
-                <div class="modal-buttons">
-                    <button class="talend-modal-close btn-secondary modal-secondary-button"
-                            type="button"
-                            translate-once="CANCEL"></button>
-                    <button class="talend-modal-close btn-primary modal-primary-button"
-                            ng-disabled="$ctrl.liveDatasetForm.$invalid"
-                            translate-once="OK"></button>
-                </div>
-            </form>
-        </div>
-        <div id="import-ghost"
-             ng-show="$ctrl.isFetchingParameters"
-             class="loading-container">
-            <div class="loading-msg">
-                <span class="wait-icon continuous-rotate" ><i data-icon="c" class="icon"></i></span>
-                <span class="wait-text" translate-once="IMPORT_WAIT"></span>
-            </div>
-        </div>
-    </talend-modal>
 </div>

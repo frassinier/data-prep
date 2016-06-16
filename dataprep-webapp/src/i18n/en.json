@@ -190,8 +190,6 @@
   "COPY_SUCCESS": "The dataset has been copied.",
   "MOVE_SUCCESS_TITLE": "Dataset move",
   "MOVE_SUCCESS": "The dataset has been moved.",
-  "LIVE_DATASET_EDIT_SUCCESS_TITLE": "Edit live dataset properties",
-  "LIVE_DATASET_EDIT_SUCCESS": "Live dataset properties have been updated.",
   "DATASET_RENAME_SUCCESS_TITLE": "Dataset rename",
   "DATASET_RENAME_SUCCESS": "The dataset has been renamed.",
   "DATASET_CURRENTLY_RENAMING_TITLE": "Dataset is already being renamed",

@@ -63,7 +63,6 @@ describe('DatasetList component', () => {
         $translateProvider.preferredLanguage('en');
     }));
     beforeEach(angular.mock.module('htmlTemplates'));
-    beforeEach(angular.mock.module('data-prep.services.import'));
     beforeEach(angular.mock.module('data-prep.dataset-list', ($provide) => {
         stateMock = {
             inventory: { datasets: datasets }

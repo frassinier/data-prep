@@ -175,23 +175,4 @@ describe('Import REST Service', function () {
         //then
         expect(params).toEqual({name: 'url'});
     }));
-    
-    describe('importRemoteJobParameters', () => {
-
-        beforeEach(inject(($q, ImportRestService) => {
-            spyOn(ImportRestService, 'importParameters').and.returnValue($q.when());
-        }));
-
-        it('should be a shortcut to importParameters', inject((ImportRestService) => {
-            //given
-            const LOCATION_TYPE_REMOTE_JOB = 'job';
-            expect(ImportRestService.importParameters).not.toHaveBeenCalled();
-
-            //when
-            ImportRestService.importRemoteJobParameters();
-
-            //then
-            expect(ImportRestService.importParameters).toHaveBeenCalledWith(LOCATION_TYPE_REMOTE_JOB);
-        }));
-    });
 });
