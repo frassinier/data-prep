@@ -81,7 +81,7 @@ public class TransformTests extends TransformationServiceBaseTests {
                         "Gloubi-boulga"); // Casimir rules !
 
         // then
-        Assert.assertEquals(500, response.getStatusCode());
+        Assert.assertEquals(415, response.getStatusCode());
         assertTrue(response.asString().contains("OUTPUT_TYPE_NOT_SUPPORTED"));
     }
 
@@ -110,7 +110,7 @@ public class TransformTests extends TransformationServiceBaseTests {
 
         // then
         Assert.assertEquals(500, response.getStatusCode());
-        assertTrue(response.asString().contains("UNABLE_TO_TRANSFORM_DATASET"));
+        assertTrue(response.asString().contains("UNABLE_TO_READ_PREPARATION"));
     }
 
     @Test
@@ -168,7 +168,7 @@ public class TransformTests extends TransformationServiceBaseTests {
         final Preparation preparation = getPreparation(prepId);
         final String headId = preparation.getSteps().get(preparation.getSteps().size() - 1);
 
-        TransformationCacheKey key = new TransformationCacheKey(prepId, metadata, "JSON", headId);
+        TransformationCacheKey key = new TransformationCacheKey(prepId, metadata.getId(), "JSON", headId);
         assertFalse(contentCache.has(key));
 
         // when
@@ -222,7 +222,7 @@ public class TransformTests extends TransformationServiceBaseTests {
         // then
         // Transformation failure
         final TransformationCacheKey key = new TransformationCacheKey(preparationId, //
-                dataSetMetadataRepository.get(dataSetId), //
+                dataSetId, //
                 "JSON", //
                 getPreparation(preparationId).getHeadId());
         assertFalse(contentCache.has(key));

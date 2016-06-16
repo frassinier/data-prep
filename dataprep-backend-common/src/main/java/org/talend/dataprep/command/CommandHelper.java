@@ -7,7 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.talend.dataprep.http.HttpResponseContext;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 public class CommandHelper {
 

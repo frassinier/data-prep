@@ -20,6 +20,7 @@ import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
+import org.talend.dataprep.api.dataset.DataSet;
 import org.talend.dataprep.validation.OneNotBlank;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -58,6 +59,7 @@ public class ExportParameters {
     private Object outFilter;
 
     private Map<String, String> unmappedProperties = new HashMap<>();
+    private DataSet content;
 
     public String getExportType() {
         return exportType;
@@ -158,5 +160,13 @@ public class ExportParameters {
         } else {
             return datasetId;
         }
+    }
+
+    public void setContent(DataSet content) {
+        this.content = content;
+    }
+
+    public DataSet getContent() {
+        return content;
     }
 }

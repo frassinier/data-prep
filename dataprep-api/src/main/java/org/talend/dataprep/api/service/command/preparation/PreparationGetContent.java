@@ -1,41 +1,39 @@
-//  ============================================================================
+// ============================================================================
 //
-//  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+// Copyright (C) 2006-2016 Talend Inc. - www.talend.com
 //
-//  This source code is available under agreement available at
-//  https://github.com/Talend/data-prep/blob/master/LICENSE
+// This source code is available under agreement available at
+// https://github.com/Talend/data-prep/blob/master/LICENSE
 //
-//  You should have received a copy of the agreement
-//  along with this program; if not, write to Talend SA
-//  9 rue Pages 92150 Suresnes, France
+// You should have received a copy of the agreement
+// along with this program; if not, write to Talend SA
+// 9 rue Pages 92150 Suresnes, France
 //
-//  ============================================================================
+// ============================================================================
 
 package org.talend.dataprep.api.service.command.preparation;
 
-import static org.talend.daikon.exception.ExceptionContext.build;
 import static org.talend.dataprep.command.Defaults.pipeStream;
-import static org.talend.dataprep.exception.error.PreparationErrorCodes.UNABLE_TO_READ_PREPARATION;
 
-import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
-import org.talend.dataprep.api.preparation.Preparation;
-import org.talend.dataprep.api.service.command.common.ChainedCommand;
-import org.talend.dataprep.command.preparation.PreparationDetailsGet;
+import org.talend.dataprep.api.org.talend.dataprep.api.export.ExportParameters;
+import org.talend.dataprep.command.GenericCommand;
 import org.talend.dataprep.exception.TDPException;
+import org.talend.dataprep.exception.error.APIErrorCodes;
 
 /**
  * Command used to retrieve the preparation content.
  */
 @Component
 @Scope("request")
-public class PreparationGetContent extends ChainedCommand<InputStream, InputStream> {
+public class PreparationGetContent extends GenericCommand<InputStream> {
 
     /** The preparation id. */
     private final String id;
@@ -43,56 +41,30 @@ public class PreparationGetContent extends ChainedCommand<InputStream, InputStre
     /** The preparation version. */
     private final String version;
 
-    /** Optional sample size (if null or <=0, the full preparation content is returned). */
-    private Long sample;
-
     /**
-     * Private constructor to ensure the IoC.
-     *
      * @param id the preparation id.
      * @param version the preparation version.
-     * @param input source command to get the preparation.
      */
-    private PreparationGetContent(String id, String version, PreparationDetailsGet input) {
-        this(id, version, null, input);
-    }
-
-    /**
-     * Constructor with sample size specified.
-     *
-     * @param id the preparation id.
-     * @param version the preparation version.
-     * @param sample the optional sample value.
-     * @param input source command to get the preparation.
-     */
-    private PreparationGetContent(String id, String version, Long sample, PreparationDetailsGet input) {
-        super(PREPARATION_GROUP, input);
+    private PreparationGetContent(String id, String version) {
+        super(PREPARATION_GROUP);
         this.id = id;
         this.version = version;
-        this.sample = sample;
-        execute(this::onExecute);
+        execute(() -> {
+            try {
+                ExportParameters parameters = new ExportParameters();
+                parameters.setPreparationId(this.id);
+                parameters.setStepId(this.version);
+                parameters.setExportType("JSON");
+
+                final String parametersAsString = objectMapper.writerFor(ExportParameters.class).writeValueAsString(parameters);
+                final HttpPost post = new HttpPost(transformationServiceUrl + "/apply");
+                post.setEntity(new StringEntity(parametersAsString, ContentType.APPLICATION_JSON));
+                return post;
+            } catch (Exception e) {
+                throw new TDPException(APIErrorCodes.UNABLE_TO_RETRIEVE_PREPARATION_CONTENT, e);
+            }
+        });
         on(HttpStatus.OK).then(pipeStream());
-    }
-
-
-    private HttpRequestBase onExecute() {
-
-        // get the preparation to extract the dataset id (DataSetId should be sent from the frontend instead)
-        final Preparation preparation;
-        try (InputStream details = getInput()) {
-            preparation = objectMapper.readerFor(Preparation.class).readValue(details);
-        } catch (IOException e) {
-            throw new TDPException(UNABLE_TO_READ_PREPARATION, e, build().put("id", id));
-        }
-
-        String datasetId = preparation.getDataSetId();
-
-        String uri = transformationServiceUrl + "/apply/preparation/" + id + "/dataset/" + datasetId + "/JSON";
-        uri += "?stepId=" + version;
-        if (sample != null) {
-            uri += "&sample=" + sample;
-        }
-        return new HttpGet(uri);
     }
 
 }

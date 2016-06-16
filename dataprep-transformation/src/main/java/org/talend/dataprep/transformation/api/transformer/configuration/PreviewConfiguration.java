@@ -37,7 +37,7 @@ public class PreviewConfiguration extends Configuration {
 
     protected PreviewConfiguration(Configuration configuration, String previewActions, List<Long> indexes) {
         super(configuration.output(), configuration.getFilter(), configuration.getOutFilter(), configuration.getMonitor(), configuration.formatId(), configuration.getActions(), configuration.getArguments(),
-                configuration.stepId(), false, false, configuration.volume());
+                configuration.getPreparationId(), configuration.stepId(), false, false, configuration.volume());
         this.previewActions = previewActions;
         this.indexes = indexes;
     }

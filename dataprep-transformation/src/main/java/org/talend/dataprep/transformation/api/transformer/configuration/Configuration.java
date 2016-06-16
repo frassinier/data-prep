@@ -72,6 +72,8 @@ public class Configuration {
      */
     private TransformationContext transformationContext;
 
+    private String preparationId;
+
     /**
      * Constructor for the transformer configuration.
      */
@@ -82,6 +84,7 @@ public class Configuration {
                             final String format, //
                             final String actions, //
                             final Map<String, String> arguments, //
+                            final String preparationId, //
                             final String stepId, //
                             boolean allowMetadataChange, //
                             boolean globalStatistics, //
@@ -93,6 +96,7 @@ public class Configuration {
         this.format = format;
         this.actions = actions;
         this.arguments = arguments;
+        this.preparationId = preparationId;
         this.stepId = stepId;
         this.allowMetadataChange = allowMetadataChange;
         this.globalStatistics = globalStatistics;
@@ -170,6 +174,10 @@ public class Configuration {
         return globalStatistics;
     }
 
+    public String getPreparationId() {
+        return preparationId;
+    }
+
     public enum Volume {
         LARGE,
         SMALL
@@ -207,6 +215,8 @@ public class Configuration {
 
         private String stepId;
 
+        private String preparationId = StringUtils.EMPTY;
+
         private boolean allowMetadataChange = true;
 
         private Supplier<Node> monitorSupplier = BasicNode::new;
@@ -235,7 +245,7 @@ public class Configuration {
          * @return a new {@link Configuration} from the mapper setup.
          */
         public Configuration build() {
-            return new Configuration(output, filter, outFilter, monitorSupplier, format, actions, arguments, stepId, allowMetadataChange, globalStatistics, dataVolume);
+            return new Configuration(output, filter, outFilter, monitorSupplier, format, actions, arguments, preparationId, stepId, allowMetadataChange, globalStatistics, dataVolume);
         }
 
         /**
@@ -272,7 +282,15 @@ public class Configuration {
         }
 
         public Builder stepId(final String stepId) {
+            if (StringUtils.equalsIgnoreCase("head", stepId)) {
+                throw new IllegalArgumentException("'head' is not a valid step id.");
+            }
             this.stepId = stepId;
+            return this;
+        }
+
+        public Builder preparationId(final String preparationId) {
+            this.preparationId = preparationId;
             return this;
         }
 

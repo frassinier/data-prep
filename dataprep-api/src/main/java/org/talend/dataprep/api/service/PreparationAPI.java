@@ -256,16 +256,8 @@ public class PreparationAPI extends APIService {
         if (LOG.isDebugEnabled()) {
             LOG.debug("Retrieving preparation content (pool: {} )...", getConnectionStats());
         }
-        Long sampleValue;
         try {
-            sampleValue = Long.parseLong(sample);
-        } catch (NumberFormatException e) {
-            sampleValue = null;
-        }
-
-        try {
-            final PreparationDetailsGet preparationDetailsGet = getCommand(PreparationDetailsGet.class, preparationId);
-            HystrixCommand<InputStream> command = getCommand(PreparationGetContent.class, preparationId, version, sampleValue, preparationDetailsGet);
+            HystrixCommand<InputStream> command = getCommand(PreparationGetContent.class, preparationId, version);
             return CommandHelper.toStreaming(command);
         } finally {
             if (LOG.isDebugEnabled()) {

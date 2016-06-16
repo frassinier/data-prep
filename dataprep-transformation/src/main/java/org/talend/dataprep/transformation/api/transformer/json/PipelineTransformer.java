@@ -61,7 +61,7 @@ public class PipelineTransformer implements Transformer {
                 .withMonitor(configuration.getMonitor())
                 .withFilter(configuration.getFilter())
                 .withFilterOut(configuration.getOutFilter())
-                .withOutput(() -> new WriterNode(writer, contentCache, configuration.stepId()))
+                .withOutput(() -> new WriterNode(writer, contentCache, configuration.getPreparationId(), configuration.stepId()))
                 .withContext(configuration.getTransformationContext())
                 .withStatisticsAdapter(adapter)
                 .withGlobalStatistics(configuration.isGlobalStatistics())

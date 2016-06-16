@@ -26,6 +26,8 @@ public class WriterNode extends BasicNode implements Monitored {
 
     private final ContentCache contentCache;
 
+    private final String preparationId;
+
     private final String stepId;
 
     private RowMetadata lastRowMetadata;
@@ -36,9 +38,10 @@ public class WriterNode extends BasicNode implements Monitored {
 
     private int count;
 
-    public WriterNode(TransformerWriter writer, ContentCache contentCache, String stepId) {
+    public WriterNode(TransformerWriter writer, ContentCache contentCache, String preparationId, String stepId) {
         this.writer = writer;
         this.contentCache = contentCache;
+        this.preparationId = preparationId;
         this.stepId = stepId;
     }
 
@@ -94,13 +97,14 @@ public class WriterNode extends BasicNode implements Monitored {
         try {
             ObjectMapper mapper = new ObjectMapper();
             final ObjectWriter objectWriter = mapper.writerFor(RowMetadata.class);
-            final OutputStream stream = contentCache.put(new TransformationMetadataCacheKey(stepId),
-                    ContentCache.TimeToLive.DEFAULT);
+            final TransformationMetadataCacheKey key = new TransformationMetadataCacheKey(preparationId, stepId);
+            final OutputStream stream = contentCache.put(key, ContentCache.TimeToLive.DEFAULT);
             objectWriter.writeValue(stream, lastRowMetadata);
             writer.flush();
+            LOGGER.debug("New metadata cache entry -> {}.", key.getKey());
             stream.close();
         } catch (IOException e) {
-            LOGGER.debug("Unable to cache metadata for step #{}", stepId, e);
+            LOGGER.error("Unable to cache metadata for step #{}", stepId, e);
         }
 
         super.signal(signal);

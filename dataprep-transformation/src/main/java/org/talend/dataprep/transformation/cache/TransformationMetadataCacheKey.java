@@ -20,14 +20,17 @@ import org.talend.dataprep.cache.ContentCacheKey;
  */
 public class TransformationMetadataCacheKey implements ContentCacheKey {
 
+    private final String preparationId;
+
     private final String stepId;
 
-    public TransformationMetadataCacheKey(String stepId) {
+    public TransformationMetadataCacheKey(String preparationId, String stepId) {
+        this.preparationId = preparationId;
         this.stepId = stepId;
     }
 
     @Override
     public String getKey() {
-        return "transformation-metadata-" + stepId;
+        return "transformation-metadata-" + preparationId + "-" + stepId;
     }
 }

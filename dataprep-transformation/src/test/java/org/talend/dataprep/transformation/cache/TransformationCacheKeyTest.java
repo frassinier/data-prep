@@ -61,7 +61,7 @@ public class TransformationCacheKeyTest extends TransformationBaseTest {
     }
 
     private TransformationCacheKey getSampleKey(String prepId, String name, String format, String step) throws IOException {
-        return new TransformationCacheKey(prepId, getDataSetMetadataSample(name), format, step);
+        return new TransformationCacheKey(prepId, getDataSetMetadataSample(name).getId(), format, step);
     }
 
     private DataSetMetadata getDataSetMetadataSample(String name) {
