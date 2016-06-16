@@ -146,7 +146,7 @@ public class SortAndOrderHelper {
         final Comparator<Preparation> comparator;
         switch (sort) {
         case NAME:
-            comparator = Comparator.comparing(Preparation::getName, comparisonOrder);
+            comparator = Comparator.comparing(dataSetMetadata -> dataSetMetadata.getName().toUpperCase(), comparisonOrder);
             break;
         case DATE:
             comparator = Comparator.comparing(p -> {

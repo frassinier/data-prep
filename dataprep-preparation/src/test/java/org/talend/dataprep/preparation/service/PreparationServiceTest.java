@@ -47,6 +47,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.restassured.http.ContentType;
 import com.jayway.restassured.path.json.JsonPath;
 import com.jayway.restassured.response.Response;
+import org.talend.dataprep.util.SortAndOrderHelper;
 
 /**
  * Unit test for the preparation service.
@@ -149,9 +150,31 @@ public class PreparationServiceTest extends BasePreparationTest {
         List<String> noPreparations = new ArrayList<>();
 
         // then
-        checkSearchFolder(rootFolder.getId(), rootPreparations);
-        checkSearchFolder(threePrepsFolder.getId(), threePreparations);
-        checkSearchFolder(noPrepsFolder.getId(), noPreparations);
+        checkSearchFolder(rootFolder.getId(), rootPreparations, SortAndOrderHelper.Sort.DATE.name());
+        checkSearchFolder(threePrepsFolder.getId(), threePreparations, SortAndOrderHelper.Sort.DATE.name());
+        checkSearchFolder(noPrepsFolder.getId(), noPreparations, SortAndOrderHelper.Sort.DATE.name());
+    }
+
+    @Test
+    public void test_TDP_2158() throws Exception {
+        // given
+        final Folder rootFolder = folderRepository.addFolder(home.getId(), "/root");
+        final List<String> rootPreparations = new ArrayList<>(1);
+        rootPreparations.add(createPreparationWithAPI("{\"name\": \"prep_1\", \"dataSetId\": \"1234\"}", rootFolder.getId()));
+
+        final Folder threePrepsFolder = folderRepository.addFolder(rootFolder.getId(), "three_preps");
+        final List<String> threePreparations = new ArrayList<>(3);
+        threePreparations.add(createPreparationWithAPI("{\"name\": \"prep_2\", \"dataSetId\": \"1234\"}", threePrepsFolder.getId()));
+        threePreparations.add(createPreparationWithAPI("{\"name\": \"Prep_3\", \"dataSetId\": \"1234\"}", threePrepsFolder.getId()));
+        threePreparations.add(createPreparationWithAPI("{\"name\": \"prep_4\", \"dataSetId\": \"1234\"}", threePrepsFolder.getId()));
+
+        final Folder noPrepsFolder = folderRepository.addFolder(threePrepsFolder.getId(), "no_prep");
+        List<String> noPreparations = new ArrayList<>();
+
+        // then
+        checkSearchFolder(rootFolder.getId(), rootPreparations, SortAndOrderHelper.Sort.DATE.name());
+        checkSearchFolder(threePrepsFolder.getId(), threePreparations, SortAndOrderHelper.Sort.NAME.name());
+        checkSearchFolder(noPrepsFolder.getId(), noPreparations, SortAndOrderHelper.Sort.DATE.name());
     }
 
     /**
@@ -161,11 +184,11 @@ public class PreparationServiceTest extends BasePreparationTest {
      * @param expectedIds the expected preparations id.
      * @throws IOException if an error occurs.
      */
-    private void checkSearchFolder(final String folderId, final List<String> expectedIds) throws IOException {
+    private void checkSearchFolder(final String folderId, final List<String> expectedIds, String sort) throws IOException {
         // when
         final Response response = given() //
                 .queryParam("folder", folderId) //
-                .queryParam("sort", "DATE") //
+                .queryParam("sort", sort) //
                 .queryParam("order", "ASC") //
                 .when().expect().statusCode(200).log().ifError() //
                 .get("/preparations/search");
