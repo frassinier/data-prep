@@ -15,7 +15,7 @@
       "canBeBlank": false,
       "placeHolder": "",
       "description": "Name of the generated export file",
-      "label": "Name of the generated export file",
+      "label": "Filename",
       "default": ""
     }
   ]

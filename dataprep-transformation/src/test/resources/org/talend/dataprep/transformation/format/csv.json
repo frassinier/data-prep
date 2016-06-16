@@ -18,7 +18,7 @@
         "values": [
           {
             "value": ";",
-            "label": "Semi colon"
+            "label": "Semicolon"
           },
           {
             "value": "\t",
@@ -37,7 +37,7 @@
       },
       "radio": true,
       "description": "Select character to use as a delimiter",
-      "label": "Select character to use as a delimiter",
+      "label": "Delimiter",
       "default": ";"
     },
     {
@@ -47,7 +47,7 @@
       "canBeBlank": false,
       "placeHolder": "",
       "description": "Name of the generated export file",
-      "label": "Name of the generated export file",
+      "label": "Filename",
       "default": ""
     }
   ]
