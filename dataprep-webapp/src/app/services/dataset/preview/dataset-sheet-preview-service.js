@@ -1,15 +1,15 @@
 /*  ============================================================================
 
-  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+ Copyright (C) 2006-2016 Talend Inc. - www.talend.com
 
-  This source code is available under agreement available at
-  https://github.com/Talend/data-prep/blob/master/LICENSE
+ This source code is available under agreement available at
+ https://github.com/Talend/data-prep/blob/master/LICENSE
 
-  You should have received a copy of the agreement
-  along with this program; if not, write to Talend SA
-  9 rue Pages 92150 Suresnes, France
+ You should have received a copy of the agreement
+ along with this program; if not, write to Talend SA
+ 9 rue Pages 92150 Suresnes, France
 
-  ============================================================================*/
+ ============================================================================*/
 
 /**
  * @ngdoc service
@@ -56,6 +56,15 @@ export default function DatasetSheetPreviewService(DatasetService) {
      * @type {boolean}
      */
     self.showModal = false;
+
+    /**
+     * @ngdoc property
+     * @name addPreparation
+     * @propertyOf data-prep.services.dataset.service:DatasetSheetPreviewService
+     * @description The flag that indicates if the dataset draft is used to add a preparation
+     * @type {boolean}
+     */
+    self.addPreparation = false;
 
     /**
      * @ngdoc method
@@ -107,11 +116,13 @@ export default function DatasetSheetPreviewService(DatasetService) {
      * @name loadPreview
      * @methodOf data-prep.services.dataset.service:DatasetSheetPreviewService
      * @param {object} metadata The dataset metadata to load
+     * @param {boolean} addPreparation The dataset draft is used to add a preparation
      * @description Set the metadata containing the dataset sheets, and get the preview of the default (last) selected sheet
      */
-    this.loadPreview = function (metadata) {
+    this.loadPreview = function (metadata, addPreparation) {
         self.currentMetadata = angular.copy(metadata, {});
         self.selectedSheetName = null;
+        self.addPreparation = addPreparation;
         resetGrid();
         return DatasetService.getSheetPreview(metadata)
             .then(function (response) {

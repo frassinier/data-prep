@@ -1,15 +1,15 @@
 /*  ============================================================================
 
-  Copyright (C) 2006-2016 Talend Inc. - www.talend.com
+ Copyright (C) 2006-2016 Talend Inc. - www.talend.com
 
-  This source code is available under agreement available at
-  https://github.com/Talend/data-prep/blob/master/LICENSE
+ This source code is available under agreement available at
+ https://github.com/Talend/data-prep/blob/master/LICENSE
 
-  You should have received a copy of the agreement
-  along with this program; if not, write to Talend SA
-  9 rue Pages 92150 Suresnes, France
+ You should have received a copy of the agreement
+ along with this program; if not, write to Talend SA
+ 9 rue Pages 92150 Suresnes, France
 
-  ============================================================================*/
+ ============================================================================*/
 
 /**
  * @ngdoc service
@@ -36,10 +36,11 @@ export default function UploadWorkflowService($state, StateService, DatasetSheet
      *      <li>File type defined but unknown : display error</li>
      * </ul>
      * @param {object} dataset The dataset draft to open
+     * @param {boolean} addPreparation The dataset draft is used to add a preparation
      */
-    this.openDraft = function openDraft(dataset) {
+    this.openDraft = function openDraft(dataset, addPreparation) {
         if (dataset.type === 'application/vnd.ms-excel') {
-            DatasetSheetPreviewService.loadPreview(dataset)
+            DatasetSheetPreviewService.loadPreview(dataset, addPreparation)
                 .then(DatasetSheetPreviewService.display);
         }
         else if (dataset.type) {
@@ -60,7 +61,7 @@ export default function UploadWorkflowService($state, StateService, DatasetSheet
      */
     this.openDataset = function openDataset(dataset) {
         if (dataset.draft) {
-            self.openDraft(dataset);
+            self.openDraft(dataset, false);
         }
         else {
             StateService.setPreviousRoute('nav.index.datasets');

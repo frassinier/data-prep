@@ -60,7 +60,7 @@ describe('UploadWorkflow Service', () => {
             $rootScope.$digest();
 
             //then
-            expect(DatasetSheetPreviewService.loadPreview).toHaveBeenCalledWith(dataset);
+            expect(DatasetSheetPreviewService.loadPreview).toHaveBeenCalledWith(dataset, false);
             expect(DatasetSheetPreviewService.display).toHaveBeenCalled();
         }));
     });
@@ -71,11 +71,11 @@ describe('UploadWorkflow Service', () => {
             const draft = {type: 'application/vnd.ms-excel'};
 
             //when
-            UploadWorkflowService.openDraft(draft);
+            UploadWorkflowService.openDraft(draft, true);
             $rootScope.$digest();
 
             //then
-            expect(DatasetSheetPreviewService.loadPreview).toHaveBeenCalledWith(draft);
+            expect(DatasetSheetPreviewService.loadPreview).toHaveBeenCalledWith(draft, true);
             expect(DatasetSheetPreviewService.display).toHaveBeenCalled();
         }));
 

@@ -34,7 +34,7 @@ describe('Preparation Creator Controller', () => {
             inventory: {
                 folder: {
                     content: {
-                        preparations : [
+                        preparations: [
                             {id: 'abc-def', name: 'my dataset Preparation'},
                             {id: 'a95-def', name: 'my dataset Preparation (1)'},
                         ]
@@ -290,7 +290,7 @@ describe('Preparation Creator Controller', () => {
                 ctrl.import();
                 expect(ctrl.whileImport).toBe(true);
                 expect(ctrl.uploadingDatasets.length).toBe(0);
-                uploadDefer.resolve({ data: dataset.id });
+                uploadDefer.resolve({data: dataset.id});
                 scope.$digest();
 
                 //then
@@ -306,11 +306,11 @@ describe('Preparation Creator Controller', () => {
                 ctrl.datasetFile = [{name: 'my dataset.csv'}];
                 ctrl.userHasTypedName = false;
                 ctrl.enteredName = '';
-                spyOn(DatasetService, 'getDatasetById').and.returnValue($q.when({id:'123', name:'my dataset'}));
+                spyOn(DatasetService, 'getDatasetById').and.returnValue($q.when({id: '123', name: 'my dataset'}));
 
                 //when
                 ctrl.import();
-                uploadDefer.resolve({ data: dataset.id });
+                uploadDefer.resolve({data: dataset.id});
                 scope.$digest();
 
                 //then
@@ -322,11 +322,11 @@ describe('Preparation Creator Controller', () => {
                 ctrl.datasetFile = [{name: 'my dataset.csv'}];
                 ctrl.userHasTypedName = true;
                 ctrl.enteredName = 'prep name by user';
-                spyOn(DatasetService, 'getDatasetById').and.returnValue($q.when({id:'123', name:'my dataset'}));
+                spyOn(DatasetService, 'getDatasetById').and.returnValue($q.when({id: '123', name: 'my dataset'}));
 
                 //when
                 ctrl.import();
-                uploadDefer.resolve({ data: dataset.id });
+                uploadDefer.resolve({data: dataset.id});
                 scope.$digest();
 
                 //then
@@ -379,9 +379,10 @@ describe('Preparation Creator Controller', () => {
         let newPreparation = {
             id: 'def-12558'
         };
-        beforeEach(inject(($q, $state, PreparationService) => {
-           spyOn(PreparationService, 'create').and.returnValue($q.when(newPreparation));
-           spyOn($state, 'go').and.returnValue();
+        beforeEach(inject(($q, $state, PreparationService, UploadWorkflowService) => {
+            spyOn(PreparationService, 'create').and.returnValue($q.when(newPreparation));
+            spyOn(UploadWorkflowService, 'openDraft').and.returnValue();
+            spyOn($state, 'go').and.returnValue();
         }));
 
         it('should call create preparation service', inject(($state, PreparationService) => {
@@ -389,7 +390,7 @@ describe('Preparation Creator Controller', () => {
             ctrl = createController();
             ctrl.baseDataset = {id: 'abc-54'};
             ctrl.enteredName = 'prep name';
-            stateMock.inventory.folder.metadata = {path : '/amaa'};
+            stateMock.inventory.folder.metadata = {path: '/amaa'};
             ctrl.addPreparationForm = {$commitViewValue: jasmine.createSpy('$commitViewValue').and.returnValue()};
 
             //when
@@ -401,6 +402,23 @@ describe('Preparation Creator Controller', () => {
             expect(ctrl.showAddPrepModal).toBe(false);
             expect($state.go).toHaveBeenCalledWith('playground.preparation', {prepid: newPreparation.id});
         }));
+
+        it('should call UploadWorkflowService openDraft for multisheet dataset', inject((UploadWorkflowService) => {
+            //given
+            ctrl = createController();
+            ctrl.baseDataset = {draft: true, id: 'abc-54'};
+            ctrl.enteredName = 'prep name';
+
+            //when
+            ctrl.createPreparation();
+            scope.$digest();
+
+            //then
+            expect(ctrl.showAddPrepModal).toBe(false);
+            expect(ctrl.baseDataset.name).toBe('prep name');
+            expect(UploadWorkflowService.openDraft).toHaveBeenCalledWith(ctrl.baseDataset, true);
+        }));
+
     });
 
     describe('Preparation Name availability', () => {
@@ -477,7 +495,7 @@ describe('Preparation Creator Controller', () => {
         let lastSelectedDataset = {
             id: 'abc-5424',
             name: 'my dataset',
-            isSelected : true
+            isSelected: true
         };
 
         it('should update selection flag for the 1st dataset select', () => {

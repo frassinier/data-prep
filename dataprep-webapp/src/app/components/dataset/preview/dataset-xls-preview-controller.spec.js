@@ -18,7 +18,16 @@ describe('Dataset xls preview controller', () => {
     const content = { column: [], records: [] };
 
     beforeEach(angular.mock.module('data-prep.dataset-xls-preview', ($provide) => {
-        stateMock = { inventory: { currentFolder: { path: 'HOME' } } };
+        stateMock = {
+            inventory: {
+                currentFolder: {path: 'HOME'},
+                folder: {
+                    metadata: {
+                        id: 'HOME'
+                    }
+                }
+            }
+        };
         $provide.constant('state', stateMock);
     }));
 
@@ -169,6 +178,27 @@ describe('Dataset xls preview controller', () => {
             //then
             expect(StateService.setPreviousRoute).toHaveBeenCalledWith('nav.index.datasets');
             expect($state.go).toHaveBeenCalledWith('playground.dataset', { datasetid: '13aa256cf813a25d158' });
+        }));
+
+        it('should open preparation', inject(($q, $state, DatasetSheetPreviewService, StateService, PreparationService) => {
+            //given
+            spyOn(PreparationService, 'create').and.returnValue($q.when({id: 'aaaa256cf813a25d158'}));
+
+            const ctrl = createController();
+            ctrl.selectedSheetName = 'my sheet';
+
+            DatasetSheetPreviewService.addPreparation = true;
+            DatasetSheetPreviewService.currentMetadata = { id: '13aa256cf813a25d158', name: 'sheet' };
+
+            //when
+            ctrl.setDatasetSheet();
+            scope.$digest();
+
+            //then
+            expect(PreparationService.create).toHaveBeenCalledWith('13aa256cf813a25d158', 'sheet', 'HOME');
+
+            expect(StateService.setPreviousRoute).toHaveBeenCalledWith('nav.index.preparations', {folderId: 'HOME'});
+            expect($state.go).toHaveBeenCalledWith('playground.preparation', {prepid: 'aaaa256cf813a25d158'});
         }));
     });
 });

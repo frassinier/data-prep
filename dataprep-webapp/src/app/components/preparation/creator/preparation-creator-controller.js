@@ -12,13 +12,15 @@
  ============================================================================*/
 
 class PreparationCreatorCtrl {
-    constructor($document, $state, RestURLs, PreparationService, DatasetService, state) {
+    constructor(state, $document, $state, RestURLs,
+                PreparationService, DatasetService, UploadWorkflowService) {
         'ngInject';
 
         this.$document = $document;
         this.$state = $state;
         this.preparationService = PreparationService;
         this.datasetService = DatasetService;
+        this.UploadWorkflowService = UploadWorkflowService;
         this.restURLs = RestURLs;
         this.enteredFilterText = '';
         this.filteredDatasets = [];
@@ -154,17 +156,33 @@ class PreparationCreatorCtrl {
 
     /**
      * @ngdoc method
+     * @name createPreparationFromMultiSheetDataset
+     * @methodOf data-prep.preparation-creator.controller:PreparationCreatorCtrl
+     * @description created the preparation from a multi sheet dataset
+     */
+    createPreparationFromMultiSheetDataset() {
+        this.showAddPrepModal = false;
+        this.baseDataset.name = this.enteredName;
+        this.UploadWorkflowService.openDraft(this.baseDataset, true);
+    }
+
+    /**
+     * @ngdoc method
      * @name createPreparation
      * @methodOf data-prep.preparation-creator.controller:PreparationCreatorCtrl
      * @description created the preparation
      */
     createPreparation() {
-        this.addPreparationForm.$commitViewValue();
-        this.preparationService.create(this.baseDataset.id, this.enteredName, this.state.inventory.folder.metadata.id)
-            .then((newPreparation) => {
-                this.showAddPrepModal = false;
-                this.$state.go('playground.preparation', {prepid: newPreparation.id});
-            });
+        if (this.baseDataset.draft) {
+            this.createPreparationFromMultiSheetDataset();
+        } else {
+            this.addPreparationForm.$commitViewValue();
+            this.preparationService.create(this.baseDataset.id, this.enteredName, this.state.inventory.folder.metadata.id)
+                .then((newPreparation) => {
+                    this.showAddPrepModal = false;
+                    this.$state.go('playground.preparation', {prepid: newPreparation.id});
+                });
+        }
     }
 
     /**

@@ -21,7 +21,9 @@
  * @requires data-prep.services.state.service:StateService
  * @requires data-prep.services.folder.service:FolderService
  */
-export default function DatasetXlsPreviewCtrl($timeout, $state, state, DatasetSheetPreviewService, DatasetService, PlaygroundService, StateService) {
+export default function DatasetXlsPreviewCtrl($timeout, $state, state,
+                                              DatasetSheetPreviewService, DatasetService,
+                                              PlaygroundService, StateService, PreparationService) {
     'ngInject';
 
     var vm = this;
@@ -68,8 +70,16 @@ export default function DatasetXlsPreviewCtrl($timeout, $state, state, DatasetSh
                 vm.visible = false;
             })
             .then(() => {
-                StateService.setPreviousRoute('nav.index.datasets');
-                $state.go('playground.dataset', {datasetid: vm.metadata.id});
+                if(DatasetSheetPreviewService.addPreparation) {
+                    PreparationService.create(vm.metadata.id, vm.metadata.name, state.inventory.folder.metadata.id)
+                        .then((newPreparation) => {
+                            StateService.setPreviousRoute('nav.index.preparations', {folderId: state.inventory.folder.metadata.id});
+                            $state.go('playground.preparation', {prepid: newPreparation.id});
+                        });
+                } else {
+                    StateService.setPreviousRoute('nav.index.datasets');
+                    $state.go('playground.dataset', {datasetid: vm.metadata.id});
+                }
             });
     };
 }
