@@ -28,6 +28,9 @@ These files must be used together with the common code contained in [daikon](htt
 
 The following project provides UI for Data Prep.
 
+[daviddm-image]: https://david-dm.org/talend/data-prep.svg?theme=shields.io
+[daviddm-url]: https://david-dm.org/talend/data-prep
+
 | _Project_                  | _Description_ |
 |:-------------------------|-------------|
 | [dataprep-webapp](dataprep-webapp)         | *Builds all the AngularJS UI of Data Prep* |
