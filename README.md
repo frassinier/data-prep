@@ -26,6 +26,8 @@ These files must be used together with the common code contained in [daikon](htt
 
 ### UI
 
+[![devDependency Status](https://david-dm.org/Talend/data-prep/dev-status.svg?path=dataprep-webapp)](https://david-dm.org/Talend/data-prep?path=dataprep-webapp#info=devDependencies)
+
 The following project provides UI for Data Prep.
 
 | _Project_                  | _Description_ |
